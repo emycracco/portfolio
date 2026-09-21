@@ -438,6 +438,32 @@ h1,h2,h3{font-family:var(--fonte-titulo); font-weight:600; line-height:1.15; mar
 }
 
 /* =======================================================
+   PLAYER DE VÍDEO (abre dentro do site)
+   ======================================================= */
+.player{
+  position:relative;
+  width:min(430px, 92vw, calc(80vh * 9 / 16));
+  animation:subir .4s ease;
+}
+.player-quadro{
+  position:relative; aspect-ratio:9/16; width:100%;
+  border-radius:var(--raio); overflow:hidden; background:#1a0d13;
+  border:1px solid rgba(255,255,255,.55);
+  box-shadow:0 30px 70px rgba(74,43,57,.45);
+}
+.player-quadro iframe{position:absolute; inset:0; width:100%; height:100%; border:0;}
+.player .fechar{top:-54px; right:0;}
+.player-legenda{
+  margin:16px 0 0; text-align:center; color:#fff;
+  font-family:var(--fonte-titulo); font-size:1.05rem;
+}
+.player-link{
+  display:block; text-align:center; margin-top:8px; color:rgba(255,255,255,.85);
+  font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; text-decoration:none;
+}
+.player-link:hover{color:#fff;}
+
+/* =======================================================
    ANIMAÇÃO DE ENTRADA
    ======================================================= */
 .revelar{opacity:0; transform:translateY(26px); transition:opacity .8s ease, transform .8s ease;}
@@ -697,6 +723,20 @@ h1,h2,h3{font-family:var(--fonte-titulo); font-weight:600; line-height:1.15; mar
   </div>
 </footer>
 
+<!-- ================= PLAYER DE VÍDEO =================
+     Abre o vídeo aqui dentro do site. Funciona com qualquer
+     link do YouTube colocado no array DESTAQUES. -->
+<div class="fundo-escuro" id="fundoVideo">
+  <div class="player" role="dialog" aria-modal="true" aria-labelledby="tituloVideo">
+    <button class="fechar" id="fecharVideo" aria-label="Fechar vídeo">&times;</button>
+    <div class="player-quadro">
+      <iframe id="quadroVideo" title="Vídeo do portfólio" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    </div>
+    <p class="player-legenda" id="tituloVideo"></p>
+    <a class="player-link" id="linkVideo" href="#" target="_blank" rel="noopener">Abrir no YouTube</a>
+  </div>
+</div>
+
 <!-- ================= CARD DE CAPTURA ================= -->
 <div class="fundo-escuro" id="fundoCaptura">
   <div class="captura" role="dialog" aria-modal="true" aria-labelledby="tituloCaptura">
@@ -755,7 +795,8 @@ const NUMEROS_CAPA = [
 ];
 
 /* ---- CONTEÚDOS DE DESTAQUE (três vídeos) ----
-   link  = ONDE ENTRA O LINK DO VÍDEO (abre em outra aba ao clicar no card)
+   link  = ONDE ENTRA O LINK DO VÍDEO. Pode ser qualquer endereço do YouTube
+           (shorts, youtu.be ou watch?v=), que o vídeo abre dentro do próprio site
    capa  = ONDE ENTRA A CAPA: deixe "" para usar o bloco com degradê,
            ou escreva o caminho da imagem, por exemplo "capa-video-1.jpg"
    numero e rotulo = o número forte e o que ele significa */
@@ -871,7 +912,7 @@ pegar("#gridDestaques").innerHTML = DESTAQUES.map(d => {
     ? `<img src="${d.capa}" alt="Capa do vídeo ${d.titulo}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0">`
     : `<span class="formato">capa do vídeo 9:16</span>`;
   return `
-  <a class="destaque revelar" href="${d.link}" target="_blank" rel="noopener" aria-label="Assistir: ${d.titulo}">
+  <a class="destaque revelar" href="${d.link}" target="_blank" rel="noopener" data-titulo="${d.titulo}" aria-label="Assistir aqui no site: ${d.titulo}">
     <div class="destaque-capa" style="background:${d.degrade}">
       ${capa}
       <span class="play" aria-hidden="true"></span>
@@ -1028,6 +1069,52 @@ pegar("#formContato").addEventListener("submit", (e) => {
 });
 
 /* =========================================================
+   PLAYER DE VÍDEO DENTRO DO SITE
+   Vale para qualquer link do YouTube colocado em DESTAQUES,
+   hoje e nos vídeos que forem acrescentados depois.
+   ========================================================= */
+const fundoVideo = pegar("#fundoVideo");
+const quadroVideo = pegar("#quadroVideo");
+let focoAntesDoVideo = null;
+
+/* lê o código do vídeo em qualquer formato de link do YouTube */
+function codigoDoYoutube(link){
+  const achou = String(link).match(/(?:shorts\/|live\/|embed\/|youtu\.be\/|[?&]v=)([A-Za-z0-9_-]{6,})/);
+  return achou ? achou[1] : "";
+}
+
+function abrirVideo(codigo, titulo, link){
+  focoAntesDoVideo = document.activeElement;
+  /* vq=hd1080 pede a melhor qualidade; o YouTube ainda ajusta conforme a internet de quem assiste */
+  quadroVideo.src = "https://www.youtube.com/embed/" + codigo +
+    "?autoplay=1&rel=0&modestbranding=1&playsinline=1&vq=hd1080";
+  pegar("#tituloVideo").textContent = titulo || "";
+  pegar("#linkVideo").href = link;
+  fundoVideo.classList.add("aberto");
+  document.body.style.overflow = "hidden";
+  pegar("#fecharVideo").focus();
+}
+
+function fecharVideo(){
+  fundoVideo.classList.remove("aberto");
+  quadroVideo.removeAttribute("src");   /* para o som e o vídeo ao fechar */
+  document.body.style.overflow = "";
+  if(focoAntesDoVideo && focoAntesDoVideo.focus) focoAntesDoVideo.focus();
+}
+
+pegar("#gridDestaques").addEventListener("click", (e) => {
+  const card = e.target.closest(".destaque");
+  if(!card) return;
+  const codigo = codigoDoYoutube(card.href);
+  if(!codigo) return;             /* link de outro lugar: segue o caminho normal */
+  e.preventDefault();
+  abrirVideo(codigo, card.dataset.titulo, card.href);
+});
+
+pegar("#fecharVideo").addEventListener("click", fecharVideo);
+fundoVideo.addEventListener("click", (e) => { if(e.target === fundoVideo) fecharVideo(); });
+
+/* =========================================================
    CARD DE CAPTURA (aparece uma vez por visita, depois de 7 segundos)
    ========================================================= */
 const fundo = pegar("#fundoCaptura");
@@ -1045,13 +1132,20 @@ function fecharCaptura(){
 }
 
 if(!sessionStorage.getItem("midiakitVisto")){
-  setTimeout(abrirCaptura, 7000);
+  /* se um vídeo estiver aberto na hora, espera o fim dele para não atrapalhar */
+  const chamarCaptura = () => {
+    if(fundoVideo.classList.contains("aberto")){ setTimeout(chamarCaptura, 4000); return; }
+    abrirCaptura();
+  };
+  setTimeout(chamarCaptura, 7000);
 }
 
 pegar("#fecharCaptura").addEventListener("click", fecharCaptura);
 fundo.addEventListener("click", (e) => { if(e.target === fundo) fecharCaptura(); });
 document.addEventListener("keydown", (e) => {
-  if(e.key === "Escape" && fundo.classList.contains("aberto")) fecharCaptura();
+  if(e.key !== "Escape") return;
+  if(fundoVideo.classList.contains("aberto")) fecharVideo();
+  else if(fundo.classList.contains("aberto")) fecharCaptura();
 });
 
 pegar("#formCaptura").addEventListener("submit", (e) => {
