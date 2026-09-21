@@ -189,19 +189,33 @@ h1,h2,h3{font-family:var(--fonte-titulo); font-weight:600; line-height:1.15; mar
 .foto-45{aspect-ratio:4/5;}
 .capa .foto{width:100%; max-width:430px; margin-left:auto;}
 
+/* faixa animada de logos: os círculos deslizam da direita para a esquerda */
 .faixa-marcas{
   margin-top:78px; border-top:1px solid rgba(224,164,180,.4); border-bottom:1px solid rgba(224,164,180,.4);
-  background:rgba(255,255,255,.55); overflow:hidden;
+  background:linear-gradient(135deg, #ffd9ea 0%, var(--rosa-claro) 45%, #ffe9f2 100%);
+  overflow:hidden; padding:26px 0; position:relative;
 }
-.faixa-lista{
-  display:flex; gap:44px; padding:18px 22px; list-style:none; margin:0;
-  overflow-x:auto; scrollbar-width:none; justify-content:center; flex-wrap:wrap;
+/* véu nas pontas para os logos entrarem e saírem suavemente */
+.faixa-marcas::before, .faixa-marcas::after{
+  content:""; position:absolute; top:0; bottom:0; width:90px; z-index:2; pointer-events:none;
 }
-.faixa-lista::-webkit-scrollbar{display:none;}
-.faixa-lista li{
-  font-family:var(--fonte-serif); font-size:1.02rem; letter-spacing:.18em; text-transform:uppercase;
-  color:var(--rosa-dourado); white-space:nowrap;
+.faixa-marcas::before{left:0; background:linear-gradient(90deg, #ffd9ea, rgba(255,217,234,0));}
+.faixa-marcas::after{right:0; background:linear-gradient(270deg, #ffe9f2, rgba(255,233,242,0));}
+.faixa-trilha{display:flex; width:max-content; animation:desliza 42s linear infinite;}
+.faixa-marcas:hover .faixa-trilha, .faixa-marcas:focus-within .faixa-trilha{animation-play-state:paused;}
+@keyframes desliza{from{transform:translateX(0);} to{transform:translateX(-50%);}}
+.marca-logo{
+  flex:none; width:112px; height:112px; margin-right:34px; border-radius:50%;
+  background:var(--branco); border:1px solid rgba(255,255,255,.9);
+  box-shadow:0 12px 26px rgba(194,24,91,.14);
+  display:flex; align-items:center; justify-content:center; text-align:center; padding:12px;
+  overflow:hidden;
 }
+.marca-logo span{
+  font-size:.7rem; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--magenta); line-height:1.35; font-weight:500;
+}
+.marca-logo img{width:100%; height:100%; object-fit:contain; border-radius:50%;}
 
 /* =======================================================
    SOBRE
@@ -452,6 +466,10 @@ h1,h2,h3{font-family:var(--fonte-titulo); font-weight:600; line-height:1.15; mar
   .menu li:last-child{border-bottom:none;}
   .menu a{display:block; padding:16px 0; font-size:.92rem;}
   .grid-destaques, .grid-trabalhos, .grid-servicos, .grid-depoimentos{grid-template-columns:1fr;}
+  .faixa-marcas{padding:20px 0;}
+  .faixa-marcas::before, .faixa-marcas::after{width:46px;}
+  .marca-logo{width:86px; height:86px; margin-right:22px; padding:9px;}
+  .marca-logo span{font-size:.6rem; letter-spacing:.1em;}
   .capa-numeros{gap:26px;}
   .capa-numeros div{min-width:92px;}
   .cartao{padding:30px 22px;}
@@ -467,6 +485,9 @@ h1,h2,h3{font-family:var(--fonte-titulo); font-weight:600; line-height:1.15; mar
   html{scroll-behavior:auto;}
   *{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important;}
   .revelar{opacity:1; transform:none;}
+  /* sem movimento: os logos ficam parados e podem ser arrastados de lado */
+  .faixa-trilha{animation:none !important; transform:none !important;}
+  .faixa-marcas{overflow-x:auto;}
 }
 </style>
 </head>
@@ -517,12 +538,8 @@ h1,h2,h3{font-family:var(--fonte-titulo); font-weight:600; line-height:1.15; mar
     </div>
   </div>
 
-  <!-- faixa fina com os nomes das marcas -->
-  <div class="faixa-marcas">
-    <div class="container">
-      <ul class="faixa-lista" id="faixaMarcas" aria-label="Marcas atendidas"></ul>
-    </div>
-  </div>
+  <!-- faixa animada com os logos das marcas, entre a capa e o Sobre mim -->
+  <div class="faixa-marcas" id="faixaMarcas" aria-label="Marcas com quem já trabalhei"></div>
 </section>
 
 <!-- ================= 2. SOBRE MIM ================= -->
@@ -707,11 +724,24 @@ h1,h2,h3{font-family:var(--fonte-titulo); font-weight:600; line-height:1.15; mar
    Edite só esta parte, sem precisar mexer no HTML.
    ========================================================= */
 
-/* ---- MARCAS (faixa fina no fim da capa) ---- */
+/* ---- MARCAS (faixa de logos que desliza no fim da capa) ----
+   nome = o que aparece escrito dentro do círculo
+   logo = deixe "" para o círculo com o nome escrito,
+          ou escreva o caminho da imagem, por exemplo "logos/dove.png",
+          que ela entra no lugar do texto, dentro do mesmo círculo */
 const MARCAS = [
-  "FM Basics", "Voudegata", "Eudora", "Dove",
-  "Marca 05", "Marca 06", "Marca 07", "Marca 08",
-  "Marca 09", "Marca 10", "Marca 11", "Marca 12"
+  { nome:"FM Basics", logo:"" },
+  { nome:"Voudegata", logo:"" },
+  { nome:"Eudora",    logo:"" },
+  { nome:"Dove",      logo:"" },
+  { nome:"Marca 05",  logo:"" },
+  { nome:"Marca 06",  logo:"" },
+  { nome:"Marca 07",  logo:"" },
+  { nome:"Marca 08",  logo:"" },
+  { nome:"Marca 09",  logo:"" },
+  { nome:"Marca 10",  logo:"" },
+  { nome:"Marca 11",  logo:"" },
+  { nome:"Marca 12",  logo:"" }
 ];
 
 /* ---- NÚMEROS DA CAPA (três números curtos) ----
@@ -818,8 +848,19 @@ const pegar = (s) => document.querySelector(s);
 pegar("#numerosCapa").innerHTML = NUMEROS_CAPA
   .map(n => `<div><strong>${n.valor}</strong><span>${n.rotulo}</span></div>`).join("");
 
-/* faixa de marcas */
-pegar("#faixaMarcas").innerHTML = MARCAS.map(m => `<li>${m}</li>`).join("");
+/* faixa animada de logos: a lista é montada duas vezes seguidas
+   para o deslize voltar ao começo sem ninguém perceber o corte */
+function circuloMarca(m, copia){
+  const miolo = m.logo
+    ? `<img src="${m.logo}" alt="Logo ${m.nome}" loading="lazy">`
+    : `<span>${m.nome}</span>`;
+  return `<div class="marca-logo"${copia ? ' aria-hidden="true"' : ''}>${miolo}</div>`;
+}
+pegar("#faixaMarcas").innerHTML =
+  `<div class="faixa-trilha">
+     ${MARCAS.map(m => circuloMarca(m, false)).join("")}
+     ${MARCAS.map(m => circuloMarca(m, true)).join("")}
+   </div>`;
 
 /* destaques */
 pegar("#gridDestaques").innerHTML = DESTAQUES.map(d => {
