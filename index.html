@@ -179,8 +179,10 @@ h1,h2,h3{font-family:var(--fonte-titulo); font-weight:600; line-height:1.15; mar
 }
 .foto::before{
   content:""; position:absolute; inset:12px; border:1px solid rgba(255,255,255,.7); border-radius:calc(var(--raio) - 12px);
-  pointer-events:none;
+  pointer-events:none; z-index:2;
 }
+/* foto real dentro da moldura: preenche o quadro sem distorcer */
+.foto > img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 28%;}
 .foto .legenda{
   position:relative; margin:0 0 20px; padding:8px 16px; border-radius:999px;
   background:rgba(255,255,255,.75); color:var(--magenta);
@@ -529,11 +531,11 @@ h1,h2,h3{font-family:var(--fonte-titulo); font-weight:600; line-height:1.15; mar
         <div class="capa-numeros" id="numerosCapa"></div>
       </div>
 
-      <!-- ESPAÇO DE FOTO DA CAPA
-           Para colocar a sua foto real, troque a div abaixo por:
-           <img class="foto foto-45" src="foto-capa.jpg" alt="Emellyn Cracco sorrindo com um produto na mão"> -->
-      <div class="foto foto-45 revelar" role="img" aria-label="Espaço reservado para a foto da creator no formato 4 por 5">
-        <p class="legenda">foto da creator 4:5</p>
+      <!-- FOTO DA CAPA
+           Para trocar por outra foto, substitua o arquivo foto-capa.jpg
+           (o ideal é uma imagem em pé, no formato 4:5, com cerca de 900px de largura) -->
+      <div class="foto foto-45 revelar">
+        <img src="foto-capa.jpg" alt="Emellyn Cracco sorrindo ao ar livre, em um parque, com regata rosa e calça jeans" width="910" height="1153">
       </div>
     </div>
   </div>
