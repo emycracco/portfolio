@@ -20,6 +20,8 @@
   --rosa-claro:#ffe8f3;
   --magenta:#c2185b;
   --rosa-dourado:#e0a4b4;
+  /* cor de todos os textos na fonte manuscrita (Parisienne) */
+  --manuscrito:#952398;
 
   --creme:#fffafc;
   --branco:#ffffff;
@@ -71,7 +73,7 @@ section{padding:96px 0; position:relative;}
    TIPOGRAFIA E ENFEITES
    ======================================================= */
 h1,h2,h3{font-family:var(--fonte-titulo); font-weight:600; line-height:1.15; margin:0;}
-.script{font-family:var(--fonte-manuscrita); color:var(--rosa); font-weight:400;}
+.script{font-family:var(--fonte-manuscrita); color:var(--manuscrito); font-weight:400;}
 .olho{
   display:inline-block;
   font-family:var(--fonte-corpo);
@@ -216,7 +218,7 @@ h1,h2,h3{font-family:var(--fonte-titulo); font-weight:600; line-height:1.15; mar
 }
 .promessas li b{color:var(--magenta); font-family:var(--fonte-titulo); font-weight:600;}
 .coracao{color:var(--rosa); flex:none; font-size:1.05rem; line-height:1.5;}
-.assinatura{font-family:var(--fonte-manuscrita); font-size:2.5rem; color:var(--magenta); margin-top:28px; line-height:1;}
+.assinatura, .sobre-texto .assinatura{font-family:var(--fonte-manuscrita); font-size:2.5rem; color:var(--manuscrito); margin-top:28px; line-height:1;}
 
 /* =======================================================
    DESTAQUES
@@ -317,7 +319,7 @@ h1,h2,h3{font-family:var(--fonte-titulo); font-weight:600; line-height:1.15; mar
 
 .subtitulo-bloco{
   text-align:center; font-family:var(--fonte-manuscrita);
-  font-size:2rem; color:var(--rosa); margin-bottom:28px;
+  font-size:2rem; color:var(--manuscrito); margin-bottom:28px;
 }
 .grid-resultados{display:grid; grid-template-columns:repeat(3,1fr); gap:26px; margin-bottom:66px;}
 .resultado{
@@ -388,7 +390,7 @@ h1,h2,h3{font-family:var(--fonte-titulo); font-weight:600; line-height:1.15; mar
   border-top:1px solid rgba(224,164,180,.45);
   background:rgba(255,255,255,.6); padding:52px 0 40px; text-align:center;
 }
-.rodape .nome{font-family:var(--fonte-manuscrita); font-size:2.4rem; color:var(--magenta); line-height:1;}
+.rodape .nome{font-family:var(--fonte-manuscrita); font-size:2.4rem; color:var(--manuscrito); line-height:1;}
 .redes{display:flex; gap:26px; justify-content:center; list-style:none; padding:0; margin:20px 0;}
 .redes a{text-decoration:none; font-size:.78rem; letter-spacing:.16em; text-transform:uppercase; color:var(--tinta-suave);}
 .redes a:hover{color:var(--magenta);}
