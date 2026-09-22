@@ -251,9 +251,17 @@ h1,h2,h3{font-family:var(--fonte-titulo); font-weight:600; line-height:1.15; mar
 .destaque-capa .formato{
   position:absolute; left:14px; bottom:14px; padding:6px 12px; border-radius:999px;
   background:rgba(255,255,255,.8); color:var(--magenta);
-  font-size:.66rem; letter-spacing:.12em; text-transform:uppercase;
+  font-size:.66rem; letter-spacing:.12em; text-transform:uppercase; z-index:3;
 }
-.play{
+/* capa: o frame do próprio vídeo */
+.destaque-thumb{position:absolute; inset:0; width:100%; height:100%; object-fit:cover;}
+/* prévia sem som, que entra quando o mouse passa por cima */
+.destaque-previa{
+  position:absolute; inset:0; width:100%; height:100%; border:0;
+  opacity:0; transition:opacity .45s ease; pointer-events:none; z-index:1;
+}
+.destaque-previa.tocando{opacity:1;}
+.play{position:relative; z-index:2;
   width:74px; height:74px; border-radius:50%;
   background:rgba(255,255,255,.9); box-shadow:0 12px 26px rgba(194,24,91,.25);
   display:flex; align-items:center; justify-content:center;
@@ -797,8 +805,8 @@ const NUMEROS_CAPA = [
 /* ---- CONTEÚDOS DE DESTAQUE (três vídeos) ----
    link  = ONDE ENTRA O LINK DO VÍDEO. Pode ser qualquer endereço do YouTube
            (shorts, youtu.be ou watch?v=), que o vídeo abre dentro do próprio site
-   capa  = ONDE ENTRA A CAPA: deixe "" para usar o bloco com degradê,
-           ou escreva o caminho da imagem, por exemplo "capa-video-1.jpg"
+   capa  = deixe "" que a capa vem do próprio vídeo (o primeiro frame que o YouTube guarda).
+           Só preencha, por exemplo com "capa-video-1.jpg", se quiser uma capa sua no lugar
    numero e rotulo = o número forte e o que ele significa */
 const DESTAQUES = [
   {
@@ -907,12 +915,15 @@ pegar("#faixaMarcas").innerHTML =
 
 /* destaques */
 pegar("#gridDestaques").innerHTML = DESTAQUES.map(d => {
-  /* se você colocar um caminho em "capa", a imagem real entra aqui no lugar do degradê */
-  const capa = d.capa
-    ? `<img src="${d.capa}" alt="Capa do vídeo ${d.titulo}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0">`
+  /* a capa é o frame do próprio vídeo, que o YouTube guarda em oardefault.jpg (1080x1920).
+     Se "capa" estiver preenchido no array, a sua imagem entra no lugar dele. */
+  const codigo = codigoDoYoutube(d.link);
+  const endereco = d.capa || (codigo ? `https://i.ytimg.com/vi/${codigo}/oardefault.jpg` : "");
+  const capa = endereco
+    ? `<img class="destaque-thumb" src="${endereco}" alt="Capa do vídeo ${d.titulo}" data-codigo="${codigo}" loading="lazy">`
     : `<span class="formato">capa do vídeo 9:16</span>`;
   return `
-  <a class="destaque revelar" href="${d.link}" target="_blank" rel="noopener" data-titulo="${d.titulo}" aria-label="Assistir aqui no site: ${d.titulo}">
+  <a class="destaque revelar" href="${d.link}" target="_blank" rel="noopener" data-titulo="${d.titulo}" data-codigo="${codigo}" aria-label="Assistir aqui no site: ${d.titulo}">
     <div class="destaque-capa" style="background:${d.degrade}">
       ${capa}
       <span class="play" aria-hidden="true"></span>
@@ -1113,6 +1124,57 @@ pegar("#gridDestaques").addEventListener("click", (e) => {
 
 pegar("#fecharVideo").addEventListener("click", fecharVideo);
 fundoVideo.addEventListener("click", (e) => { if(e.target === fundoVideo) fecharVideo(); });
+
+/* se o frame vertical do vídeo não existir, tenta as outras capas do YouTube */
+document.querySelectorAll(".destaque-thumb").forEach(img => {
+  const reservas = img.dataset.codigo ? [
+    `https://i.ytimg.com/vi/${img.dataset.codigo}/maxresdefault.jpg`,
+    `https://i.ytimg.com/vi/${img.dataset.codigo}/hqdefault.jpg`
+  ] : [];
+  img.addEventListener("error", () => {
+    const proxima = reservas.shift();
+    if(proxima) img.src = proxima;
+  });
+});
+
+/* PRÉVIA SEM SOM ao passar o mouse por cima do card.
+   Só em telas com mouse e para quem não pediu menos movimento.
+   Vale para qualquer vídeo novo acrescentado em DESTAQUES. */
+const temMouse = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+if(temMouse && !semAnimacao){
+  document.querySelectorAll(".destaque").forEach(card => {
+    const codigo = card.dataset.codigo;
+    if(!codigo) return;
+    const quadro = card.querySelector(".destaque-capa");
+    let espera = null, previa = null;
+
+    const ligar = () => {
+      if(previa) return;
+      espera = setTimeout(() => {
+        previa = document.createElement("iframe");
+        previa.className = "destaque-previa";
+        previa.tabIndex = -1;
+        previa.setAttribute("aria-hidden", "true");
+        previa.setAttribute("allow", "autoplay; encrypted-media");
+        previa.src = "https://www.youtube.com/embed/" + codigo +
+          "?autoplay=1&mute=1&controls=0&loop=1&playlist=" + codigo +
+          "&playsinline=1&modestbranding=1&rel=0&vq=hd1080";
+        quadro.appendChild(previa);
+        requestAnimationFrame(() => previa.classList.add("tocando"));
+      }, 320);   /* espera curta para não carregar vídeo em passagem rápida do mouse */
+    };
+
+    const desligar = () => {
+      clearTimeout(espera);
+      if(previa){ previa.remove(); previa = null; }
+    };
+
+    card.addEventListener("mouseenter", ligar);
+    card.addEventListener("mouseleave", desligar);
+    card.addEventListener("focus", ligar);
+    card.addEventListener("blur", desligar);
+  });
+}
 
 /* =========================================================
    CARD DE CAPTURA (aparece uma vez por visita, depois de 7 segundos)
