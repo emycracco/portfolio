@@ -229,8 +229,9 @@ h1,h2,h3{font-family:var(--fonte-titulo); font-weight:600; line-height:1.15; mar
   overflow:hidden;
 }
 .marca-logo span{
+  display:block; width:100%; overflow-wrap:break-word;
   font-size:.7rem; letter-spacing:.12em; text-transform:uppercase;
-  color:var(--magenta); line-height:1.35; font-weight:500;
+  color:var(--magenta); line-height:1.3; font-weight:500;
 }
 .marca-logo img{width:100%; height:100%; object-fit:contain; border-radius:50%;}
 
@@ -795,18 +796,16 @@ h1,h2,h3{font-family:var(--fonte-titulo); font-weight:600; line-height:1.15; mar
           ou escreva o caminho da imagem, por exemplo "logos/dove.png",
           que ela entra no lugar do texto, dentro do mesmo círculo */
 const MARCAS = [
-  { nome:"FM Basics", logo:"" },
-  { nome:"Voudegata", logo:"" },
-  { nome:"Eudora",    logo:"" },
-  { nome:"Dove",      logo:"" },
-  { nome:"Marca 05",  logo:"" },
-  { nome:"Marca 06",  logo:"" },
-  { nome:"Marca 07",  logo:"" },
-  { nome:"Marca 08",  logo:"" },
-  { nome:"Marca 09",  logo:"" },
-  { nome:"Marca 10",  logo:"" },
-  { nome:"Marca 11",  logo:"" },
-  { nome:"Marca 12",  logo:"" }
+  { nome:"FIBER",             logo:"" },
+  { nome:"Hábito Vida",       logo:"" },
+  { nome:"Dove",              logo:"" },
+  { nome:"Eudora",            logo:"" },
+  { nome:"Popozuda",          logo:"" },
+  { nome:"Soldiers Nutrition", logo:"" },
+  { nome:"Tim",               logo:"" },
+  { nome:"FM Basics",         logo:"" },
+  { nome:"Voudegata",         logo:"" },
+  { nome:"ALVA",              logo:"" }
 ];
 
 /* ---- NÚMEROS DA CAPA (três números curtos) ----
@@ -927,6 +926,29 @@ pegar("#faixaMarcas").innerHTML =
      ${MARCAS.map(m => circuloMarca(m, false)).join("")}
      ${MARCAS.map(m => circuloMarca(m, true)).join("")}
    </div>`;
+
+/* nomes compridos diminuem sozinhos para caber dentro do círculo,
+   assim qualquer marca nova entra sem quebrar o desenho */
+function ajustarNomesDasMarcas(){
+  document.querySelectorAll(".marca-logo span").forEach(nome => {
+    const circulo = nome.parentElement;
+    nome.style.fontSize = "";
+    let tamanho = parseFloat(getComputedStyle(nome).fontSize);
+    const alturaLivre = circulo.clientHeight - 18;
+    let voltas = 0;
+    while(nome.scrollHeight > alturaLivre && tamanho > 7 && voltas < 14){
+      tamanho -= 0.7;
+      nome.style.fontSize = tamanho + "px";
+      voltas++;
+    }
+  });
+}
+ajustarNomesDasMarcas();
+let esperaMarcas;
+window.addEventListener("resize", () => {
+  clearTimeout(esperaMarcas);
+  esperaMarcas = setTimeout(ajustarNomesDasMarcas, 200);
+});
 
 /* destaques */
 pegar("#gridDestaques").innerHTML = DESTAQUES.map(d => {
