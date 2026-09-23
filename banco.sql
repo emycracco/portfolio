@@ -95,6 +95,24 @@ create table if not exists public.campanhas (
   criado_em  timestamptz not null default now()
 );
 
+-- Os cupons de afiliada e os links das marcas parceiras.
+-- "copias" conta quantas vezes voce ja copiou aquele cupom,
+-- para saber qual e o que voce mais divulga.
+create table if not exists public.cupons (
+  id         uuid primary key default gen_random_uuid(),
+  marca      text not null,
+  cupom      text,
+  desconto   text,               -- exemplo: 10% de desconto
+  link       text,
+  mensagem   text,               -- a mensagem pronta para enviar, opcional
+  obs        text,
+  validade   date,
+  ativo      boolean not null default true,
+  favorito   boolean not null default false,
+  copias     integer not null default 0,
+  criado_em  timestamptz not null default now()
+);
+
 -- O que voce ja marcou no checklist do portfolio.
 -- Cada item tem uma chave de texto propria, por isso ela e a chave da tabela.
 create table if not exists public.marcados (
@@ -133,6 +151,7 @@ alter table public.calendario enable row level security;
 alter table public.campanhas  enable row level security;
 alter table public.marcados   enable row level security;
 alter table public.visitas    enable row level security;
+alter table public.cupons     enable row level security;
 
 -- Apaga regras antigas, para voce poder rodar este arquivo de novo
 -- sem receber erro de "ja existe".
@@ -143,7 +162,7 @@ begin
     select schemaname, tablename, policyname
     from pg_policies
     where schemaname = 'public'
-      and tablename in ('videos','marcas','calendario','campanhas','marcados','visitas')
+      and tablename in ('videos','marcas','calendario','campanhas','marcados','visitas','cupons')
   loop
     execute format('drop policy if exists %I on %I.%I', r.policyname, r.schemaname, r.tablename);
   end loop;
@@ -184,6 +203,12 @@ create policy "dona le marcados"    on public.marcados for select to authenticat
 create policy "dona cria marcados"  on public.marcados for insert to authenticated with check (public.sou_a_dona());
 create policy "dona edita marcados" on public.marcados for update to authenticated using (public.sou_a_dona()) with check (public.sou_a_dona());
 create policy "dona apaga marcados" on public.marcados for delete to authenticated using (public.sou_a_dona());
+
+-- CUPONS (só a dona, nem leitura nem escrita para quem não está logado)
+create policy "dona le cupons"      on public.cupons for select to authenticated using (public.sou_a_dona());
+create policy "dona cria cupons"    on public.cupons for insert to authenticated with check (public.sou_a_dona());
+create policy "dona edita cupons"   on public.cupons for update to authenticated using (public.sou_a_dona()) with check (public.sou_a_dona());
+create policy "dona apaga cupons"   on public.cupons for delete to authenticated using (public.sou_a_dona());
 
 -- VISITAS
 create policy "dona le visitas"     on public.visitas for select to authenticated using (public.sou_a_dona());
@@ -246,6 +271,10 @@ where not exists (select 1 from public.calendario);
 insert into public.campanhas (campanha, cliente, tipo, status, qtd, valor, prazo, pagamento, ativa, favorita)
 select 'EXEMPLO, pode apagar', 'Cliente de exemplo', 'Conteúdo', 'Briefing', 1, 0, current_date + 7, 'pendente', true, false
 where not exists (select 1 from public.campanhas);
+
+insert into public.cupons (marca, cupom, desconto, link, obs, validade, ativo, favorito)
+select 'EXEMPLO, pode apagar', 'EMY10', '10% de desconto', 'https://marcadeexemplo.com.br', 'Linha de exemplo so para ver o formato', current_date + 30, true, false
+where not exists (select 1 from public.cupons);
 
 -- As tabelas marcados e visitas comecam vazias de proposito:
 -- marcados enche conforme voce marca o checklist, e visitas
