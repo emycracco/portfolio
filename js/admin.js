@@ -72,6 +72,8 @@ const ICONE = {
   lixo:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 7V5h4v2M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg>',
   arrastar:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"/></svg>',
   seta:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
+  conteudo:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/></svg>',
+  reciclar:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9a8 8 0 0 1 13.3-3.5L20 8"/><path d="M20 4v4h-4"/><path d="M20 15a8 8 0 0 1-13.3 3.5L4 16"/><path d="M4 20v-4h4"/></svg>',
   cupons:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 9V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v2a2.5 2.5 0 0 1 0 6v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2a2.5 2.5 0 0 1 0-6Z"/><path d="M13 7v2M13 14v3"/></svg>',
   copiar:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 6H6a2 2 0 0 0-2 2v9"/></svg>',
   link:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a4 4 0 0 0 5.7 0l3-3a4 4 0 1 0-5.7-5.7L11.3 6"/><path d="M14 11a4 4 0 0 0-5.7 0l-3 3a4 4 0 1 0 5.7 5.7l1.7-1.7"/></svg>',
@@ -85,12 +87,25 @@ const ABAS = [
   { id:"portfolio",  grupo:"meu site",     nome:"Portfólio",  sub:"Como o seu site está indo." },
   { id:"marcas",     grupo:"meu site",     nome:"Marcas",     sub:"A sua base de contatos de empresa." },
   { id:"cupons",     grupo:"meu site",     nome:"Cupons",     sub:"Seus cupons e links de afiliada, prontos para enviar." },
+  { id:"conteudo",   grupo:"minha rotina", nome:"Conteúdo",   sub:"A sua semana de postagens, canal por canal." },
   { id:"calendario", grupo:"minha rotina", nome:"Calendário", sub:"O mês inteiro de gravar, editar e postar." },
   { id:"campanhas",  grupo:"minha rotina", nome:"Campanhas",  sub:"Trabalhos, valores e prazos." },
   { id:"checklist",  grupo:"minha rotina", nome:"Checklist",  sub:"O que ainda falta no seu portfólio." }
 ];
 
 const FUNIL = ["Briefing", "Roteiro", "Aprovação Roteiro", "Gravação", "Edição", "Aprovado", "Entregue"];
+
+/* Os seus canais, na ordem em que aparecem na grade da semana.
+   "meta" é quantos vídeos por dia você combinou consigo mesma.
+   "fonte" marca o canal de onde sai o conteúdo original. */
+const CANAIS = [
+  { id:"tiktok",         nome:"TikTok Shop",   curto:"TikTok",      meta:4, fonte:true,  cor:"p-editar" },
+  { id:"instagram_shop", nome:"Insta shop",    curto:"Insta shop",  meta:1, fonte:false, cor:"p-conteudo" },
+  { id:"shopee",         nome:"Shopee Vídeos", curto:"Shopee",      meta:2, fonte:false, cor:"p-pago" },
+  { id:"instagram",      nome:"Insta pessoal", curto:"Insta",       meta:0, fonte:false, cor:"p-funil" }
+];
+const ETAPAS = ["ideia", "gravado", "editado", "postado"];
+const TIPOS_CONTEUDO = ["review", "unboxing", "rotina", "tutorial", "antes e depois", "oferta do dia", "trend", "resposta a comentário", "bastidores", "vitrine"];
 const SITUACOES = ["Lead", "Conversando", "Cliente", "Parada"];
 const TIPOS_AGENDA = ["gravar", "editar", "postar"];
 
@@ -98,7 +113,8 @@ const estado = {
   aba: "portfolio",
   email: "",
   faltando: [],
-  dados: { videos:[], marcas:[], calendario:[], campanhas:[], marcados:{}, visitas:[], cupons:[] },
+  dados: { videos:[], marcas:[], calendario:[], campanhas:[], marcados:{}, visitas:[], cupons:[], conteudos:[] },
+  semana: new Date(), filtroConteudo: "Todos",
   buscaCupons: "", filtroCupons: "Todos",
   buscaMarcas: "", filtroSituacao: "Todas",
   buscaCampanhas: "", filtroCampanhas: "Todas",
@@ -169,16 +185,18 @@ async function apagarLinha(tabela, id){
 
 async function carregarTudo(){
   estado.faltando = [];
-  const [videos, marcas, calendario, campanhas, marcados, visitas, cupons] = await Promise.all([
+  const [videos, marcas, calendario, campanhas, marcados, visitas, cupons, conteudos] = await Promise.all([
     lerTabela("videos", "ordem", true),
     lerTabela("marcas", "criado_em", false),
     lerTabela("calendario", "data", true),
     lerTabela("campanhas", "criado_em", false),
     lerTabela("marcados"),
     lerTabela("visitas", "data", false),
-    lerTabela("cupons", "criado_em", false)
+    lerTabela("cupons", "criado_em", false),
+    lerTabela("conteudos", "data", true)
   ]);
   estado.dados.cupons = cupons;
+  estado.dados.conteudos = conteudos;
   estado.dados.videos = videos;
   estado.dados.marcas = marcas;
   estado.dados.calendario = calendario;
@@ -273,6 +291,7 @@ function desenhar(){
   if(estado.aba === "portfolio")  desenharPortfolio();
   if(estado.aba === "marcas")     desenharMarcas();
   if(estado.aba === "cupons")     desenharCupons();
+  if(estado.aba === "conteudo")   desenharConteudo();
   if(estado.aba === "calendario") desenharCalendario();
   if(estado.aba === "campanhas")  desenharCampanhas();
   if(estado.aba === "checklist")  desenharChecklist();
@@ -626,6 +645,255 @@ function formularioMarca(marca){
     if(await gravar("marcas", linha, m.id)){
       fecharJanela(); recado("Marca salva."); await carregarTudo(); desenhar();
     }
+  });
+}
+
+/* ============================================================
+   ABA: CONTEÚDO DA SEMANA
+   Uma linha por canal, uma coluna por dia, de segunda a domingo.
+   ============================================================ */
+function diasDaSemana(referencia){
+  const d = new Date(referencia);
+  let recuo = d.getDay() - 1; if(recuo < 0) recuo = 6;   /* a semana começa na segunda */
+  const inicio = new Date(d.getFullYear(), d.getMonth(), d.getDate() - recuo);
+  const lista = [];
+  for(let i = 0; i < 7; i++){
+    const dia = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + i);
+    lista.push({
+      iso: dia.getFullYear() + "-" + String(dia.getMonth()+1).padStart(2,"0") + "-" + String(dia.getDate()).padStart(2,"0"),
+      nome: ["seg","ter","qua","qui","sex","sáb","dom"][i],
+      numero: dia.getDate()
+    });
+  }
+  return lista;
+}
+
+function canalPor(id){ return CANAIS.find(c => c.id === id) || CANAIS[0]; }
+
+function desenharConteudo(){
+  const dias = diasDaSemana(estado.semana);
+  const hoje = hojeISO();
+  const todos = estado.dados.conteudos || [];
+
+  const daSemana = todos.filter(c => {
+    const dia = String(c.data || "").slice(0,10);
+    const dentro = dia >= dias[0].iso && dia <= dias[6].iso;
+    const filtroOk =
+      estado.filtroConteudo === "Todos" ||
+      (estado.filtroConteudo === "A fazer" && c.status !== "postado") ||
+      (estado.filtroConteudo === "Postados" && c.status === "postado");
+    return dentro && filtroOk;
+  });
+
+  const porCelula = {};
+  daSemana.forEach(c => {
+    const chave = c.canal + "|" + String(c.data).slice(0,10);
+    (porCelula[chave] = porCelula[chave] || []).push(c);
+  });
+
+  /* contas da semana, sempre protegidas contra divisão por zero */
+  const metaSemana = CANAIS.reduce((s,c) => s + c.meta, 0) * 7;
+  const planejados = daSemana.length;
+  const postados = daSemana.filter(c => c.status === "postado").length;
+  const doDia = todos.filter(c => String(c.data).slice(0,10) === hoje);
+  const metaDia = CANAIS.reduce((s,c) => s + c.meta, 0);
+  const postadosHoje = doDia.filter(c => c.status === "postado").length;
+
+  const intervalo = dias[0].numero + " a " + dias[6].numero + " de " +
+    new Date(dias[6].iso + "T00:00:00").toLocaleDateString("pt-BR", { month:"long" });
+
+  pegar("#acoesTopo").innerHTML = `<button class="btn btn-principal" id="novoConteudo">${ICONE.mais} Novo conteúdo</button>`;
+
+  pegar("#area").innerHTML = `
+    <div class="faixa-numeros quatro">
+      <div class="numero"><b>${planejados}</b><small>na semana</small><i>meta de ${metaSemana}</i></div>
+      <div class="numero"><b>${postados}</b><small>já postados</small></div>
+      <div class="numero"><b>${Math.max(0, metaSemana - planejados)}</b><small>faltam planejar</small></div>
+      <div class="numero"><b>${postadosHoje} de ${metaDia}</b><small>postados hoje</small></div>
+    </div>
+
+    <section class="cartao">
+      <div class="cartao-topo">
+        <div class="mes-topo">
+          <button class="icone-btn" id="semanaAnterior" aria-label="Semana anterior">${ICONE.seta}</button>
+          <span class="mes-nome">${seguro(intervalo)}</span>
+          <button class="icone-btn" id="semanaSeguinte" aria-label="Próxima semana" style="transform:rotate(180deg)">${ICONE.seta}</button>
+          <button class="btn-mini" id="estaSemana">Esta semana</button>
+        </div>
+        <div class="grupo-filtro">
+          ${["Todos","A fazer","Postados"].map(f => `<button class="filtro" data-fconteudo="${f}" aria-pressed="${estado.filtroConteudo === f}">${f}</button>`).join("")}
+        </div>
+      </div>
+
+      <div class="rolagem">
+        <div class="grade-semana">
+          <div class="canto"></div>
+          ${dias.map(d => `<div class="cabeca-dia ${d.iso === hoje ? "hoje" : ""}">${d.nome} ${d.numero}</div>`).join("")}
+
+          ${CANAIS.map(canal => `
+            <div class="nome-canal">
+              <span class="pilula ${canal.cor}">${seguro(canal.curto)}</span>
+              <small>${canal.meta > 0 ? canal.meta + " por dia" : "quando der"}</small>
+            </div>
+            ${dias.map(d => {
+              const itens = porCelula[canal.id + "|" + d.iso] || [];
+              const feitos = itens.filter(i => i.status === "postado").length;
+              const faltando = canal.meta > 0 && itens.length < canal.meta;
+              return `
+              <div class="celula ${d.iso === hoje ? "hoje" : ""}" data-canal="${canal.id}" data-dia="${d.iso}">
+                ${canal.meta > 0 ? `<span class="contagem ${faltando ? "falta" : ""}">${itens.length}/${canal.meta}</span>` : ""}
+                <button class="mais-dia" data-novo="${canal.id}|${d.iso}" title="Adicionar neste dia">+</button>
+                ${itens.map(i => `
+                  <button class="chip ${i.status}" data-item="${seguro(i.id)}" title="${seguro(i.assunto)}">
+                    ${i.origem_id ? "&#8635; " : ""}${seguro(i.assunto)}
+                  </button>`).join("")}
+              </div>`;
+            }).join("")}
+          `).join("")}
+        </div>
+      </div>
+
+      <div class="cartao-corpo legenda">
+        ${ETAPAS.map(e => `<span><i class="ponto ${e}"></i>${e}</span>`).join("")}
+        <span><i class="ponto">&#8635;</i>reciclado do TikTok</span>
+      </div>
+    </section>
+  `;
+
+  pegar("#novoConteudo").addEventListener("click", () => formularioConteudo(null, "tiktok", hoje));
+  pegar("#semanaAnterior").addEventListener("click", () => { const d = new Date(estado.semana); d.setDate(d.getDate()-7); estado.semana = d; desenharConteudo(); });
+  pegar("#semanaSeguinte").addEventListener("click", () => { const d = new Date(estado.semana); d.setDate(d.getDate()+7); estado.semana = d; desenharConteudo(); });
+  pegar("#estaSemana").addEventListener("click", () => { estado.semana = new Date(); desenharConteudo(); });
+  pegarTodos("[data-fconteudo]").forEach(b => b.addEventListener("click", () => { estado.filtroConteudo = b.dataset.fconteudo; desenharConteudo(); }));
+
+  pegarTodos("[data-novo]").forEach(b => b.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const [canal, dia] = b.dataset.novo.split("|");
+    formularioConteudo(null, canal, dia);
+  }));
+  pegarTodos(".celula").forEach(c => c.addEventListener("click", (e) => {
+    if(e.target.closest("button")) return;
+    formularioConteudo(null, c.dataset.canal, c.dataset.dia);
+  }));
+  pegarTodos("[data-item]").forEach(b => b.addEventListener("click", (e) => {
+    e.stopPropagation();
+    formularioConteudo(todos.find(c => String(c.id) === b.dataset.item));
+  }));
+}
+
+function formularioConteudo(item, canalSugerido, diaSugerido){
+  const c = item || {};
+  const canal = c.canal || canalSugerido || "tiktok";
+  const data = c.data ? String(c.data).slice(0,10) : (diaSugerido || hojeISO());
+  const origem = c.origem_id ? (estado.dados.conteudos || []).find(x => String(x.id) === String(c.origem_id)) : null;
+
+  abrirJanela(item ? "Editar conteúdo" : "Novo conteúdo", `
+    <form id="formConteudo">
+      ${origem ? `<p class="porque">Reciclado de: ${seguro(origem.assunto)} (${seguro(canalPor(origem.canal).nome)}, ${dataBR(origem.data)})</p>` : ""}
+      <div class="campos">
+        <div class="campo"><label for="t-canal">Canal</label>
+          <select id="t-canal">${CANAIS.map(x => `<option value="${x.id}" ${canal === x.id ? "selected" : ""}>${x.nome}</option>`).join("")}</select>
+        </div>
+        <div class="campo"><label for="t-data">Dia</label><input id="t-data" type="date" value="${data}" required></div>
+        <div class="campo largo"><label for="t-assunto">Assunto, o que é o vídeo</label><input id="t-assunto" required placeholder="Ex: review do sérum da marca X" value="${seguro(c.assunto)}"></div>
+        <div class="campo"><label for="t-tipo">Tipo</label>
+          <input id="t-tipo" list="listaTipos" placeholder="review, unboxing, rotina..." value="${seguro(c.tipo)}">
+          <datalist id="listaTipos">${TIPOS_CONTEUDO.map(t => `<option value="${t}">`).join("")}</datalist>
+        </div>
+        <div class="campo"><label for="t-marca">Marca ou produto</label><input id="t-marca" value="${seguro(c.marca)}"></div>
+        <div class="campo largo"><label for="t-descricao">Descrição, legenda ou roteiro</label><textarea id="t-descricao" placeholder="o que falar, os ganchos, a legenda que vai junto">${seguro(c.descricao)}</textarea></div>
+        <div class="campo"><label for="t-status">Etapa</label>
+          <select id="t-status">${ETAPAS.map(e => `<option ${c.status === e ? "selected" : ""}>${e}</option>`).join("")}</select>
+        </div>
+        <div class="campo"><label for="t-hora">Hora de postar</label><input id="t-hora" placeholder="19h" value="${seguro(c.hora)}"></div>
+        <div class="campo largo"><label for="t-link">Link do post, depois de publicado</label><input id="t-link" placeholder="https://..." value="${seguro(c.link)}"></div>
+      </div>
+      <div class="acoes-janela">
+        ${item ? `<button type="button" class="btn btn-simples apagar" id="apagarConteudo">Apagar</button>` : ""}
+        ${item && canal === "tiktok" ? `<button type="button" class="btn btn-simples" id="reciclar">${ICONE.reciclar} Reciclar</button>` : ""}
+        <button type="button" class="btn btn-simples" id="cancelar">Cancelar</button>
+        <button type="submit" class="btn btn-principal">Salvar</button>
+      </div>
+    </form>
+  `);
+
+  pegar("#cancelar").addEventListener("click", fecharJanela);
+  if(item){
+    pegar("#apagarConteudo").addEventListener("click", async () => {
+      if(!confirm('Apagar "' + c.assunto + '"?')) return;
+      if(await apagarLinha("conteudos", c.id)){ fecharJanela(); recado("Conteúdo apagado."); await carregarTudo(); desenhar(); }
+    });
+    if(canal === "tiktok") pegar("#reciclar").addEventListener("click", () => janelaReciclar(c));
+  }
+
+  pegar("#formConteudo").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const linha = {
+      canal: pegar("#t-canal").value,
+      data: pegar("#t-data").value,
+      assunto: pegar("#t-assunto").value.trim(),
+      tipo: pegar("#t-tipo").value.trim(),
+      marca: pegar("#t-marca").value.trim(),
+      descricao: pegar("#t-descricao").value.trim(),
+      status: pegar("#t-status").value,
+      hora: pegar("#t-hora").value.trim(),
+      link: pegar("#t-link").value.trim()
+    };
+    if(!linha.assunto || !linha.data){ recado("Escreva o assunto e escolha o dia.", true); return; }
+    if(await gravar("conteudos", linha, c.id)){
+      fecharJanela(); recado("Conteúdo salvo."); await carregarTudo(); desenhar();
+    }
+  });
+}
+
+/* Reciclar: cria o mesmo conteúdo nos outros canais, já marcado
+   como vindo daquele vídeo do TikTok Shop. */
+function janelaReciclar(original){
+  const destinos = CANAIS.filter(c => !c.fonte && c.meta > 0);
+  abrirJanela("Reciclar este vídeo", `
+    <p class="porque">Vou criar uma cópia de "${seguro(original.assunto)}" nos canais que você escolher, já ligada a este vídeo.</p>
+    <form id="formReciclar">
+      <div class="campos">
+        <div class="campo largo"><label>Para quais canais</label>
+          ${destinos.map(d => `
+            <label class="item-check" style="padding:6px 0">
+              <input type="checkbox" value="${d.id}" checked>
+              <span><b>${d.nome}</b><small>${d.meta} por dia</small></span>
+            </label>`).join("")}
+        </div>
+        <div class="campo"><label for="r-data">Em qual dia</label><input id="r-data" type="date" value="${String(original.data).slice(0,10)}" required></div>
+        <div class="campo"><label for="r-status">Começa como</label>
+          <select id="r-status">${ETAPAS.map(e => `<option ${e === "editado" ? "selected" : ""}>${e}</option>`).join("")}</select>
+        </div>
+      </div>
+      <div class="acoes-janela">
+        <button type="button" class="btn btn-simples" id="cancelar">Cancelar</button>
+        <button type="submit" class="btn btn-principal">Criar cópias</button>
+      </div>
+    </form>
+  `);
+  pegar("#cancelar").addEventListener("click", fecharJanela);
+  pegar("#formReciclar").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const escolhidos = Array.from(document.querySelectorAll("#formReciclar input[type=checkbox]:checked")).map(i => i.value);
+    if(!escolhidos.length){ recado("Escolha ao menos um canal.", true); return; }
+    let criados = 0;
+    for(const canal of escolhidos){
+      const ok = await gravar("conteudos", {
+        canal: canal,
+        data: pegar("#r-data").value,
+        assunto: original.assunto,
+        tipo: original.tipo,
+        marca: original.marca,
+        descricao: original.descricao,
+        status: pegar("#r-status").value,
+        origem_id: original.id
+      });
+      if(ok) criados++;
+    }
+    fecharJanela();
+    recado(criados === 1 ? "1 cópia criada." : criados + " cópias criadas.");
+    await carregarTudo(); desenhar();
   });
 }
 
