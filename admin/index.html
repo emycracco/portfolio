@@ -263,6 +263,32 @@ tbody tr.destacada td:first-child{box-shadow:inset 3px 0 0 var(--rosa);}
 .atrasados{list-style:none; margin:0; padding:0;}
 .atrasados li:last-child{border-bottom:0;}
 
+/* ---------- cupons ---------- */
+.grid-cupons{display:grid; grid-template-columns:repeat(auto-fill,minmax(248px,1fr)); gap:16px;}
+.cupom{
+  display:flex; flex-direction:column; gap:11px;
+  background:var(--branco); border:1px solid var(--linha); border-radius:var(--raio);
+  padding:16px 16px 13px; box-shadow:var(--sombra); position:relative;
+}
+.cupom.destacado{box-shadow:var(--sombra), inset 3px 0 0 var(--rosa);}
+.cupom.vencido{opacity:.62;}
+.cupom-topo{display:flex; align-items:flex-start; justify-content:space-between; gap:8px;}
+.cupom-topo b{display:block; font-weight:500; font-size:.98rem;}
+.cupom-topo small{color:var(--tinta-suave); font-size:.76rem;}
+.codigo{
+  width:100%; padding:13px 10px; border:1px dashed var(--rosa-dourado); border-radius:var(--raio-p);
+  background:var(--rosa-claro); color:var(--magenta);
+  font-size:1.12rem; font-weight:500; letter-spacing:.16em; text-transform:uppercase;
+  transition:background .2s ease;
+}
+.codigo:hover{background:#ffd9ea;}
+.cupom-acoes{display:flex; gap:8px;}
+.cupom-acoes .btn{flex:1; justify-content:center; border-color:var(--linha); color:var(--magenta); padding:7px 8px;}
+.cupom-acoes .btn:hover{background:var(--rosa-claro);}
+.cupom-obs{margin:0; font-size:.78rem; color:var(--tinta-suave);}
+.cupom-rodape{display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:.7rem; color:var(--tinta-suave);}
+.cupom-rodape .icone-btn{width:26px; height:26px;}
+
 /* ---------- checklist ---------- */
 .subabas{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px;}
 .subaba{
