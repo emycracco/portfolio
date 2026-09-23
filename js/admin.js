@@ -362,7 +362,7 @@ function desenharPortfolio(){
         ${videos.length ? `
         <table>
           <thead><tr>
-            <th style="width:34px"></th><th>Título</th><th>Nicho</th><th>Formato</th>
+            <th style="width:34px"></th><th>Título</th><th>Onde aparece</th><th>Nicho</th><th>Formato</th>
             <th>Marca</th><th>Destaque</th><th style="width:130px">Ações</th>
           </tr></thead>
           <tbody id="corpoVideos">
@@ -370,6 +370,7 @@ function desenharPortfolio(){
               <tr draggable="true" data-id="${seguro(v.id)}" data-pos="${i}" class="${v.visivel === false ? "sumido" : ""}">
                 <td class="alcinha">${ICONE.arrastar}</td>
                 <td>${seguro(v.titulo)}</td>
+                <td><span class="pilula ${v.secao === "trabalho" ? "p-editar" : "p-conteudo"}">${v.secao === "trabalho" ? "galeria" : "destaque"}</span></td>
                 <td>${v.nicho ? `<span class="pilula p-funil">${seguro(v.nicho)}</span>` : ""}</td>
                 <td>${seguro(v.formato)}</td>
                 <td>${seguro(v.marca)}</td>
@@ -447,10 +448,17 @@ function formularioVideo(video){
       <div class="campos">
         <div class="campo largo"><label for="v-titulo">Título</label><input id="v-titulo" required value="${seguro(v.titulo)}"></div>
         <div class="campo largo"><label for="v-link">Link do vídeo</label><input id="v-link" placeholder="https://youtube.com/shorts/..." value="${seguro(v.link)}"></div>
+        <div class="campo"><label for="v-secao">Onde aparece no site</label>
+          <select id="v-secao">
+            <option value="destaque" ${v.secao === "trabalho" ? "" : "selected"}>Destaque, os três cards grandes</option>
+            <option value="trabalho" ${v.secao === "trabalho" ? "selected" : ""}>Galeria de trabalhos por nicho</option>
+          </select>
+        </div>
         <div class="campo"><label for="v-nicho">Nicho</label><input id="v-nicho" placeholder="beleza, skincare, moda..." value="${seguro(v.nicho)}"></div>
         <div class="campo"><label for="v-formato">Formato</label><input id="v-formato" placeholder="vídeo 9:16" value="${seguro(v.formato)}"></div>
         <div class="campo"><label for="v-marca">Marca</label><input id="v-marca" value="${seguro(v.marca)}"></div>
         <div class="campo"><label for="v-destaque">Destaque</label><input id="v-destaque" placeholder="2,4M views" value="${seguro(v.destaque)}"></div>
+        <div class="campo largo"><label for="v-descricao">Linha de contexto</label><input id="v-descricao" placeholder="uma frase curta que aparece embaixo do título" value="${seguro(v.descricao)}"></div>
         <div class="campo"><label for="v-ordem">Ordem</label><input id="v-ordem" type="number" value="${numero(v.ordem)}"></div>
         <div class="campo"><label for="v-visivel">Aparece no site</label>
           <select id="v-visivel">
@@ -469,8 +477,10 @@ function formularioVideo(video){
   pegar("#formVideo").addEventListener("submit", async (e) => {
     e.preventDefault();
     const linha = {
-      titulo:   pegar("#v-titulo").value.trim(),
-      link:     pegar("#v-link").value.trim(),
+      titulo:    pegar("#v-titulo").value.trim(),
+      link:      pegar("#v-link").value.trim(),
+      secao:     pegar("#v-secao").value,
+      descricao: pegar("#v-descricao").value.trim(),
       nicho:    pegar("#v-nicho").value.trim(),
       formato:  pegar("#v-formato").value.trim(),
       marca:    pegar("#v-marca").value.trim(),
