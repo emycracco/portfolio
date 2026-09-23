@@ -783,6 +783,8 @@ h1,h2,h3{font-family:var(--fonte-titulo); font-weight:600; line-height:1.15; mar
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="js/banco.js"></script>
 <script>
 /* =========================================================
    DADOS EDITÁVEIS
@@ -950,8 +952,12 @@ window.addEventListener("resize", () => {
   esperaMarcas = setTimeout(ajustarNomesDasMarcas, 200);
 });
 
-/* destaques */
-pegar("#gridDestaques").innerHTML = DESTAQUES.map(d => {
+/* destaques: esta função monta os três cards.
+   Ela é usada duas vezes: primeiro com a lista fixa aqui de cima,
+   para o site nunca aparecer vazio, e depois com os vídeos que
+   vierem do banco, quando eles existirem. */
+function montarDestaques(lista){
+pegar("#gridDestaques").innerHTML = lista.map(d => {
   /* a capa é o frame do próprio vídeo, que o YouTube guarda em oardefault.jpg (1080x1920).
      Se "capa" estiver preenchido no array, a sua imagem entra no lugar dele. */
   const codigo = codigoDoYoutube(d.link);
@@ -973,6 +979,9 @@ pegar("#gridDestaques").innerHTML = DESTAQUES.map(d => {
     </div>
   </a>`;
 }).join("");
+  ligarCapasEPrevias();
+}
+montarDestaques(DESTAQUES);
 
 /* serviços */
 pegar("#gridServicos").innerHTML = SERVICOS.map((s, i) => `
@@ -1101,7 +1110,7 @@ if("IntersectionObserver" in window){
 /* =========================================================
    FORMULÁRIO DE CONTATO
    ========================================================= */
-pegar("#formContato").addEventListener("submit", (e) => {
+pegar("#formContato").addEventListener("submit", async (e) => {
   e.preventDefault();
   const form = e.target;
   const aviso = pegar("#avisoForm");
@@ -1111,7 +1120,27 @@ pegar("#formContato").addEventListener("submit", (e) => {
     form.reportValidity();
     return;
   }
-  aviso.textContent = "Recebido com carinho, " + form.nome.value.trim() + ". Respondo no seu e-mail em até 24 horas úteis.";
+  const nome = form.nome.value.trim();
+  const email = form.email.value.trim();
+  const mensagem = form.mensagem.value.trim();
+
+  /* a mensagem entra na minha base de marcas como Lead */
+  let guardou = false;
+  if(window.sb){
+    try{
+      const { error } = await window.sb.from("marcas").insert({
+        nome: nome,
+        email: email,
+        situacao: "Lead",
+        obs: mensagem
+      });
+      guardou = !error;
+    }catch(erro){ guardou = false; }
+  }
+
+  aviso.textContent = guardou
+    ? "Recebido com carinho, " + nome + ". Respondo no seu e-mail em até 24 horas úteis."
+    : "Recebi por aqui, " + nome + ", mas para garantir me chame também no WhatsApp ou no e-mail logo ao lado.";
   aviso.classList.add("aparecer");
   form.reset();
 });
@@ -1162,6 +1191,10 @@ pegar("#gridDestaques").addEventListener("click", (e) => {
 pegar("#fecharVideo").addEventListener("click", fecharVideo);
 fundoVideo.addEventListener("click", (e) => { if(e.target === fundoVideo) fecharVideo(); });
 
+/* Liga a capa de reserva e a prévia do mouse em todos os cards.
+   Roda de novo toda vez que os cards são montados, inclusive
+   quando eles vêm do banco. */
+function ligarCapasEPrevias(){
 /* se o frame vertical do vídeo não existir, tenta as outras capas do YouTube */
 document.querySelectorAll(".destaque-thumb").forEach(img => {
   const reservas = img.dataset.codigo ? [
@@ -1178,7 +1211,8 @@ document.querySelectorAll(".destaque-thumb").forEach(img => {
    Só em telas com mouse e para quem não pediu menos movimento.
    Vale para qualquer vídeo novo acrescentado em DESTAQUES. */
 const temMouse = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-if(temMouse && !semAnimacao){
+const menosMovimento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+if(temMouse && !menosMovimento){
   document.querySelectorAll(".destaque").forEach(card => {
     const codigo = card.dataset.codigo;
     if(!codigo) return;
@@ -1212,6 +1246,69 @@ if(temMouse && !semAnimacao){
     card.addEventListener("blur", desligar);
   });
 }
+}
+
+/* =========================================================
+   VÍDEOS VINDOS DO PAINEL (banco de dados)
+
+   O site já mostrou a lista fixa lá de cima. Agora ele pergunta
+   ao banco se existem vídeos cadastrados no admin. Se existirem,
+   eles entram no lugar. Se o banco estiver vazio ou fora do ar,
+   a página segue com a lista fixa e ninguém percebe nada.
+   ========================================================= */
+(async function videosDoPainel(){
+  if(!window.sb) return;
+  try{
+    const { data, error } = await window.sb
+      .from("videos").select("*").eq("visivel", true).order("ordem", { ascending:true });
+    if(error || !data || !data.length) return;
+
+    const degrades = DESTAQUES.map(d => d.degrade);
+    const lista = data.slice(0, 6).map((v, i) => ({
+      link: v.link || "",
+      capa: "",
+      degrade: degrades[i % degrades.length],
+      numero: v.destaque || "",
+      rotulo: v.nicho || "",
+      titulo: v.titulo || "",
+      contexto: v.marca || v.formato || ""
+    }));
+    montarDestaques(lista);
+    /* os cards novos já entram visíveis, sem esperar a animação de rolagem */
+    document.querySelectorAll("#gridDestaques .revelar").forEach(e => e.classList.add("visivel"));
+  }catch(e){
+    /* qualquer problema aqui é silencioso de propósito: o site continua com a lista fixa */
+  }
+})();
+
+/* =========================================================
+   REGISTRO DE VISITA
+
+   Guarda só a data, a página e de onde a pessoa veio.
+   Não guarda nada que identifique ninguém, não usa serviço
+   de fora e não pede nada para o visitante.
+   Conta uma vez por visita, não a cada recarregada.
+   ========================================================= */
+(async function registrarVisita(){
+  if(!window.sb) return;
+  try{
+    const marca = "visita:" + location.pathname;
+    if(sessionStorage.getItem(marca)) return;
+    sessionStorage.setItem(marca, "1");
+
+    let origem = "direto";
+    if(document.referrer){
+      try{
+        const host = new URL(document.referrer).hostname.replace("www.", "");
+        if(host && host !== location.hostname) origem = host;
+      }catch(e){}
+    }
+    await window.sb.from("visitas").insert({
+      pagina: location.pathname || "/",
+      origem: origem
+    });
+  }catch(e){}
+})();
 
 /* =========================================================
    CARD DE CAPTURA (aparece uma vez por visita, depois de 7 segundos)
