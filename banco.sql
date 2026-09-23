@@ -33,10 +33,18 @@ create table if not exists public.videos (
   formato     text,
   marca       text,
   destaque    text,               -- exemplo: 2,4M views
+  descricao   text,               -- a frase curta embaixo do titulo
+  secao       text not null default 'destaque',   -- destaque (os 3 cards grandes) ou trabalho (galeria por nicho)
   ordem       integer not null default 0,
   visivel     boolean not null default true,
   criado_em   timestamptz not null default now()
 );
+
+-- Para quem ja tinha a tabela criada antes destas duas colunas existirem:
+alter table public.videos add column if not exists descricao text;
+alter table public.videos add column if not exists secao text not null default 'destaque';
+alter table public.videos drop constraint if exists videos_secao_check;
+alter table public.videos add constraint videos_secao_check check (secao in ('destaque', 'trabalho'));
 
 -- A sua base de contatos de empresa.
 -- "situacao" so aceita os quatro estagios combinados.

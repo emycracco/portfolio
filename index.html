@@ -1016,9 +1016,12 @@ pegar("#gridDepoimentos").innerHTML = DEPOIMENTOS.map(d => `
 /* =========================================================
    FILTRO DE TRABALHOS POR NICHO
    ========================================================= */
-const nichos = ["todos", ...new Set(TRABALHOS.map(t => t.nicho))];
-pegar("#filtros").innerHTML = nichos.map((n, i) => `
-  <button class="filtro" type="button" data-nicho="${n}" aria-pressed="${i === 0}">${n}</button>`).join("");
+function montarFiltros(){
+  const nichos = ["todos", ...new Set(TRABALHOS.map(t => t.nicho))];
+  pegar("#filtros").innerHTML = nichos.map((n, i) => `
+    <button class="filtro" type="button" data-nicho="${n}" aria-pressed="${i === 0}">${n}</button>`).join("");
+}
+montarFiltros();
 
 function montarTrabalhos(nicho){
   const lista = nicho === "todos" ? TRABALHOS : TRABALHOS.filter(t => t.nicho === nicho);
@@ -1263,19 +1266,39 @@ if(temMouse && !menosMovimento){
       .from("videos").select("*").eq("visivel", true).order("ordem", { ascending:true });
     if(error || !data || !data.length) return;
 
-    const degrades = DESTAQUES.map(d => d.degrade);
-    const lista = data.slice(0, 6).map((v, i) => ({
-      link: v.link || "",
-      capa: "",
-      degrade: degrades[i % degrades.length],
-      numero: v.destaque || "",
-      rotulo: v.nicho || "",
-      titulo: v.titulo || "",
-      contexto: v.marca || v.formato || ""
-    }));
-    montarDestaques(lista);
-    /* os cards novos já entram visíveis, sem esperar a animação de rolagem */
-    document.querySelectorAll("#gridDestaques .revelar").forEach(e => e.classList.add("visivel"));
+    /* No painel, cada vídeo diz em qual parte do site ele aparece:
+       "destaque" são os três cards grandes, "trabalho" é a galeria por nicho. */
+    const destaques = data.filter(v => v.secao !== "trabalho");
+    const trabalhos = data.filter(v => v.secao === "trabalho");
+
+    if(destaques.length){
+      const degrades = DESTAQUES.map(d => d.degrade);
+      montarDestaques(destaques.slice(0, 6).map((v, i) => ({
+        link: v.link || "",
+        capa: "",
+        degrade: degrades[i % degrades.length],
+        numero: v.destaque || "",
+        rotulo: v.nicho || "",
+        titulo: v.titulo || "",
+        contexto: v.descricao || v.marca || v.formato || ""
+      })));
+      document.querySelectorAll("#gridDestaques .revelar").forEach(e => e.classList.add("visivel"));
+    }
+
+    if(trabalhos.length){
+      const degrades = TRABALHOS.map(t => t.degrade);
+      TRABALHOS.length = 0;
+      trabalhos.forEach((v, i) => TRABALHOS.push({
+        titulo: v.titulo || "",
+        nicho: (v.nicho || "outros").toLowerCase(),
+        formato: v.formato || "vídeo 9:16",
+        descricao: v.descricao || v.marca || "",
+        foto: "",
+        degrade: degrades[i % degrades.length]
+      }));
+      montarFiltros();
+      montarTrabalhos("todos");
+    }
   }catch(e){
     /* qualquer problema aqui é silencioso de propósito: o site continua com a lista fixa */
   }
