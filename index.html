@@ -225,7 +225,7 @@ h1,h2,h3{font-family:var(--fonte-titulo); font-weight:600; line-height:1.15; mar
   flex:none; width:112px; height:112px; margin-right:34px; border-radius:50%;
   background:var(--branco); border:1px solid rgba(255,255,255,.9);
   box-shadow:0 12px 26px rgba(194,24,91,.14);
-  display:flex; align-items:center; justify-content:center; text-align:center; padding:12px;
+  display:flex; align-items:center; justify-content:center; text-align:center; padding:16px;
   overflow:hidden;
 }
 .marca-logo span{
@@ -233,7 +233,11 @@ h1,h2,h3{font-family:var(--fonte-titulo); font-weight:600; line-height:1.15; mar
   font-size:.7rem; letter-spacing:.12em; text-transform:uppercase;
   color:var(--magenta); line-height:1.3; font-weight:500;
 }
-.marca-logo img{width:100%; height:100%; object-fit:contain; border-radius:50%;}
+.marca-logo img{width:100%; height:100%; object-fit:contain;}
+/* logos que já têm fundo próprio (um círculo ou um quadrado colorido)
+   ficam mais bonitas preenchendo o círculo inteiro, sem respiro em volta */
+.marca-logo.cheia{padding:0;}
+.marca-logo.cheia img{object-fit:cover; border-radius:50%;}
 
 /* =======================================================
    SOBRE
@@ -796,18 +800,23 @@ h1,h2,h3{font-family:var(--fonte-titulo); font-weight:600; line-height:1.15; mar
    nome = o que aparece escrito dentro do círculo
    logo = deixe "" para o círculo com o nome escrito,
           ou escreva o caminho da imagem, por exemplo "logos/dove.png",
-          que ela entra no lugar do texto, dentro do mesmo círculo */
+          que ela entra no lugar do texto, dentro do mesmo círculo
+   cheia = use true só quando a logo já vem com fundo próprio, como um
+           círculo ou quadrado colorido. Aí ela preenche o círculo inteiro.
+           Para logo solta, sem fundo, deixe de fora
+   zoom = ajuste fino de tamanho, só para logos muito largas ou muito finas,
+          que ficariam pequenas demais dentro do círculo. 1 é o normal */
 const MARCAS = [
-  { nome:"FIBER",             logo:"" },
-  { nome:"Hábito Vida",       logo:"" },
-  { nome:"Dove",              logo:"" },
-  { nome:"Eudora",            logo:"" },
-  { nome:"Popozuda",          logo:"" },
-  { nome:"Soldiers Nutrition", logo:"" },
-  { nome:"Tim",               logo:"" },
-  { nome:"FM Basics",         logo:"" },
-  { nome:"Voudegata",         logo:"" },
-  { nome:"ALVA",              logo:"" }
+  { nome:"FIBER",              logo:"logos/fiber.png", cheia:true },
+  { nome:"Hábito Vida",        logo:"logos/habito-vida.png", zoom:1.22 },
+  { nome:"Dove",               logo:"logos/dove.png", zoom:1.06 },
+  { nome:"Eudora",             logo:"logos/eudora.png" },
+  { nome:"Popozuda",           logo:"logos/popozuda.png", cheia:true },
+  { nome:"Soldiers Nutrition", logo:"logos/soldiers-nutrition.png", zoom:1.12 },
+  { nome:"Tim",                logo:"logos/tim.png", zoom:1.3 },
+  { nome:"FM Basics",          logo:"logos/fm-basics.png", zoom:1.12 },
+  { nome:"Voudegata",          logo:"logos/voudegata.png", zoom:1.06 },
+  { nome:"ALVA",               logo:"logos/alva.png", cheia:true }
 ];
 
 /* ---- NÚMEROS DA CAPA (três números curtos) ----
@@ -919,9 +928,10 @@ pegar("#numerosCapa").innerHTML = NUMEROS_CAPA
    para o deslize voltar ao começo sem ninguém perceber o corte */
 function circuloMarca(m, copia){
   const miolo = m.logo
-    ? `<img src="${m.logo}" alt="Logo ${m.nome}" loading="lazy">`
+    ? `<img src="${m.logo}" alt="Logo ${m.nome}" loading="lazy" style="transform:scale(${m.zoom || 1})">`
     : `<span>${m.nome}</span>`;
-  return `<div class="marca-logo"${copia ? ' aria-hidden="true"' : ''}>${miolo}</div>`;
+  const classe = "marca-logo" + (m.cheia ? " cheia" : "");
+  return `<div class="${classe}" title="${m.nome}"${copia ? ' aria-hidden="true"' : ''}>${miolo}</div>`;
 }
 pegar("#faixaMarcas").innerHTML =
   `<div class="faixa-trilha">
