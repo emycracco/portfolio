@@ -72,6 +72,9 @@ const ICONE = {
   lixo:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 7V5h4v2M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg>',
   arrastar:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"/></svg>',
   seta:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
+  cupons:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 9V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v2a2.5 2.5 0 0 1 0 6v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2a2.5 2.5 0 0 1 0-6Z"/><path d="M13 7v2M13 14v3"/></svg>',
+  copiar:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 6H6a2 2 0 0 0-2 2v9"/></svg>',
+  link:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a4 4 0 0 0 5.7 0l3-3a4 4 0 1 0-5.7-5.7L11.3 6"/><path d="M14 11a4 4 0 0 0-5.7 0l-3 3a4 4 0 1 0 5.7 5.7l1.7-1.7"/></svg>',
   zap:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 0 1-11.9 7L4 20l1.1-4A8 8 0 1 1 20 12Z"/></svg>'
 };
 
@@ -81,6 +84,7 @@ const ICONE = {
 const ABAS = [
   { id:"portfolio",  grupo:"meu site",     nome:"Portfólio",  sub:"Como o seu site está indo." },
   { id:"marcas",     grupo:"meu site",     nome:"Marcas",     sub:"A sua base de contatos de empresa." },
+  { id:"cupons",     grupo:"meu site",     nome:"Cupons",     sub:"Seus cupons e links de afiliada, prontos para enviar." },
   { id:"calendario", grupo:"minha rotina", nome:"Calendário", sub:"O mês inteiro de gravar, editar e postar." },
   { id:"campanhas",  grupo:"minha rotina", nome:"Campanhas",  sub:"Trabalhos, valores e prazos." },
   { id:"checklist",  grupo:"minha rotina", nome:"Checklist",  sub:"O que ainda falta no seu portfólio." }
@@ -94,7 +98,8 @@ const estado = {
   aba: "portfolio",
   email: "",
   faltando: [],
-  dados: { videos:[], marcas:[], calendario:[], campanhas:[], marcados:{}, visitas:[] },
+  dados: { videos:[], marcas:[], calendario:[], campanhas:[], marcados:{}, visitas:[], cupons:[] },
+  buscaCupons: "", filtroCupons: "Todos",
   buscaMarcas: "", filtroSituacao: "Todas",
   buscaCampanhas: "", filtroCampanhas: "Todas",
   ordem: { campo:"prazo", sentido:1 },
@@ -164,14 +169,16 @@ async function apagarLinha(tabela, id){
 
 async function carregarTudo(){
   estado.faltando = [];
-  const [videos, marcas, calendario, campanhas, marcados, visitas] = await Promise.all([
+  const [videos, marcas, calendario, campanhas, marcados, visitas, cupons] = await Promise.all([
     lerTabela("videos", "ordem", true),
     lerTabela("marcas", "criado_em", false),
     lerTabela("calendario", "data", true),
     lerTabela("campanhas", "criado_em", false),
     lerTabela("marcados"),
-    lerTabela("visitas", "data", false)
+    lerTabela("visitas", "data", false),
+    lerTabela("cupons", "criado_em", false)
   ]);
+  estado.dados.cupons = cupons;
   estado.dados.videos = videos;
   estado.dados.marcas = marcas;
   estado.dados.calendario = calendario;
@@ -265,6 +272,7 @@ function desenhar(){
 
   if(estado.aba === "portfolio")  desenharPortfolio();
   if(estado.aba === "marcas")     desenharMarcas();
+  if(estado.aba === "cupons")     desenharCupons();
   if(estado.aba === "calendario") desenharCalendario();
   if(estado.aba === "campanhas")  desenharCampanhas();
   if(estado.aba === "checklist")  desenharChecklist();
@@ -617,6 +625,228 @@ function formularioMarca(marca){
     if(!linha.nome){ recado("O nome da marca é obrigatório.", true); return; }
     if(await gravar("marcas", linha, m.id)){
       fecharJanela(); recado("Marca salva."); await carregarTudo(); desenhar();
+    }
+  });
+}
+
+/* ============================================================
+   ABA: CUPONS E LINKS DE AFILIADA
+   Pensada para uma coisa só: achar o cupom e copiar rápido.
+   ============================================================ */
+
+/* Copia um texto para a área de transferência e avisa na tela. */
+async function copiar(texto, oque, cupom){
+  if(!texto){ recado("Esse campo está vazio no cupom.", true); return; }
+  let deu = false;
+  try{
+    await navigator.clipboard.writeText(texto);
+    deu = true;
+  }catch(e){
+    /* navegador que não deixa copiar direto: usa um campo escondido */
+    const campo = document.createElement("textarea");
+    campo.value = texto;
+    campo.style.position = "fixed"; campo.style.opacity = "0";
+    document.body.appendChild(campo);
+    campo.select();
+    try{ deu = document.execCommand("copy"); }catch(e2){ deu = false; }
+    campo.remove();
+  }
+  recado(deu ? oque + " copiado." : "Não consegui copiar. O texto é: " + texto, !deu);
+  if(deu && cupom) contarCopia(cupom);
+}
+
+/* Conta quantas vezes você já usou cada cupom, para saber qual rende mais. */
+async function contarCopia(cupom){
+  const novas = numero(cupom.copias) + 1;
+  cupom.copias = novas;
+  const alvo = document.querySelector('[data-copias="' + cupom.id + '"]');
+  if(alvo) alvo.textContent = novas === 1 ? "copiado 1 vez" : "copiado " + novas + " vezes";
+  if(window.sb){
+    try{ await window.sb.from("cupons").update({ copias: novas }).eq("id", cupom.id); }catch(e){}
+  }
+}
+
+/* A mensagem pronta para mandar para alguém no zap ou no direct. */
+function mensagemDoCupom(c){
+  if(c.mensagem) return c.mensagem;
+  let texto = "Oi! Se você for comprar na " + (c.marca || "marca") + ", usa o meu cupom " + (c.cupom || "");
+  if(c.desconto) texto += " e ganha " + c.desconto;
+  texto += ".";
+  if(c.link) texto += " O link direto é " + c.link;
+  return texto;
+}
+
+function situacaoValidade(c){
+  if(!c.validade) return { classe:"", etiqueta:"sem prazo", vencido:false };
+  const dias = diasEntre(String(c.validade).slice(0,10), hojeISO());
+  if(dias < 0)  return { classe:"p-atrasado", etiqueta:"venceu em " + dataBR(c.validade), vencido:true };
+  if(dias <= 7) return { classe:"p-perto", etiqueta: dias === 0 ? "vence hoje" : "vence em " + dias + " dia" + (dias === 1 ? "" : "s"), vencido:false };
+  return { classe:"p-funil", etiqueta:"vale até " + dataBR(c.validade), vencido:false };
+}
+
+function desenharCupons(){
+  const todos = estado.dados.cupons || [];
+  const busca = estado.buscaCupons.toLowerCase();
+
+  let lista = todos.filter(c => {
+    const combina = !busca ||
+      String(c.marca||"").toLowerCase().includes(busca) ||
+      String(c.cupom||"").toLowerCase().includes(busca) ||
+      String(c.obs||"").toLowerCase().includes(busca);
+    const v = situacaoValidade(c);
+    const filtroOk =
+      estado.filtroCupons === "Todos" ||
+      (estado.filtroCupons === "Ativos" && c.ativo !== false && !v.vencido) ||
+      (estado.filtroCupons === "Vencidos" && (v.vencido || c.ativo === false)) ||
+      (estado.filtroCupons === "Favoritos" && c.favorito);
+    return combina && filtroOk;
+  });
+
+  /* os favoritos vêm primeiro, depois os mais copiados */
+  lista = lista.slice().sort((a,b) => {
+    if(!!b.favorito - !!a.favorito) return !!b.favorito - !!a.favorito;
+    return numero(b.copias) - numero(a.copias);
+  });
+
+  const ativos = todos.filter(c => c.ativo !== false && !situacaoValidade(c).vencido).length;
+  const vencendo = todos.filter(c => {
+    if(!c.validade || c.ativo === false) return false;
+    const d = diasEntre(String(c.validade).slice(0,10), hojeISO());
+    return d >= 0 && d <= 7;
+  }).length;
+  const copiasTotais = todos.reduce((s,c) => s + numero(c.copias), 0);
+
+  pegar("#acoesTopo").innerHTML = `<button class="btn btn-principal" id="novoCupom">${ICONE.mais} Novo cupom</button>`;
+
+  pegar("#area").innerHTML = `
+    <div class="faixa-numeros quatro">
+      <div class="numero"><b>${todos.length}</b><small>cupons guardados</small></div>
+      <div class="numero"><b>${ativos}</b><small>valendo agora</small></div>
+      <div class="numero"><b>${vencendo}</b><small>vencem em 7 dias</small></div>
+      <div class="numero"><b>${copiasTotais}</b><small>vezes que você copiou</small></div>
+    </div>
+
+    <section class="cartao">
+      <div class="cartao-topo">
+        <div class="busca">${ICONE.lupa}<input id="buscaCupons" placeholder="buscar marca ou código" value="${seguro(estado.buscaCupons)}"></div>
+        <div class="grupo-filtro">
+          ${["Todos","Ativos","Vencidos","Favoritos"].map(f => `<button class="filtro" data-fcupom="${f}" aria-pressed="${estado.filtroCupons === f}">${f}</button>`).join("")}
+        </div>
+      </div>
+      <div class="cartao-corpo">
+        ${lista.length ? `
+        <div class="grid-cupons">
+          ${lista.map(c => {
+            const v = situacaoValidade(c);
+            const morto = v.vencido || c.ativo === false;
+            return `
+            <article class="cupom ${c.favorito ? "destacado" : ""} ${morto ? "vencido" : ""}">
+              <header class="cupom-topo">
+                <div>
+                  <b>${seguro(c.marca)}</b>
+                  ${c.desconto ? `<small>${seguro(c.desconto)}</small>` : `<small>sem desconto anotado</small>`}
+                </div>
+                <button class="estrela-cupom" data-estrela="${seguro(c.id)}" title="Deixar no topo" style="border:0;background:none;font-size:1.1rem;color:${c.favorito ? "var(--rosa)" : "var(--rosa-dourado)"}">${c.favorito ? "★" : "☆"}</button>
+              </header>
+
+              <button class="codigo" data-cod="${seguro(c.id)}" title="Clique para copiar o código">${seguro(c.cupom) || "sem código"}</button>
+
+              <div class="cupom-acoes">
+                <button class="btn btn-simples" data-link="${seguro(c.id)}">${ICONE.link} Link</button>
+                <button class="btn btn-simples" data-msg="${seguro(c.id)}">${ICONE.copiar} Mensagem</button>
+              </div>
+
+              ${c.obs ? `<p class="cupom-obs">${seguro(c.obs)}</p>` : ""}
+
+              <footer class="cupom-rodape">
+                <span class="pilula ${v.classe}">${v.etiqueta}</span>
+                <span data-copias="${seguro(c.id)}">${numero(c.copias) === 1 ? "copiado 1 vez" : "copiado " + numero(c.copias) + " vezes"}</span>
+                <button class="icone-btn" data-editar="${seguro(c.id)}" title="Editar">${ICONE.lapis}</button>
+              </footer>
+            </article>`;
+          }).join("")}
+        </div>` : `<p class="recado">${todos.length ? "Nenhum cupom com esse filtro." : "Nenhum cupom guardado ainda. Clique em Novo cupom e comece pela marca que você mais divulga."}</p>`}
+      </div>
+    </section>
+  `;
+
+  const campoBusca = pegar("#buscaCupons");
+  campoBusca.addEventListener("input", () => {
+    estado.buscaCupons = campoBusca.value;
+    desenharCupons();
+    const novo = pegar("#buscaCupons");
+    novo.focus(); novo.setSelectionRange(novo.value.length, novo.value.length);
+  });
+  pegarTodos("[data-fcupom]").forEach(b => b.addEventListener("click", () => { estado.filtroCupons = b.dataset.fcupom; desenharCupons(); }));
+  pegar("#novoCupom").addEventListener("click", () => formularioCupom(null));
+
+  const acha = (id) => todos.find(c => String(c.id) === id);
+
+  pegarTodos("[data-cod]").forEach(b => b.addEventListener("click", () => {
+    const c = acha(b.dataset.cod); if(c) copiar(c.cupom, "Código", c);
+  }));
+  pegarTodos("[data-link]").forEach(b => b.addEventListener("click", () => {
+    const c = acha(b.dataset.link); if(c) copiar(c.link, "Link", c);
+  }));
+  pegarTodos("[data-msg]").forEach(b => b.addEventListener("click", () => {
+    const c = acha(b.dataset.msg); if(c) copiar(mensagemDoCupom(c), "Mensagem", c);
+  }));
+  pegarTodos("[data-editar]").forEach(b => b.addEventListener("click", () => formularioCupom(acha(b.dataset.editar))));
+  pegarTodos("[data-estrela]").forEach(b => b.addEventListener("click", async () => {
+    const c = acha(b.dataset.estrela); if(!c) return;
+    if(await gravar("cupons", { favorito: !c.favorito }, c.id)){ await carregarTudo(); desenhar(); }
+  }));
+}
+
+function formularioCupom(cupom){
+  const c = cupom || {};
+  abrirJanela(cupom ? "Editar cupom" : "Novo cupom", `
+    <form id="formCupom">
+      <div class="campos">
+        <div class="campo"><label for="p-marca">Marca</label><input id="p-marca" required value="${seguro(c.marca)}"></div>
+        <div class="campo"><label for="p-cupom">Código do cupom</label><input id="p-cupom" placeholder="EMY10" value="${seguro(c.cupom)}"></div>
+        <div class="campo"><label for="p-desconto">Desconto</label><input id="p-desconto" placeholder="10% de desconto" value="${seguro(c.desconto)}"></div>
+        <div class="campo"><label for="p-validade">Vale até</label><input id="p-validade" type="date" value="${c.validade ? String(c.validade).slice(0,10) : ""}"></div>
+        <div class="campo largo"><label for="p-link">Link de afiliada</label><input id="p-link" placeholder="https://..." value="${seguro(c.link)}"></div>
+        <div class="campo largo"><label for="p-mensagem">Mensagem pronta (deixe vazio que eu monto sozinha)</label><textarea id="p-mensagem" placeholder="Ex: Corre que na Marca X o meu cupom EMY10 dá 10% de desconto">${seguro(c.mensagem)}</textarea></div>
+        <div class="campo largo"><label for="p-obs">Observação</label><input id="p-obs" placeholder="comissão, regras, onde vale" value="${seguro(c.obs)}"></div>
+        <div class="campo"><label for="p-ativo">Ainda está valendo</label>
+          <select id="p-ativo">
+            <option value="sim" ${c.ativo === false ? "" : "selected"}>Sim</option>
+            <option value="nao" ${c.ativo === false ? "selected" : ""}>Não</option>
+          </select>
+        </div>
+      </div>
+      <div class="acoes-janela">
+        ${cupom ? `<button type="button" class="btn btn-simples apagar" id="apagarCupom">Apagar</button>` : ""}
+        <button type="button" class="btn btn-simples" id="cancelar">Cancelar</button>
+        <button type="submit" class="btn btn-principal">Salvar</button>
+      </div>
+    </form>
+  `);
+  pegar("#cancelar").addEventListener("click", fecharJanela);
+  if(cupom){
+    pegar("#apagarCupom").addEventListener("click", async () => {
+      if(!confirm('Apagar o cupom da marca "' + c.marca + '"?')) return;
+      if(await apagarLinha("cupons", c.id)){ fecharJanela(); recado("Cupom apagado."); await carregarTudo(); desenhar(); }
+    });
+  }
+  pegar("#formCupom").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const linha = {
+      marca: pegar("#p-marca").value.trim(),
+      cupom: pegar("#p-cupom").value.trim(),
+      desconto: pegar("#p-desconto").value.trim(),
+      link: pegar("#p-link").value.trim(),
+      mensagem: pegar("#p-mensagem").value.trim(),
+      obs: pegar("#p-obs").value.trim(),
+      validade: pegar("#p-validade").value || null,
+      ativo: pegar("#p-ativo").value === "sim"
+    };
+    if(!linha.marca){ recado("O nome da marca é obrigatório.", true); return; }
+    if(!linha.cupom && !linha.link){ recado("Preencha ao menos o código do cupom ou o link.", true); return; }
+    if(await gravar("cupons", linha, c.id)){
+      fecharJanela(); recado("Cupom salvo."); await carregarTudo(); desenhar();
     }
   });
 }
