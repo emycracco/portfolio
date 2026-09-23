@@ -113,6 +113,27 @@ create table if not exists public.cupons (
   criado_em  timestamptz not null default now()
 );
 
+-- O planejamento de conteudo da semana, canal por canal.
+-- "origem_id" aponta para o video que deu origem, quando e um
+-- conteudo reciclado do TikTok Shop para o Insta shop ou para o Shopee.
+create table if not exists public.conteudos (
+  id         uuid primary key default gen_random_uuid(),
+  canal      text not null default 'tiktok'
+             check (canal in ('tiktok', 'instagram_shop', 'shopee', 'instagram')),
+  data       date not null,
+  hora       text,
+  tipo       text,               -- review, unboxing, rotina, oferta...
+  assunto    text not null,
+  descricao  text,
+  marca      text,
+  status     text not null default 'ideia'
+             check (status in ('ideia', 'gravado', 'editado', 'postado')),
+  link       text,
+  origem_id  uuid references public.conteudos(id) on delete set null,
+  criado_em  timestamptz not null default now()
+);
+create index if not exists conteudos_data_idx on public.conteudos (data);
+
 -- O que voce ja marcou no checklist do portfolio.
 -- Cada item tem uma chave de texto propria, por isso ela e a chave da tabela.
 create table if not exists public.marcados (
@@ -152,6 +173,7 @@ alter table public.campanhas  enable row level security;
 alter table public.marcados   enable row level security;
 alter table public.visitas    enable row level security;
 alter table public.cupons     enable row level security;
+alter table public.conteudos  enable row level security;
 
 -- Apaga regras antigas, para voce poder rodar este arquivo de novo
 -- sem receber erro de "ja existe".
@@ -162,7 +184,7 @@ begin
     select schemaname, tablename, policyname
     from pg_policies
     where schemaname = 'public'
-      and tablename in ('videos','marcas','calendario','campanhas','marcados','visitas','cupons')
+      and tablename in ('videos','marcas','calendario','campanhas','marcados','visitas','cupons','conteudos')
   loop
     execute format('drop policy if exists %I on %I.%I', r.policyname, r.schemaname, r.tablename);
   end loop;
@@ -209,6 +231,12 @@ create policy "dona le cupons"      on public.cupons for select to authenticated
 create policy "dona cria cupons"    on public.cupons for insert to authenticated with check (public.sou_a_dona());
 create policy "dona edita cupons"   on public.cupons for update to authenticated using (public.sou_a_dona()) with check (public.sou_a_dona());
 create policy "dona apaga cupons"   on public.cupons for delete to authenticated using (public.sou_a_dona());
+
+-- CONTEUDOS (o planejamento da semana, so a dona)
+create policy "dona le conteudos"    on public.conteudos for select to authenticated using (public.sou_a_dona());
+create policy "dona cria conteudos"  on public.conteudos for insert to authenticated with check (public.sou_a_dona());
+create policy "dona edita conteudos" on public.conteudos for update to authenticated using (public.sou_a_dona()) with check (public.sou_a_dona());
+create policy "dona apaga conteudos" on public.conteudos for delete to authenticated using (public.sou_a_dona());
 
 -- VISITAS
 create policy "dona le visitas"     on public.visitas for select to authenticated using (public.sou_a_dona());
