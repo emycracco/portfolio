@@ -1325,9 +1325,27 @@ if(temMouse && !menosMovimento){
 (async function registrarVisita(){
   if(!window.sb) return;
   try{
-    const marca = "visita:" + location.pathname;
-    if(sessionStorage.getItem(marca)) return;
-    sessionStorage.setItem(marca, "1");
+    /* 1. Robô não conta. Buscadores e ferramentas de teste se identificam
+          no nome do navegador, e navegador automatizado avisa em webdriver. */
+    const nome = navigator.userAgent || "";
+    const ehRobo = /bot|crawl|spider|slurp|bingpreview|headless|lighthouse|pingdom|monitor|scanner|curl|wget|python-requests|facebookexternalhit|whatsapp|telegram/i.test(nome)
+      || navigator.webdriver === true;
+    if(ehRobo) return;
+
+    /* 2. A mesma pessoa só conta uma vez a cada meia hora,
+          para recarregar a página não inflar o número. */
+    const chave = "ultimaVisita:" + location.pathname;
+    let ultima = 0;
+    try{ ultima = Number(localStorage.getItem(chave) || 0); }catch(e){ ultima = 0; }
+    if(Date.now() - ultima < 30 * 60 * 1000) return;
+    try{ localStorage.setItem(chave, String(Date.now())); }catch(e){}
+
+    /* 3. A data vai no horário do Brasil, e não no do servidor,
+          senão visita da noite cairia no dia seguinte. */
+    const agora = new Date();
+    const dataLocal = agora.getFullYear() + "-" +
+      String(agora.getMonth() + 1).padStart(2, "0") + "-" +
+      String(agora.getDate()).padStart(2, "0");
 
     let origem = "direto";
     if(document.referrer){
@@ -1337,6 +1355,7 @@ if(temMouse && !menosMovimento){
       }catch(e){}
     }
     await window.sb.from("visitas").insert({
+      data: dataLocal,
       pagina: location.pathname || "/",
       origem: origem
     });
