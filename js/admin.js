@@ -847,7 +847,7 @@ function janelaImportar(linhas, nomeArquivo){
   const escolha = adivinharColunas(cabecalhos);
 
   function opcoes(selecionado){
-    return `<option value="-1">não importar</option>` +
+    return `<option value="-1">a planilha não tem</option>` +
       cabecalhos.map((h,i) => `<option value="${i}" ${selecionado === i ? "selected" : ""}>${seguro(h || ("coluna " + (i+1)))}</option>`).join("");
   }
 
@@ -855,7 +855,10 @@ function janelaImportar(linhas, nomeArquivo){
     <p class="porque">Li <b>${dados.length}</b> linha${dados.length === 1 ? "" : "s"} do arquivo ${seguro(nomeArquivo)}.
     Confira de onde vem cada informação e veja a prévia antes de importar.</p>
 
-    <div class="campos" id="deParaCampos">
+    <p id="resumoColunas" style="font-size:.84rem; line-height:1.6; margin:0 0 10px"></p>
+    <button type="button" class="btn-mini" id="mudarColunas">Mudar de onde vem cada informação</button>
+
+    <div class="campos" id="deParaCampos" hidden style="margin-top:12px">
       ${CAMPOS_MARCA.map(c => `
         <div class="campo">
           <label for="de-${c.campo}">${c.rotulo}${c.campo === "nome" ? " (obrigatório)" : ""}</label>
@@ -981,9 +984,36 @@ function janelaImportar(linhas, nomeArquivo){
       </tbody>`;
   }
 
+  /* explica em português o que o painel entendeu da planilha */
+  function escreverResumo(){
+    const achados = [], faltando = [];
+    CAMPOS_MARCA.forEach(c => {
+      const i = Number(pegar("#de-" + c.campo).value);
+      if(i >= 0) achados.push("<b>" + c.rotulo + "</b> vem da coluna " + seguro(cabecalhos[i] || ("número " + (i+1))));
+      else faltando.push(c.rotulo.toLowerCase());
+    });
+    const semSituacao = faltando.includes("situação");
+    const outros = faltando.filter(f => f !== "situação");
+
+    let texto = "Entendi assim: " + achados.join(", ") + ".";
+    if(outros.length){
+      texto += " A sua planilha não tem " + outros.join(", ").replace(/, ([^,]*)$/, " nem $1") + ", e tudo bem, esses campos entram vazios.";
+    }
+    if(semSituacao) texto += " Como não há coluna de situação, todas entram como <b>Lead</b>.";
+    pegar("#resumoColunas").innerHTML = texto;
+  }
+
+  escreverResumo();
   desenharPrevia();
-  pegarTodos("#deParaCampos select").forEach(s => s.addEventListener("change", desenharPrevia));
+  pegarTodos("#deParaCampos select").forEach(s => s.addEventListener("change", () => { escreverResumo(); desenharPrevia(); }));
   pegar("#nichoPadrao").addEventListener("input", desenharPrevia);
+  pegar("#mudarColunas").addEventListener("click", () => {
+    const area = pegar("#deParaCampos");
+    area.hidden = !area.hidden;
+    pegar("#mudarColunas").textContent = area.hidden
+      ? "Mudar de onde vem cada informação"
+      : "Pronto, esconder as colunas";
+  });
   pegar("#verMapeado").addEventListener("click", () => {
     modo = "mapeado";
     pegar("#verMapeado").setAttribute("aria-pressed","true");
