@@ -388,6 +388,18 @@ textarea.roteiro{
   background:var(--branco); border-radius:var(--raio); box-shadow:0 26px 60px rgba(74,43,57,.3);
 }
 .janela.larga{max-width:680px;}
+.janela.enorme{max-width:min(1000px, 96vw);}
+/* a prévia da planilha rola sozinha, com o cabeçalho fixo no topo */
+.planilha-previa{
+  max-height:340px; overflow:auto;
+  border:1px solid var(--linha); border-radius:var(--raio-p);
+}
+.planilha-previa table{font-size:.8rem;}
+.planilha-previa thead th{
+  position:sticky; top:0; background:#fff7fa; z-index:2;
+  border-bottom:1px solid var(--linha); white-space:nowrap;
+}
+.planilha-previa td{white-space:nowrap; max-width:280px; overflow:hidden; text-overflow:ellipsis;}
 .janela-topo{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 20px; border-bottom:1px solid var(--linha); position:sticky; top:0; background:var(--branco); z-index:2;}
 .janela-topo h2{font-size:.98rem;}
 .janela-corpo{padding:20px;}
