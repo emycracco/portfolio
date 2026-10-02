@@ -712,21 +712,63 @@ function lerCSV(texto){
 
 /* Os campos da sua base e as palavras que ajudam a reconhecer a coluna. */
 const CAMPOS_MARCA = [
-  { campo:"nome",           rotulo:"Marca",          pistas:["marca","nome","empresa","cliente","perfil","loja"] },
-  { campo:"instagram",      rotulo:"Instagram",      pistas:["instagram","insta","arroba","usuario","@"] },
-  { campo:"email",          rotulo:"E-mail",         pistas:["email","e-mail","mail"] },
-  { campo:"telefone",       rotulo:"Telefone",       pistas:["telefone","fone","whats","celular","tel","contato"] },
-  { campo:"situacao",       rotulo:"Situação",       pistas:["situacao","status","etapa","estagio"] },
-  { campo:"obs",            rotulo:"Observação",     pistas:["obs","observa","nota","anota","comentario","descricao","detalhe"] },
-  { campo:"ultimo_contato", rotulo:"Último contato", pistas:["ultimo contato","data","quando"] }
+  { campo:"nome",           rotulo:"Marca",
+    exatas:["marca","nome","nome da marca","empresa","loja","cliente"],
+    pistas:["marca","nome","empresa","loja"] },
+  { campo:"instagram",      rotulo:"Instagram",
+    exatas:["instagram","insta","@","@ do perfil","perfil","usuario","arroba"],
+    pistas:["instagram","insta","perfil","arroba","usuario","@"] },
+  { campo:"email",          rotulo:"E-mail",
+    exatas:["email","e-mail","mail"],
+    pistas:["email","e-mail","mail"] },
+  { campo:"telefone",       rotulo:"Telefone",
+    exatas:["telefone","whatsapp","whats","celular","fone"],
+    pistas:["telefone","whats","celular","fone","tel","contato"] },
+  { campo:"situacao",       rotulo:"Situação",
+    exatas:["situacao","status","etapa","estagio"],
+    pistas:["situacao","status","etapa","estagio"] },
+  { campo:"obs",            rotulo:"Observação",
+    exatas:["obs","observacao","observacoes","nota","notas","comentario"],
+    pistas:["obs","observa","nota","anota","comentario","descricao","detalhe","sobre"] },
+  { campo:"ultimo_contato", rotulo:"Último contato",
+    exatas:["ultimo contato","data","data do contato"],
+    pistas:["ultimo contato","data","quando"] }
 ];
 
-function adivinharColuna(cabecalhos, pistas){
-  for(let i = 0; i < cabecalhos.length; i++){
-    const titulo = simplificar(cabecalhos[i]);
-    if(pistas.some(p => titulo.includes(simplificar(p)))) return i;
+/* Escolhe a coluna de cada campo dando preferência para o título
+   que bate exatamente, e nunca usa a mesma coluna em dois campos. */
+function adivinharColunas(cabecalhos){
+  const titulos = cabecalhos.map(simplificar);
+  const escolha = {};
+  const usadas = new Set();
+
+  const tentar = (campoInfo, modo) => {
+    if(escolha[campoInfo.campo] >= 0) return;
+    for(let i = 0; i < titulos.length; i++){
+      if(usadas.has(i)) continue;
+      const t = titulos[i];
+      const bate = modo === "exata"
+        ? campoInfo.exatas.some(p => t === simplificar(p))
+        : campoInfo.pistas.some(p => t.includes(simplificar(p)));
+      if(bate){ escolha[campoInfo.campo] = i; usadas.add(i); return; }
+    }
+  };
+
+  CAMPOS_MARCA.forEach(c => { escolha[c.campo] = -1; });
+  CAMPOS_MARCA.forEach(c => tentar(c, "exata"));
+  CAMPOS_MARCA.forEach(c => tentar(c, "parecida"));
+
+  /* Se a planilha não tiver coluna de nome, o @ do perfil vira o nome,
+     que é como a marca é conhecida mesmo. Em último caso, a primeira coluna livre. */
+  if(escolha.nome < 0){
+    if(escolha.instagram >= 0) escolha.nome = escolha.instagram;
+    else {
+      for(let i = 0; i < titulos.length; i++){
+        if(!usadas.has(i)){ escolha.nome = i; usadas.add(i); break; }
+      }
+    }
   }
-  return -1;
+  return escolha;
 }
 
 /* Aceita 2026-10-02 e 02/10/2026. Qualquer outra coisa vira vazio. */
@@ -763,8 +805,7 @@ function janelaImportar(linhas, nomeArquivo){
   const dados = linhas.slice(1);
 
   /* o painel chuta o de para das colunas */
-  const escolha = {};
-  CAMPOS_MARCA.forEach(c => { escolha[c.campo] = adivinharColuna(cabecalhos, c.pistas); });
+  const escolha = adivinharColunas(cabecalhos);
 
   function opcoes(selecionado){
     return `<option value="-1">não importar</option>` +
@@ -788,14 +829,22 @@ function janelaImportar(linhas, nomeArquivo){
       <span><b>Pular quem já está na minha base</b><small>compara pelo e-mail, pelo @ do Instagram e pelo nome</small></span>
     </label>
 
-    <h3 style="font-size:.86rem; margin:16px 0 8px">Prévia das 5 primeiras</h3>
-    <div class="rolagem"><table id="previaImportacao"></table></div>
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin:18px 0 8px">
+      <h3 style="font-size:.86rem" id="tituloPrevia">Como vai entrar na sua base</h3>
+      <div class="grupo-filtro">
+        <button type="button" class="filtro" id="verMapeado" aria-pressed="true">Como vai entrar</button>
+        <button type="button" class="filtro" id="verOriginal" aria-pressed="false">Planilha original</button>
+      </div>
+    </div>
+    <p id="resumoPrevia" style="font-size:.78rem; color:var(--tinta-suave); margin:0 0 8px"></p>
+    <div class="planilha-previa"><table id="previaImportacao"></table></div>
 
     <div class="acoes-janela">
       <button type="button" class="btn btn-simples" id="cancelar">Cancelar</button>
       <button type="button" class="btn btn-principal" id="confirmarImportar">Importar</button>
     </div>
   `, true);
+  pegar("#janela").classList.add("enorme");
 
   function montarLinha(linha){
     const pega = (campo) => {
@@ -813,21 +862,86 @@ function janelaImportar(linhas, nomeArquivo){
     };
   }
 
+  /* diz o que vai acontecer com cada linha, antes de importar */
+  function conferirLinhas(){
+    const jaTem = { emails:new Set(), instas:new Set(), nomes:new Set() };
+    (estado.dados.marcas || []).forEach(m => {
+      if(m.email) jaTem.emails.add(simplificar(m.email));
+      if(m.instagram) jaTem.instas.add(simplificar(m.instagram).replace("@",""));
+      if(m.nome) jaTem.nomes.add(simplificar(m.nome));
+    });
+    return dados.map(linha => {
+      const m = montarLinha(linha);
+      let destino = "entra";
+      if(!m.nome) destino = "sem nome";
+      else {
+        const e = simplificar(m.email), i = simplificar(m.instagram).replace("@",""), n = simplificar(m.nome);
+        if((e && jaTem.emails.has(e)) || (i && jaTem.instas.has(i)) || jaTem.nomes.has(n)) destino = "já existe";
+        else { if(e) jaTem.emails.add(e); if(i) jaTem.instas.add(i); jaTem.nomes.add(n); }
+      }
+      return { marca:m, destino:destino };
+    });
+  }
+
+  let modo = "mapeado";
+
   function desenharPrevia(){
-    const amostra = dados.slice(0,5).map(montarLinha);
+    const conferidas = conferirLinhas();
+    const entram = conferidas.filter(c => c.destino === "entra").length;
+    const repetidas = conferidas.filter(c => c.destino === "já existe").length;
+    const semNome = conferidas.filter(c => c.destino === "sem nome").length;
+
+    const partes = [entram + (entram === 1 ? " linha vai entrar" : " linhas vão entrar")];
+    if(repetidas) partes.push(repetidas + (repetidas === 1 ? " já está na base" : " já estão na base"));
+    if(semNome) partes.push(semNome + " sem nome de marca");
+    pegar("#resumoPrevia").textContent = partes.join(", ") + ". Mostrando todas as " + dados.length + " linhas do arquivo.";
+
+    if(modo === "original"){
+      pegar("#tituloPrevia").textContent = "A sua planilha, do jeito que veio";
+      pegar("#previaImportacao").innerHTML = `
+        <thead><tr><th>#</th>${cabecalhos.map(h => `<th>${seguro(h)}</th>`).join("")}</tr></thead>
+        <tbody>${dados.map((l,i) => `<tr><td style="color:var(--rosa-dourado)">${i+1}</td>${cabecalhos.map((h,c) => `<td>${seguro(l[c] || "")}</td>`).join("")}</tr>`).join("")}</tbody>`;
+      return;
+    }
+
+    pegar("#tituloPrevia").textContent = "Como vai entrar na sua base";
     pegar("#previaImportacao").innerHTML = `
-      <thead><tr>${CAMPOS_MARCA.map(c => `<th>${c.rotulo}</th>`).join("")}</tr></thead>
+      <thead><tr><th>#</th><th>O que acontece</th>${CAMPOS_MARCA.map(c => `<th>${c.rotulo}</th>`).join("")}</tr></thead>
       <tbody>
-        ${amostra.map(m => `<tr>
-          <td>${seguro(m.nome) || '<span style="color:var(--vermelho)">faltando</span>'}</td>
-          <td>${seguro(m.instagram)}</td><td>${seguro(m.email)}</td><td>${seguro(m.telefone)}</td>
-          <td><span class="pilula p-${m.situacao.toLowerCase()}">${m.situacao}</span></td>
-          <td style="max-width:200px">${seguro(m.obs)}</td><td>${dataBR(m.ultimo_contato)}</td>
-        </tr>`).join("")}
+        ${conferidas.map((c,i) => {
+          const m = c.marca;
+          const etiqueta = c.destino === "entra" ? `<span class="pilula p-cliente">entra</span>`
+            : c.destino === "já existe" ? `<span class="pilula p-parada">já existe</span>`
+            : `<span class="pilula p-atrasado">sem nome</span>`;
+          return `<tr class="${c.destino === "entra" ? "" : "sumido"}">
+            <td style="color:var(--rosa-dourado)">${i+1}</td>
+            <td>${etiqueta}</td>
+            <td>${seguro(m.nome)}</td>
+            <td>${seguro(m.instagram)}</td>
+            <td>${seguro(m.email)}</td>
+            <td>${seguro(m.telefone)}</td>
+            <td><span class="pilula p-${m.situacao.toLowerCase()}">${m.situacao}</span></td>
+            <td style="max-width:260px">${seguro(m.obs)}</td>
+            <td>${dataBR(m.ultimo_contato)}</td>
+          </tr>`;
+        }).join("")}
       </tbody>`;
   }
+
   desenharPrevia();
   pegarTodos("#deParaCampos select").forEach(s => s.addEventListener("change", desenharPrevia));
+  pegar("#verMapeado").addEventListener("click", () => {
+    modo = "mapeado";
+    pegar("#verMapeado").setAttribute("aria-pressed","true");
+    pegar("#verOriginal").setAttribute("aria-pressed","false");
+    desenharPrevia();
+  });
+  pegar("#verOriginal").addEventListener("click", () => {
+    modo = "original";
+    pegar("#verMapeado").setAttribute("aria-pressed","false");
+    pegar("#verOriginal").setAttribute("aria-pressed","true");
+    desenharPrevia();
+  });
   pegar("#cancelar").addEventListener("click", fecharJanela);
 
   pegar("#confirmarImportar").addEventListener("click", async () => {
