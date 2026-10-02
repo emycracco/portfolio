@@ -64,6 +64,7 @@ const ICONE = {
   campanhas: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3 12h18"/></svg>',
   checklist: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>',
   mais:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  subir:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5M8 9l4-4 4 4M4 19h16"/></svg>',
   baixar:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10M8 11l4 4 4-4M4 19h16"/></svg>',
   lupa:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="6"/><path d="M20 20l-3.5-3.5"/></svg>',
   olhoAberto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.6"/></svg>',
@@ -113,6 +114,7 @@ const estado = {
   aba: "portfolio",
   email: "",
   faltando: [],
+  sessaoExpirou: false,
   dados: { videos:[], marcas:[], calendario:[], campanhas:[], marcados:{}, visitas:[], cupons:[], conteudos:[] },
   semana: new Date(), filtroConteudo: "Todos",
   buscaCupons: "", filtroCupons: "Todos",
@@ -130,6 +132,11 @@ const estado = {
    ------------------------------------------------------------ */
 function anotarFalta(tabela, mensagem){
   const texto = String(mensagem || "").toLowerCase();
+  /* sessão vencida é outro assunto: não adianta falar de tabela */
+  if(texto.includes("jwt") || texto.includes("expired") || texto.includes("invalid token")){
+    estado.sessaoExpirou = true;
+    return;
+  }
   let recadoTexto;
   if(texto.includes("does not exist") || texto.includes("not find the table") || texto.includes("schema cache")){
     recadoTexto = "a tabela <b>" + tabela + "</b> ainda não existe no banco";
@@ -143,18 +150,34 @@ function anotarFalta(tabela, mensagem){
   if(!estado.faltando.includes(recadoTexto)) estado.faltando.push(recadoTexto);
 }
 
+/* Faz uma leitura só, sem avisar nada. */
+async function tentarLer(tabela, campoOrdem, crescente){
+  let consulta = window.sb.from(tabela).select("*");
+  if(campoOrdem) consulta = consulta.order(campoOrdem, { ascending: crescente !== false });
+  return await consulta;
+}
+
+/* Lê a tabela e, se falhar, espera um pouco e tenta de novo.
+   Internet oscila, e uma falha de um segundo não é motivo para
+   encher a tela de aviso. Só avisa se falhar nas duas vezes. */
 async function lerTabela(tabela, campoOrdem, crescente){
   if(!window.sb){ anotarFalta(tabela, "sem conexão"); return []; }
-  try{
-    let consulta = window.sb.from(tabela).select("*");
-    if(campoOrdem) consulta = consulta.order(campoOrdem, { ascending: crescente !== false });
-    const { data, error } = await consulta;
-    if(error){ anotarFalta(tabela, error.message); return []; }
-    return data || [];
-  }catch(e){
-    anotarFalta(tabela, e && e.message);
-    return [];
+  for(let tentativa = 1; tentativa <= 2; tentativa++){
+    try{
+      const { data, error } = await tentarLer(tabela, campoOrdem, crescente);
+      if(!error) return data || [];
+
+      const texto = String(error.message || "").toLowerCase();
+      const semJeito = texto.includes("does not exist") || texto.includes("not find the table") ||
+                       texto.includes("schema cache") || texto.includes("column");
+      /* erro de tabela faltando não melhora tentando de novo */
+      if(semJeito || tentativa === 2){ anotarFalta(tabela, error.message); return []; }
+    }catch(e){
+      if(tentativa === 2){ anotarFalta(tabela, e && e.message); return []; }
+    }
+    await new Promise(r => setTimeout(r, 700));
   }
+  return [];
 }
 
 async function gravar(tabela, linha, id){
@@ -185,6 +208,7 @@ async function apagarLinha(tabela, id){
 
 async function carregarTudo(){
   estado.faltando = [];
+  estado.sessaoExpirou = false;
   const [videos, marcas, calendario, campanhas, marcados, visitas, cupons, conteudos] = await Promise.all([
     lerTabela("videos", "ordem", true),
     lerTabela("marcas", "criado_em", false),
@@ -284,9 +308,16 @@ function desenhar(){
   pegarTodos(".menu-item").forEach(b => b.setAttribute("aria-current", String(b.dataset.aba === estado.aba)));
 
   /* avisos de coisa que faltou no banco */
-  pegar("#avisosFalta").innerHTML = estado.faltando.length
-    ? `<div class="aviso-falta">O painel abriu, mas ${estado.faltando.join(", ")}. O resto continua funcionando. Rode o arquivo banco.sql no Supabase para resolver.</div>`
-    : "";
+  if(estado.sessaoExpirou){
+    pegar("#avisosFalta").innerHTML = `<div class="aviso-falta">A sua sessão expirou, por isso alguns dados não carregaram.
+      <button class="btn-mini" id="entrarDeNovo" style="margin-left:8px">Entrar de novo</button></div>`;
+    const botao = pegar("#entrarDeNovo");
+    if(botao) botao.addEventListener("click", () => window.location.replace("/login/"));
+  } else {
+    pegar("#avisosFalta").innerHTML = estado.faltando.length
+      ? `<div class="aviso-falta">O painel abriu, mas ${estado.faltando.join(", ")}. O resto continua funcionando. Se a tabela ainda não existir, rode o arquivo banco.sql no Supabase. Se foi só a internet oscilando, recarregue a página.</div>`
+      : "";
+  }
 
   if(estado.aba === "portfolio")  desenharPortfolio();
   if(estado.aba === "marcas")     desenharMarcas();
@@ -539,6 +570,8 @@ function desenharMarcas(){
   });
 
   pegar("#acoesTopo").innerHTML = `
+    <button class="btn btn-simples" id="importarMarcas">${ICONE.subir} Importar planilha</button>
+    <input type="file" id="arquivoCSV" accept=".csv,text/csv,text/plain" hidden>
     <button class="btn btn-simples" id="baixarMarcas">${ICONE.baixar} Baixar CSV</button>
     <button class="btn btn-principal" id="novaMarca">${ICONE.mais} Nova marca</button>`;
 
@@ -585,6 +618,23 @@ function desenharMarcas(){
     estado.filtroSituacao = b.dataset.situacao; desenharMarcas();
   }));
   pegar("#novaMarca").addEventListener("click", () => formularioMarca(null));
+
+  /* importar planilha de leads */
+  pegar("#importarMarcas").addEventListener("click", () => pegar("#arquivoCSV").click());
+  pegar("#arquivoCSV").addEventListener("change", async (e) => {
+    const arquivo = e.target.files && e.target.files[0];
+    e.target.value = "";                       /* permite escolher o mesmo arquivo de novo */
+    if(!arquivo) return;
+    try{
+      const texto = await lerArquivoTexto(arquivo);
+      const linhas = lerCSV(texto);
+      if(linhas.length < 2){ recado("A planilha parece vazia ou só tem o cabeçalho.", true); return; }
+      janelaImportar(linhas, arquivo.name);
+    }catch(erro){
+      recado("Não consegui ler esse arquivo. Salve como CSV e tente de novo.", true);
+    }
+  });
+
   pegar("#baixarMarcas").addEventListener("click", () => {
     baixarCSV("minhas-marcas.csv",
       ["Marca","Instagram","E-mail","Telefone","Situação","Observação","Último contato"],
@@ -599,6 +649,237 @@ function desenharMarcas(){
     const numeroZap = so.length <= 11 ? "55" + so : so;
     window.open("https://wa.me/" + numeroZap, "_blank", "noopener");
   }));
+}
+
+/* ============================================================
+   IMPORTAR PLANILHA DE LEADS PARA A ABA MARCAS
+   Lê o CSV, adivinha as colunas, mostra a prévia e só então grava.
+   ============================================================ */
+
+/* Tira acento e deixa minúsculo, para comparar nomes de coluna. */
+function simplificar(texto){
+  return String(texto || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+}
+
+/* Lê o arquivo tentando UTF-8 e, se vier com caractere estranho,
+   tenta de novo no formato que o Excel do Windows costuma salvar. */
+function lerArquivoTexto(arquivo){
+  return new Promise((resolve, reject) => {
+    const leitor = new FileReader();
+    leitor.onerror = reject;
+    leitor.onload = () => {
+      const bytes = new Uint8Array(leitor.result);
+      let texto = new TextDecoder("utf-8").decode(bytes);
+      if(texto.includes("�")){
+        try{ texto = new TextDecoder("windows-1252").decode(bytes); }catch(e){}
+      }
+      resolve(texto);
+    };
+    leitor.readAsArrayBuffer(arquivo);
+  });
+}
+
+/* Transforma o texto do CSV em linhas e colunas.
+   Entende ponto e vírgula ou vírgula, aspas e quebra de linha dentro do campo. */
+function lerCSV(texto){
+  texto = String(texto || "").replace(/^﻿/, "");
+  const primeira = texto.split(/\r?\n/)[0] || "";
+  const separador = (primeira.split(";").length > primeira.split(",").length) ? ";" : ",";
+
+  const linhas = [];
+  let campo = "", linha = [], dentroDeAspas = false;
+
+  for(let i = 0; i < texto.length; i++){
+    const c = texto[i];
+    if(dentroDeAspas){
+      if(c === '"'){
+        if(texto[i+1] === '"'){ campo += '"'; i++; }
+        else dentroDeAspas = false;
+      } else campo += c;
+    } else {
+      if(c === '"') dentroDeAspas = true;
+      else if(c === separador){ linha.push(campo); campo = ""; }
+      else if(c === "\n"){ linha.push(campo); linhas.push(linha); linha = []; campo = ""; }
+      else if(c !== "\r") campo += c;
+    }
+  }
+  if(campo !== "" || linha.length){ linha.push(campo); linhas.push(linha); }
+
+  return linhas
+    .map(l => l.map(c => String(c).trim()))
+    .filter(l => l.some(c => c !== ""));
+}
+
+/* Os campos da sua base e as palavras que ajudam a reconhecer a coluna. */
+const CAMPOS_MARCA = [
+  { campo:"nome",           rotulo:"Marca",          pistas:["marca","nome","empresa","cliente","perfil","loja"] },
+  { campo:"instagram",      rotulo:"Instagram",      pistas:["instagram","insta","arroba","usuario","@"] },
+  { campo:"email",          rotulo:"E-mail",         pistas:["email","e-mail","mail"] },
+  { campo:"telefone",       rotulo:"Telefone",       pistas:["telefone","fone","whats","celular","tel","contato"] },
+  { campo:"situacao",       rotulo:"Situação",       pistas:["situacao","status","etapa","estagio"] },
+  { campo:"obs",            rotulo:"Observação",     pistas:["obs","observa","nota","anota","comentario","descricao","detalhe"] },
+  { campo:"ultimo_contato", rotulo:"Último contato", pistas:["ultimo contato","data","quando"] }
+];
+
+function adivinharColuna(cabecalhos, pistas){
+  for(let i = 0; i < cabecalhos.length; i++){
+    const titulo = simplificar(cabecalhos[i]);
+    if(pistas.some(p => titulo.includes(simplificar(p)))) return i;
+  }
+  return -1;
+}
+
+/* Aceita 2026-10-02 e 02/10/2026. Qualquer outra coisa vira vazio. */
+function dataParaBanco(valor){
+  const t = String(valor || "").trim();
+  if(!t) return null;
+  if(/^\d{4}-\d{2}-\d{2}$/.test(t)) return t;
+  const br = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if(br){
+    const ano = br[3].length === 2 ? "20" + br[3] : br[3];
+    return ano + "-" + br[2].padStart(2,"0") + "-" + br[1].padStart(2,"0");
+  }
+  return null;
+}
+
+function arrumarSituacao(valor){
+  const t = simplificar(valor);
+  if(t.includes("client")) return "Cliente";
+  if(t.includes("convers") || t.includes("negoc") || t.includes("andamento")) return "Conversando";
+  if(t.includes("parad") || t.includes("perdid") || t.includes("sem retorno")) return "Parada";
+  return "Lead";
+}
+
+function arrumarInstagram(valor){
+  let t = String(valor || "").trim();
+  if(!t) return "";
+  t = t.replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/\/+$/, "").split("?")[0];
+  if(!t) return "";
+  return t.startsWith("@") ? t : "@" + t;
+}
+
+function janelaImportar(linhas, nomeArquivo){
+  const cabecalhos = linhas[0];
+  const dados = linhas.slice(1);
+
+  /* o painel chuta o de para das colunas */
+  const escolha = {};
+  CAMPOS_MARCA.forEach(c => { escolha[c.campo] = adivinharColuna(cabecalhos, c.pistas); });
+
+  function opcoes(selecionado){
+    return `<option value="-1">não importar</option>` +
+      cabecalhos.map((h,i) => `<option value="${i}" ${selecionado === i ? "selected" : ""}>${seguro(h || ("coluna " + (i+1)))}</option>`).join("");
+  }
+
+  abrirJanela("Importar planilha", `
+    <p class="porque">Li <b>${dados.length}</b> linha${dados.length === 1 ? "" : "s"} do arquivo ${seguro(nomeArquivo)}.
+    Confira de onde vem cada informação e veja a prévia antes de importar.</p>
+
+    <div class="campos" id="deParaCampos">
+      ${CAMPOS_MARCA.map(c => `
+        <div class="campo">
+          <label for="de-${c.campo}">${c.rotulo}${c.campo === "nome" ? " (obrigatório)" : ""}</label>
+          <select id="de-${c.campo}" data-campo="${c.campo}">${opcoes(escolha[c.campo])}</select>
+        </div>`).join("")}
+    </div>
+
+    <label class="item-check" style="margin-top:14px">
+      <input type="checkbox" id="pularRepetidas" checked>
+      <span><b>Pular quem já está na minha base</b><small>compara pelo e-mail, pelo @ do Instagram e pelo nome</small></span>
+    </label>
+
+    <h3 style="font-size:.86rem; margin:16px 0 8px">Prévia das 5 primeiras</h3>
+    <div class="rolagem"><table id="previaImportacao"></table></div>
+
+    <div class="acoes-janela">
+      <button type="button" class="btn btn-simples" id="cancelar">Cancelar</button>
+      <button type="button" class="btn btn-principal" id="confirmarImportar">Importar</button>
+    </div>
+  `, true);
+
+  function montarLinha(linha){
+    const pega = (campo) => {
+      const i = Number(pegar("#de-" + campo).value);
+      return i >= 0 ? String(linha[i] || "").trim() : "";
+    };
+    return {
+      nome: pega("nome"),
+      instagram: arrumarInstagram(pega("instagram")),
+      email: pega("email").toLowerCase(),
+      telefone: pega("telefone"),
+      situacao: arrumarSituacao(pega("situacao")),
+      obs: pega("obs"),
+      ultimo_contato: dataParaBanco(pega("ultimo_contato"))
+    };
+  }
+
+  function desenharPrevia(){
+    const amostra = dados.slice(0,5).map(montarLinha);
+    pegar("#previaImportacao").innerHTML = `
+      <thead><tr>${CAMPOS_MARCA.map(c => `<th>${c.rotulo}</th>`).join("")}</tr></thead>
+      <tbody>
+        ${amostra.map(m => `<tr>
+          <td>${seguro(m.nome) || '<span style="color:var(--vermelho)">faltando</span>'}</td>
+          <td>${seguro(m.instagram)}</td><td>${seguro(m.email)}</td><td>${seguro(m.telefone)}</td>
+          <td><span class="pilula p-${m.situacao.toLowerCase()}">${m.situacao}</span></td>
+          <td style="max-width:200px">${seguro(m.obs)}</td><td>${dataBR(m.ultimo_contato)}</td>
+        </tr>`).join("")}
+      </tbody>`;
+  }
+  desenharPrevia();
+  pegarTodos("#deParaCampos select").forEach(s => s.addEventListener("change", desenharPrevia));
+  pegar("#cancelar").addEventListener("click", fecharJanela);
+
+  pegar("#confirmarImportar").addEventListener("click", async () => {
+    const botao = pegar("#confirmarImportar");
+    botao.disabled = true; botao.textContent = "Importando...";
+
+    const pularRepetidas = pegar("#pularRepetidas").checked;
+    const jaTem = { emails:new Set(), instas:new Set(), nomes:new Set() };
+    (estado.dados.marcas || []).forEach(m => {
+      if(m.email) jaTem.emails.add(simplificar(m.email));
+      if(m.instagram) jaTem.instas.add(simplificar(m.instagram).replace("@",""));
+      if(m.nome) jaTem.nomes.add(simplificar(m.nome));
+    });
+
+    const paraGravar = [];
+    let semNome = 0, repetidas = 0;
+
+    dados.forEach(linha => {
+      const m = montarLinha(linha);
+      if(!m.nome){ semNome++; return; }
+      const chaveEmail = simplificar(m.email);
+      const chaveInsta = simplificar(m.instagram).replace("@","");
+      const chaveNome = simplificar(m.nome);
+      const repetida =
+        (chaveEmail && jaTem.emails.has(chaveEmail)) ||
+        (chaveInsta && jaTem.instas.has(chaveInsta)) ||
+        jaTem.nomes.has(chaveNome);
+      if(pularRepetidas && repetida){ repetidas++; return; }
+      if(chaveEmail) jaTem.emails.add(chaveEmail);
+      if(chaveInsta) jaTem.instas.add(chaveInsta);
+      jaTem.nomes.add(chaveNome);
+      paraGravar.push(m);
+    });
+
+    let gravadas = 0, falharam = 0;
+    for(let i = 0; i < paraGravar.length; i += 40){
+      const lote = paraGravar.slice(i, i + 40);
+      try{
+        const { error } = await window.sb.from("marcas").insert(lote);
+        if(error) falharam += lote.length; else gravadas += lote.length;
+      }catch(e){ falharam += lote.length; }
+    }
+
+    fecharJanela();
+    await carregarTudo(); desenhar();
+
+    const partes = [gravadas + (gravadas === 1 ? " marca importada" : " marcas importadas")];
+    if(repetidas) partes.push(repetidas + (repetidas === 1 ? " já estava na base" : " já estavam na base"));
+    if(semNome)   partes.push(semNome + " sem nome, ignorada" + (semNome === 1 ? "" : "s"));
+    if(falharam)  partes.push(falharam + (falharam === 1 ? " não entrou" : " não entraram"));
+    recado(partes.join(", ") + ".", falharam > 0);
+  });
 }
 
 function formularioMarca(marca){
