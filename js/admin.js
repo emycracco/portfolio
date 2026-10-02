@@ -121,7 +121,7 @@ const estado = {
   dados: { videos:[], marcas:[], calendario:[], campanhas:[], marcados:{}, visitas:[], cupons:[], conteudos:[] },
   semana: new Date(), filtroConteudo: "Todos",
   buscaCupons: "", filtroCupons: "Todos",
-  buscaMarcas: "", filtroSituacao: "Todas", filtroNicho: "Todos",
+  buscaMarcas: "", filtroSituacao: "Todas", filtroNicho: "Todos", soFavoritas: false,
   buscaCampanhas: "", filtroCampanhas: "Todas",
   ordem: { campo:"prazo", sentido:1 },
   mes: new Date(),
@@ -572,8 +572,11 @@ function desenharMarcas(){
     const situacaoOk = estado.filtroSituacao === "Todas" || m.situacao === estado.filtroSituacao;
     const nichoOk = estado.filtroNicho === "Todos" ||
       (estado.filtroNicho === "sem nicho" ? !m.nicho : m.nicho === estado.filtroNicho);
-    return combina && situacaoOk && nichoOk;
-  });
+    const favoritaOk = !estado.soFavoritas || m.favorita;
+    return combina && situacaoOk && nichoOk && favoritaOk;
+  })
+  /* as favoritas ficam sempre no topo da lista */
+  .sort((a,b) => (b.favorita ? 1 : 0) - (a.favorita ? 1 : 0));
 
   /* a lista de nichos sai das próprias marcas cadastradas */
   const nichosNaBase = [...new Set(todas.map(m => m.nicho).filter(Boolean))].sort();
@@ -590,6 +593,7 @@ function desenharMarcas(){
       <div class="cartao-topo">
         <div class="busca">${ICONE.lupa}<input id="buscaMarcas" placeholder="buscar por nome, @ ou e-mail" value="${seguro(estado.buscaMarcas)}"></div>
         <div class="grupo-filtro">
+          <button class="filtro" id="soFavoritas" aria-pressed="${estado.soFavoritas}" title="Mostrar só as favoritas">★ favoritas</button>
           ${["Todas"].concat(SITUACOES).map(s => `<button class="filtro" data-situacao="${s}" aria-pressed="${estado.filtroSituacao === s}">${s}</button>`).join("")}
         </div>
         ${(nichosNaBase.length || temSemNicho) ? `
@@ -603,12 +607,14 @@ function desenharMarcas(){
         ${lista.length ? `
         <table>
           <thead><tr>
+            <th style="width:34px"></th>
             <th>Marca</th><th>Nicho</th><th>Instagram</th><th>E-mail</th><th>Telefone</th>
             <th>Situação</th><th>Observação</th><th>Último contato</th>
           </tr></thead>
           <tbody>
             ${lista.map(m => `
-              <tr class="linha-clicavel" data-id="${seguro(m.id)}">
+              <tr class="linha-clicavel ${m.favorita ? "destacada" : ""}" data-id="${seguro(m.id)}">
+                <td><button class="estrela-marca parar" data-estrela="${seguro(m.id)}" title="${m.favorita ? "Tirar dos favoritos" : "Fixar no topo"}" style="border:0;background:none;font-size:1.05rem;color:${m.favorita ? "var(--rosa)" : "var(--rosa-dourado)"}">${m.favorita ? "★" : "☆"}</button></td>
                 <td>${seguro(m.nome)}</td>
                 <td>${m.nicho ? `<span class="pilula p-funil">${seguro(m.nicho)}</span>` : ""}</td>
                 <td>${m.instagram ? `<a href="https://instagram.com/${seguro(String(m.instagram).replace("@",""))}" target="_blank" rel="noopener" class="parar">${seguro(m.instagram)}</a>` : ""}</td>
@@ -638,6 +644,15 @@ function desenharMarcas(){
   if(seletorNicho) seletorNicho.addEventListener("change", () => {
     estado.filtroNicho = seletorNicho.value; desenharMarcas();
   });
+  pegar("#soFavoritas").addEventListener("click", () => {
+    estado.soFavoritas = !estado.soFavoritas; desenharMarcas();
+  });
+  pegarTodos("[data-estrela]").forEach(b => b.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    const m = todas.find(x => String(x.id) === b.dataset.estrela);
+    if(!m) return;
+    if(await gravar("marcas", { favorita: !m.favorita }, m.id)){ await carregarTudo(); desenhar(); }
+  }));
   pegar("#novaMarca").addEventListener("click", () => formularioMarca(null));
 
   /* importar planilha de leads */
