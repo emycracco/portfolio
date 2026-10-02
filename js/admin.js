@@ -108,6 +108,9 @@ const CANAIS = [
 const ETAPAS = ["ideia", "gravado", "editado", "postado"];
 const TIPOS_CONTEUDO = ["review", "unboxing", "rotina", "tutorial", "antes e depois", "oferta do dia", "trend", "resposta a comentário", "bastidores", "vitrine"];
 const SITUACOES = ["Lead", "Conversando", "Cliente", "Parada"];
+/* sugestões de nicho, só para facilitar o preenchimento.
+   Você pode escrever qualquer outro, o campo é livre. */
+const NICHOS_SUGERIDOS = ["moda fitness", "suplementos", "cosméticos", "skincare", "moda", "beleza", "tech", "casa", "pet", "alimentação"];
 const TIPOS_AGENDA = ["gravar", "editar", "postar"];
 
 const estado = {
@@ -118,7 +121,7 @@ const estado = {
   dados: { videos:[], marcas:[], calendario:[], campanhas:[], marcados:{}, visitas:[], cupons:[], conteudos:[] },
   semana: new Date(), filtroConteudo: "Todos",
   buscaCupons: "", filtroCupons: "Todos",
-  buscaMarcas: "", filtroSituacao: "Todas",
+  buscaMarcas: "", filtroSituacao: "Todas", filtroNicho: "Todos",
   buscaCampanhas: "", filtroCampanhas: "Todas",
   ordem: { campo:"prazo", sentido:1 },
   mes: new Date(),
@@ -564,10 +567,17 @@ function desenharMarcas(){
     const combina = !busca ||
       String(m.nome||"").toLowerCase().includes(busca) ||
       String(m.instagram||"").toLowerCase().includes(busca) ||
-      String(m.email||"").toLowerCase().includes(busca);
+      String(m.email||"").toLowerCase().includes(busca) ||
+      String(m.nicho||"").toLowerCase().includes(busca);
     const situacaoOk = estado.filtroSituacao === "Todas" || m.situacao === estado.filtroSituacao;
-    return combina && situacaoOk;
+    const nichoOk = estado.filtroNicho === "Todos" ||
+      (estado.filtroNicho === "sem nicho" ? !m.nicho : m.nicho === estado.filtroNicho);
+    return combina && situacaoOk && nichoOk;
   });
+
+  /* a lista de nichos sai das próprias marcas cadastradas */
+  const nichosNaBase = [...new Set(todas.map(m => m.nicho).filter(Boolean))].sort();
+  const temSemNicho = todas.some(m => !m.nicho);
 
   pegar("#acoesTopo").innerHTML = `
     <button class="btn btn-simples" id="importarMarcas">${ICONE.subir} Importar planilha</button>
@@ -582,18 +592,25 @@ function desenharMarcas(){
         <div class="grupo-filtro">
           ${["Todas"].concat(SITUACOES).map(s => `<button class="filtro" data-situacao="${s}" aria-pressed="${estado.filtroSituacao === s}">${s}</button>`).join("")}
         </div>
+        ${(nichosNaBase.length || temSemNicho) ? `
+        <select class="filtro" id="filtroNicho" style="padding:6px 12px">
+          <option value="Todos">todos os nichos</option>
+          ${nichosNaBase.map(n => `<option value="${seguro(n)}" ${estado.filtroNicho === n ? "selected" : ""}>${seguro(n)}</option>`).join("")}
+          ${temSemNicho ? `<option value="sem nicho" ${estado.filtroNicho === "sem nicho" ? "selected" : ""}>sem nicho</option>` : ""}
+        </select>` : ""}
       </div>
       <div class="rolagem">
         ${lista.length ? `
         <table>
           <thead><tr>
-            <th>Marca</th><th>Instagram</th><th>E-mail</th><th>Telefone</th>
+            <th>Marca</th><th>Nicho</th><th>Instagram</th><th>E-mail</th><th>Telefone</th>
             <th>Situação</th><th>Observação</th><th>Último contato</th>
           </tr></thead>
           <tbody>
             ${lista.map(m => `
               <tr class="linha-clicavel" data-id="${seguro(m.id)}">
                 <td>${seguro(m.nome)}</td>
+                <td>${m.nicho ? `<span class="pilula p-funil">${seguro(m.nicho)}</span>` : ""}</td>
                 <td>${m.instagram ? `<a href="https://instagram.com/${seguro(String(m.instagram).replace("@",""))}" target="_blank" rel="noopener" class="parar">${seguro(m.instagram)}</a>` : ""}</td>
                 <td>${seguro(m.email)}</td>
                 <td>${m.telefone ? `${seguro(m.telefone)} <button class="btn-mini zap parar" data-tel="${seguro(m.telefone)}">WhatsApp</button>` : ""}</td>
@@ -617,6 +634,10 @@ function desenharMarcas(){
   pegarTodos("[data-situacao]").forEach(b => b.addEventListener("click", () => {
     estado.filtroSituacao = b.dataset.situacao; desenharMarcas();
   }));
+  const seletorNicho = pegar("#filtroNicho");
+  if(seletorNicho) seletorNicho.addEventListener("change", () => {
+    estado.filtroNicho = seletorNicho.value; desenharMarcas();
+  });
   pegar("#novaMarca").addEventListener("click", () => formularioMarca(null));
 
   /* importar planilha de leads */
@@ -637,8 +658,8 @@ function desenharMarcas(){
 
   pegar("#baixarMarcas").addEventListener("click", () => {
     baixarCSV("minhas-marcas.csv",
-      ["Marca","Instagram","E-mail","Telefone","Situação","Observação","Último contato"],
-      lista.map(m => [m.nome, m.instagram, m.email, m.telefone, m.situacao, m.obs, dataBR(m.ultimo_contato)]));
+      ["Marca","Nicho","Instagram","E-mail","Telefone","Situação","Observação","Último contato"],
+      lista.map(m => [m.nome, m.nicho, m.instagram, m.email, m.telefone, m.situacao, m.obs, dataBR(m.ultimo_contato)]));
   });
   pegarTodos("tbody .linha-clicavel").forEach(linha => linha.addEventListener("click", (e) => {
     if(e.target.closest(".parar")) return;
@@ -727,6 +748,9 @@ const CAMPOS_MARCA = [
   { campo:"situacao",       rotulo:"Situação",
     exatas:["situacao","status","etapa","estagio"],
     pistas:["situacao","status","etapa","estagio"] },
+  { campo:"nicho",          rotulo:"Nicho",
+    exatas:["nicho","segmento","categoria","area","tipo"],
+    pistas:["nicho","segmento","categoria"] },
   { campo:"obs",            rotulo:"Observação",
     exatas:["obs","observacao","observacoes","nota","notas","comentario"],
     pistas:["obs","observa","nota","anota","comentario","descricao","detalhe","sobre"] },
@@ -824,6 +848,16 @@ function janelaImportar(linhas, nomeArquivo){
         </div>`).join("")}
     </div>
 
+    <div class="campo" style="margin-top:4px">
+      <label for="nichoPadrao">Nicho para todas as linhas desta planilha</label>
+      <input id="nichoPadrao" list="listaNichosImportar" placeholder="ex: moda fitness">
+      <datalist id="listaNichosImportar">
+        ${[...new Set(NICHOS_SUGERIDOS.concat((estado.dados.marcas||[]).map(x => x.nicho).filter(Boolean)))]
+          .map(n => `<option value="${seguro(n)}">`).join("")}
+      </datalist>
+      <small style="font-size:.72rem; color:var(--tinta-suave)">usado só nas linhas que não tiverem nicho na planilha</small>
+    </div>
+
     <label class="item-check" style="margin-top:14px">
       <input type="checkbox" id="pularRepetidas" checked>
       <span><b>Pular quem já está na minha base</b><small>compara pelo e-mail, pelo @ do Instagram e pelo nome</small></span>
@@ -851,12 +885,15 @@ function janelaImportar(linhas, nomeArquivo){
       const i = Number(pegar("#de-" + campo).value);
       return i >= 0 ? String(linha[i] || "").trim() : "";
     };
+    const campoPadrao = pegar("#nichoPadrao");
+    const padrao = campoPadrao ? campoPadrao.value.trim() : "";
     return {
       nome: pega("nome"),
       instagram: arrumarInstagram(pega("instagram")),
       email: pega("email").toLowerCase(),
       telefone: pega("telefone"),
       situacao: arrumarSituacao(pega("situacao")),
+      nicho: pega("nicho") || padrao,
       obs: pega("obs"),
       ultimo_contato: dataParaBanco(pega("ultimo_contato"))
     };
@@ -921,6 +958,7 @@ function janelaImportar(linhas, nomeArquivo){
             <td>${seguro(m.email)}</td>
             <td>${seguro(m.telefone)}</td>
             <td><span class="pilula p-${m.situacao.toLowerCase()}">${m.situacao}</span></td>
+            <td>${m.nicho ? `<span class="pilula p-funil">${seguro(m.nicho)}</span>` : ""}</td>
             <td style="max-width:260px">${seguro(m.obs)}</td>
             <td>${dataBR(m.ultimo_contato)}</td>
           </tr>`;
@@ -930,6 +968,7 @@ function janelaImportar(linhas, nomeArquivo){
 
   desenharPrevia();
   pegarTodos("#deParaCampos select").forEach(s => s.addEventListener("change", desenharPrevia));
+  pegar("#nichoPadrao").addEventListener("input", desenharPrevia);
   pegar("#verMapeado").addEventListener("click", () => {
     modo = "mapeado";
     pegar("#verMapeado").setAttribute("aria-pressed","true");
@@ -1008,6 +1047,13 @@ function formularioMarca(marca){
         <div class="campo"><label for="m-situacao">Situação</label>
           <select id="m-situacao">${SITUACOES.map(s => `<option ${m.situacao === s ? "selected" : ""}>${s}</option>`).join("")}</select>
         </div>
+        <div class="campo"><label for="m-nicho">Nicho</label>
+          <input id="m-nicho" list="listaNichos" placeholder="moda fitness, suplementos..." value="${seguro(m.nicho)}">
+          <datalist id="listaNichos">
+            ${[...new Set(NICHOS_SUGERIDOS.concat((estado.dados.marcas||[]).map(x => x.nicho).filter(Boolean)))]
+              .map(n => `<option value="${seguro(n)}">`).join("")}
+          </datalist>
+        </div>
         <div class="campo largo"><label for="m-obs">Observação</label><textarea id="m-obs">${seguro(m.obs)}</textarea></div>
         <div class="campo"><label for="m-contato">Último contato</label><input id="m-contato" type="date" value="${m.ultimo_contato ? String(m.ultimo_contato).slice(0,10) : ""}"></div>
       </div>
@@ -1033,6 +1079,7 @@ function formularioMarca(marca){
       email: pegar("#m-email").value.trim(),
       telefone: pegar("#m-tel").value.trim(),
       situacao: pegar("#m-situacao").value,
+      nicho: pegar("#m-nicho").value.trim(),
       obs: pegar("#m-obs").value.trim(),
       ultimo_contato: pegar("#m-contato").value || null
     };
