@@ -60,6 +60,9 @@ button{font-family:inherit; font-size:inherit; color:inherit;}
   background:var(--creme); color:var(--tinta-suave); z-index:200; font-size:.9rem;
 }
 #app[hidden]{display:none;}
+/* quando algo está marcado como escondido, fica escondido mesmo,
+   mesmo que tenha outro display vindo da classe */
+[hidden]{display:none !important;}
 
 /* ---------- menu lateral ---------- */
 .painel{display:flex; min-height:100vh;}
