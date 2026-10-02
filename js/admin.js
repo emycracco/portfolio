@@ -183,13 +183,49 @@ async function lerTabela(tabela, campoOrdem, crescente){
   return [];
 }
 
+/* Quando o banco reclama de uma coluna que ainda não existe,
+   ele diz o nome dela na mensagem. Esta função pega esse nome. */
+function colunaQueFaltou(mensagem){
+  const texto = String(mensagem || "");
+  const achou = texto.match(/Could not find the '([^']+)' column/i)
+             || texto.match(/column "([^"]+)" of relation/i)
+             || texto.match(/column ([a-z_]+) does not exist/i);
+  return achou ? achou[1] : null;
+}
+
+/* Grava tirando do caminho as colunas que ainda não existem no banco,
+   em vez de perder tudo. Devolve também quais colunas ficaram de fora. */
+async function gravarTolerante(tabela, linhas, id){
+  let dados = Array.isArray(linhas)
+    ? linhas.map(l => Object.assign({}, l))
+    : Object.assign({}, linhas);
+  const deixadasDeFora = [];
+
+  for(let tentativa = 0; tentativa < 5; tentativa++){
+    const resposta = id
+      ? await window.sb.from(tabela).update(dados).eq("id", id)
+      : await window.sb.from(tabela).insert(dados);
+
+    if(!resposta.error) return { ok:true, deixadasDeFora };
+
+    const coluna = colunaQueFaltou(resposta.error.message);
+    if(!coluna) return { ok:false, erro:resposta.error.message, deixadasDeFora };
+
+    deixadasDeFora.push(coluna);
+    if(Array.isArray(dados)) dados = dados.map(l => { const copia = Object.assign({}, l); delete copia[coluna]; return copia; });
+    else { dados = Object.assign({}, dados); delete dados[coluna]; }
+  }
+  return { ok:false, erro:"não consegui ajustar as colunas", deixadasDeFora };
+}
+
 async function gravar(tabela, linha, id){
   if(!window.sb){ recado("Sem conexão com o banco.", true); return false; }
   try{
-    const resposta = id
-      ? await window.sb.from(tabela).update(linha).eq("id", id)
-      : await window.sb.from(tabela).insert(linha);
-    if(resposta.error){ recado("Não consegui salvar: " + resposta.error.message, true); return false; }
+    const r = await gravarTolerante(tabela, linha, id);
+    if(!r.ok){ recado("Não consegui salvar: " + r.erro, true); return false; }
+    if(r.deixadasDeFora.length){
+      recado("Salvei, mas " + r.deixadasDeFora.join(" e ") + " não existe no banco ainda. Rode o banco.sql no Supabase.", true);
+    }
     return true;
   }catch(e){
     recado("Não consegui salvar agora.", true);
@@ -1060,13 +1096,20 @@ function janelaImportar(linhas, nomeArquivo){
       paraGravar.push(m);
     });
 
-    let gravadas = 0, falharam = 0;
+    let gravadas = 0, falharam = 0, ultimoErro = "";
+    const colunasForaDoBanco = [];
     for(let i = 0; i < paraGravar.length; i += 40){
       const lote = paraGravar.slice(i, i + 40);
       try{
-        const { error } = await window.sb.from("marcas").insert(lote);
-        if(error) falharam += lote.length; else gravadas += lote.length;
-      }catch(e){ falharam += lote.length; }
+        const r = await gravarTolerante("marcas", lote);
+        if(r.ok){
+          gravadas += lote.length;
+          r.deixadasDeFora.forEach(c => { if(!colunasForaDoBanco.includes(c)) colunasForaDoBanco.push(c); });
+        } else {
+          falharam += lote.length;
+          ultimoErro = r.erro || "";
+        }
+      }catch(e){ falharam += lote.length; ultimoErro = e && e.message; }
     }
 
     fecharJanela();
@@ -1076,7 +1119,12 @@ function janelaImportar(linhas, nomeArquivo){
     if(repetidas) partes.push(repetidas + (repetidas === 1 ? " já estava na base" : " já estavam na base"));
     if(semNome)   partes.push(semNome + " sem nome, ignorada" + (semNome === 1 ? "" : "s"));
     if(falharam)  partes.push(falharam + (falharam === 1 ? " não entrou" : " não entraram"));
-    recado(partes.join(", ") + ".", falharam > 0);
+    let aviso = partes.join(", ") + ".";
+    if(colunasForaDoBanco.length){
+      aviso += " A coluna " + colunasForaDoBanco.join(" e ") + " ainda não existe no banco, então ficou vazia. Rode o banco.sql no Supabase.";
+    }
+    if(falharam && ultimoErro) aviso += " Motivo: " + ultimoErro;
+    recado(aviso, falharam > 0);
   });
 }
 
