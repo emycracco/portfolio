@@ -8,20 +8,23 @@
 <meta name="description" content="Área restrita do portfólio de Emellyn Cracco.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
+/* mesma paleta e mesmo jeito do portfólio: borda grossa e sombra dura */
 :root{
-  --rosa:#ff7eb6;
-  --rosa-claro:#ffe8f3;
-  --magenta:#c2185b;
-  --rosa-dourado:#e0a4b4;
-  --creme:#fffafc;
+  --rosa:#ff8ac4;
+  --rosa-claro:#fde4f2;
+  --magenta:#e3157f;
+  --rosa-dourado:#c58aae;
+  --roxo:#6a1b9a;
+  --lima:#a7d41f;
+  --creme:#f8ecf6;
   --branco:#fff;
-  --tinta:#4a2b39;
-  --tinta-suave:#7a5566;
-  --raio:22px;
-  --seta:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 26 26"><path d="M4 2 L4 20 L8.6 15.7 L11.5 22 L14.8 20.5 L11.9 14.4 L18.2 14.4 Z" fill="%23c2185b" stroke="white" stroke-width="1.3" stroke-linejoin="round"/></svg>') 4 2, auto;
-  --toque:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="28" viewBox="0 0 24 28"><path d="M9 2.2c0-1.2 1-2.2 2.2-2.2s2.2 1 2.2 2.2V12h.6c.2-.9 1-1.6 2-1.6s1.8.6 2 1.5c.35-.32.8-.5 1.3-.5 1.1 0 2 .9 2 2v.6c.55.35.9.95.9 1.6v3.5c0 4.2-3.4 7.6-7.6 7.6h-1.6c-2.3 0-4.4-1-5.8-2.8L2.6 18.6c-.7-.9-.5-2.2.4-2.8.8-.6 1.9-.5 2.6.2L9 19V2.2Z" fill="%23c2185b" stroke="white" stroke-width="1.1" stroke-linejoin="round"/></svg>') 11 1, pointer;
+  --tinta:#2c0620;
+  --tinta-suave:#6b4260;
+  --raio:18px;
+  --seta:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 26 26"><path d="M4 2 L4 20 L8.6 15.7 L11.5 22 L14.8 20.5 L11.9 14.4 L18.2 14.4 Z" fill="%23e3157f" stroke="white" stroke-width="1.3" stroke-linejoin="round"/></svg>') 4 2, auto;
+  --toque:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="28" viewBox="0 0 24 28"><path d="M9 2.2c0-1.2 1-2.2 2.2-2.2s2.2 1 2.2 2.2V12h.6c.2-.9 1-1.6 2-1.6s1.8.6 2 1.5c.35-.32.8-.5 1.3-.5 1.1 0 2 .9 2 2v.6c.55.35.9.95.9 1.6v3.5c0 4.2-3.4 7.6-7.6 7.6h-1.6c-2.3 0-4.4-1-5.8-2.8L2.6 18.6c-.7-.9-.5-2.2.4-2.8.8-.6 1.9-.5 2.6.2L9 19V2.2Z" fill="%23e3157f" stroke="white" stroke-width="1.1" stroke-linejoin="round"/></svg>') 11 1, pointer;
 }
 *{box-sizing:border-box;}
 html,body{cursor:var(--seta);}
@@ -38,11 +41,11 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(-
 
 .cartao{
   width:100%; max-width:390px; background:var(--branco);
-  border:1px solid rgba(224,164,180,.45); border-radius:var(--raio);
-  padding:38px 32px 32px; box-shadow:0 22px 55px rgba(194,24,91,.14);
+  border:3px solid var(--tinta); border-radius:var(--raio);
+  padding:38px 32px 32px; box-shadow:8px 8px 0 var(--tinta);
 }
-.marca{font-family:"Playfair Display",serif; font-size:1.5rem; margin:0; text-align:center;}
-.marca span{color:var(--rosa);}
+.marca{font-family:"Fredoka",sans-serif; font-weight:700; font-size:1.5rem; margin:0; text-align:center;}
+.marca span{color:var(--magenta);}
 .sub{
   text-align:center; margin:6px 0 26px; font-size:.72rem;
   letter-spacing:.2em; text-transform:uppercase; color:var(--tinta-suave);
@@ -50,17 +53,18 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(-
 label{display:block; font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--tinta-suave); margin-bottom:6px;}
 input{
   width:100%; padding:12px 14px; margin-bottom:16px; border-radius:12px;
-  border:1px solid rgba(224,164,180,.6); background:#fffdfe;
+  border:2px solid var(--tinta); background:#fffdfe;
   font-family:inherit; font-size:.95rem; color:var(--tinta); cursor:text;
 }
-input:focus{border-color:var(--rosa);}
+input:focus{border-color:var(--magenta); outline:none;}
 .botao{
-  width:100%; padding:13px; border:0; border-radius:999px; color:#fff;
-  background:linear-gradient(135deg, var(--rosa), var(--magenta));
-  font-size:.78rem; letter-spacing:.16em; text-transform:uppercase; font-weight:500;
-  box-shadow:0 12px 26px rgba(194,24,91,.26); transition:transform .2s ease;
+  width:100%; padding:13px; border:3px solid var(--tinta); border-radius:999px; color:#fff;
+  background:var(--magenta);
+  font-family:"Fredoka",sans-serif; font-size:.82rem; letter-spacing:.08em; font-weight:600;
+  box-shadow:4px 4px 0 var(--tinta); transition:transform .18s ease, box-shadow .18s ease;
 }
-.botao:hover{transform:translateY(-2px);}
+.botao:hover{transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--tinta);}
+.botao:active{transform:translate(2px,2px); box-shadow:0 0 0 var(--tinta);}
 .botao[disabled]{opacity:.6; transform:none;}
 .linha-extra{margin-top:18px; text-align:center;}
 .link{
@@ -71,8 +75,8 @@ input:focus{border-color:var(--rosa);}
   display:none; margin-bottom:18px; padding:11px 14px; border-radius:12px;
   font-size:.86rem; line-height:1.45;
 }
-.faixa.erro{display:block; background:#ffe3ec; color:#a3164c; border:1px solid #f4b8cd;}
-.faixa.ok{display:block; background:var(--rosa-claro); color:var(--magenta); border:1px solid var(--rosa-dourado);}
+.faixa.erro{display:block; background:#ffe0ec; color:#c00f54; border:2px solid #c00f54;}
+.faixa.ok{display:block; background:var(--lima); color:var(--tinta); border:2px solid var(--tinta);}
 .voltar{display:block; text-align:center; margin-top:22px; font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; color:var(--tinta-suave); text-decoration:none;}
 .voltar:hover{color:var(--magenta);}
 .carregando{text-align:center; color:var(--tinta-suave); font-size:.85rem; padding:40px 0;}
