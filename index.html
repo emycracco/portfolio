@@ -334,6 +334,11 @@ a.trabalho{display:block; text-decoration:none; color:inherit;}
 }
 .trabalho-info h3{font-size:1.14rem;}
 .trabalho-info p{margin:6px 0 0; font-family:var(--fonte-serif); color:var(--tinta-suave);}
+/* o nome da marca do trabalho, discreto embaixo da descrição */
+.marca-trabalho{
+  display:inline-block; margin-top:10px;
+  font-size:.72rem; letter-spacing:.16em; text-transform:uppercase; color:var(--rosa-dourado);
+}
 .vazio{text-align:center; color:var(--tinta-suave); font-family:var(--fonte-serif); font-size:1.1rem;}
 
 /* =======================================================
@@ -1066,6 +1071,7 @@ function montarTrabalhos(nicho){
         <span class="tag">${t.nicho}</span>
         <h3>${t.titulo}</h3>
         <p>${t.descricao}</p>
+        ${t.marca ? `<span class="marca-trabalho">${t.marca}</span>` : ""}
       </div>`;
 
     return codigo
@@ -1240,16 +1246,32 @@ fundoVideo.addEventListener("click", (e) => { if(e.target === fundoVideo) fechar
    Roda de novo toda vez que os cards são montados, inclusive
    quando eles vêm do banco. */
 function ligarCapasEPrevias(){
-/* se o frame vertical do vídeo não existir, tenta as outras capas do YouTube */
+/* Se o frame vertical do vídeo não existir, tenta as outras capas do YouTube.
+   Atenção: quando a capa não existe, o YouTube não dá erro, ele devolve
+   uma imagenzinha cinza de 120x90. Por isso a troca também olha o tamanho. */
 document.querySelectorAll(".destaque-thumb").forEach(img => {
-  const reservas = img.dataset.codigo ? [
-    `https://i.ytimg.com/vi/${img.dataset.codigo}/maxresdefault.jpg`,
-    `https://i.ytimg.com/vi/${img.dataset.codigo}/hqdefault.jpg`
+  if(img.dataset.ligada) return;          /* não liga duas vezes no mesmo card */
+  img.dataset.ligada = "1";
+
+  const codigo = img.dataset.codigo;
+  const reservas = codigo ? [
+    `https://i.ytimg.com/vi/${codigo}/maxresdefault.jpg`,
+    `https://i.ytimg.com/vi/${codigo}/sddefault.jpg`,
+    `https://i.ytimg.com/vi/${codigo}/hqdefault.jpg`
   ] : [];
-  img.addEventListener("error", () => {
+
+  const tentarProxima = () => {
     const proxima = reservas.shift();
     if(proxima) img.src = proxima;
-  });
+  };
+  const conferirTamanho = () => {
+    /* capa de verdade tem pelo menos 400px de largura */
+    if(img.naturalWidth && img.naturalWidth < 400) tentarProxima();
+  };
+
+  img.addEventListener("error", tentarProxima);
+  img.addEventListener("load", conferirTamanho);
+  if(img.complete) conferirTamanho();
 });
 
 /* PRÉVIA SEM SOM ao passar o mouse por cima do card.
@@ -1334,7 +1356,8 @@ if(temMouse && !menosMovimento){
         titulo: v.titulo || "",
         nicho: (v.nicho || "outros").toLowerCase(),
         formato: v.formato || "vídeo 9:16",
-        descricao: v.descricao || v.marca || "",
+        descricao: v.descricao || "",
+        marca: v.marca || "",
         link: v.link || "",
         foto: "",
         degrade: degrades[i % degrades.length]
