@@ -376,7 +376,7 @@ a.trabalho{display:block; text-decoration:none; color:inherit;}
   text-align:center; font-family:var(--fonte-manuscrita);
   font-size:2rem; color:var(--rosa); margin-bottom:28px;
 }
-.grid-resultados{display:grid; grid-template-columns:repeat(3,1fr); gap:26px; margin-bottom:66px;}
+.grid-resultados{display:grid; grid-template-columns:repeat(4,1fr); gap:22px; margin-bottom:10px;}
 .resultado{
   background:linear-gradient(150deg, #fff 0%, #fff4f9 100%);
   border:var(--borda); border-left:3px solid var(--rosa);
@@ -575,7 +575,7 @@ a.trabalho{display:block; text-decoration:none; color:inherit;}
         <li><a href="#destaques">Destaques</a></li>
         <li><a href="#trabalhos">Trabalhos</a></li>
         <li><a href="#servicos">Serviços</a></li>
-        <li><a href="#numeros">Números</a></li>
+        <li><a href="#numeros">Como eu trabalho</a></li>
         <li><a href="#contato">Contato</a></li>
       </ul>
     </nav>
@@ -684,19 +684,16 @@ a.trabalho{display:block; text-decoration:none; color:inherit;}
 <section id="numeros" aria-labelledby="tituloNumeros">
   <div class="container">
     <div class="cabecalho-secao revelar">
-      <span class="olho">Números e depoimentos</span>
-      <h2 id="tituloNumeros" class="titulo-secao">Resultados que <span class="script">falam por mim</span></h2>
-      <p class="subtitulo-secao">Dados das entregas, resultados de campanha e o que as marcas dizem depois de trabalhar comigo.</p>
+      <span class="olho">Como eu trabalho</span>
+      <h2 id="tituloNumeros" class="titulo-secao">Do briefing ao vídeo <span class="script">pronto para publicar</span></h2>
+      <p class="subtitulo-secao">O caminho é sempre o mesmo, combinado antes, para você saber o que esperar e quando.</p>
       <div class="ornamento">&#10047;</div>
     </div>
 
     <div class="grid-metricas" id="gridMetricas"></div>
 
-    <p class="subtitulo-bloco revelar">resultados de campanha</p>
+    <p class="subtitulo-bloco revelar">o passo a passo</p>
     <div class="grid-resultados" id="gridResultados"></div>
-
-    <p class="subtitulo-bloco revelar">o que as marcas dizem</p>
-    <div class="grid-depoimentos" id="gridDepoimentos"></div>
   </div>
 </section>
 
@@ -832,65 +829,67 @@ const MARCAS = [
   { nome:"ALVA",               logo:"logos/alva.png", cheia:true }
 ];
 
-/* ---- NÚMEROS DA CAPA (três números curtos) ----
-   Troque os valores pelos seus números reais. */
-const NUMEROS_CAPA = [
-  { valor: "+120",  rotulo: "vídeos entregues" },
-  { valor: "+18",   rotulo: "marcas atendidas" },
-  { valor: "+3,2M", rotulo: "views somadas" }
-];
+/* ---- NÚMEROS DA CAPA ----
+   Estes números não são digitados: eles são contados sozinhos
+   a partir dos vídeos e das marcas que estão cadastrados.
+   Assim nunca ficam desatualizados nem exagerados. */
+function numerosDaCapa(){
+  const links = new Set();
+  DESTAQUES.concat(TRABALHOS).forEach(v => { if(v.link) links.add(v.link); });
+  const totalVideos = links.size || DESTAQUES.length;
+  const nichos = new Set(TRABALHOS.map(t => t.nicho).filter(Boolean));
+
+  /* se alguma conta der zero, aquele número simplesmente não aparece */
+  return [
+    { valor: totalVideos, rotulo: totalVideos === 1 ? "vídeo no portfólio" : "vídeos no portfólio" },
+    { valor: MARCAS.length, rotulo: MARCAS.length === 1 ? "marca parceira" : "marcas parceiras" },
+    { valor: nichos.size, rotulo: nichos.size === 1 ? "nicho atendido" : "nichos atendidos" }
+  ].filter(n => n.valor > 0).map(n => ({ valor: String(n.valor), rotulo: n.rotulo }));
+}
 
 /* ---- CONTEÚDOS DE DESTAQUE (três vídeos) ----
    link  = ONDE ENTRA O LINK DO VÍDEO. Pode ser qualquer endereço do YouTube
            (shorts, youtu.be ou watch?v=), que o vídeo abre dentro do próprio site
    capa  = deixe "" que a capa vem do próprio vídeo (o primeiro frame que o YouTube guarda).
            Só preencha, por exemplo com "capa-video-1.jpg", se quiser uma capa sua no lugar
-   numero e rotulo = o número forte e o que ele significa */
+   numero e rotulo = deixe "" se não houver número real para mostrar.
+   Esta lista é só a reserva: ela aparece apenas se o banco não responder.
+   No dia a dia os destaques vêm da aba Portfólio do painel. */
 const DESTAQUES = [
   {
     link: "https://youtube.com/shorts/ZvDNc4IgmOE?feature=share",
     capa: "",
     degrade: "linear-gradient(160deg,#ffd3e6 0%,#ffb6d5 55%,#e0a4b4 100%)",
-    numero: "+2,4M",
-    rotulo: "views no reels",
-    titulo: "Rotina de skincare da noite",
-    contexto: "Vídeo de rotina com foco no antes e depois da pele."
+    numero: "",
+    rotulo: "beleza e autocuidado",
+    titulo: "Conteúdo de beleza",
+    contexto: "Vídeo vertical gravado e editado por mim."
   },
   {
     link: "https://youtube.com/shorts/xXChgLiVN48?feature=share",
     capa: "",
     degrade: "linear-gradient(160deg,#ffe8f3 0%,#ffc2dd 50%,#ff7eb6 100%)",
-    numero: "+980K",
-    rotulo: "views no vídeo",
-    titulo: "Look do dia com peça da marca",
-    contexto: "Prova de roupa com três combinações no mesmo vídeo."
+    numero: "",
+    rotulo: "moda e lifestyle",
+    titulo: "Conteúdo de moda",
+    contexto: "Vídeo vertical gravado e editado por mim."
   },
   {
     link: "https://youtube.com/shorts/hqq-lg7zhBs?feature=share",
     capa: "",
     degrade: "linear-gradient(160deg,#ffdfec 0%,#f3b8cd 55%,#c2185b 130%)",
-    numero: "+640K",
-    rotulo: "views no vídeo",
-    titulo: "Unboxing com primeira impressão",
-    contexto: "Abertura do produto com reação real e detalhe da textura."
+    numero: "",
+    rotulo: "fitness e suplementos",
+    titulo: "Conteúdo fitness",
+    contexto: "Vídeo vertical gravado e editado por mim."
   }
 ];
 
 /* ---- TRABALHOS POR NICHO ----
-   nicho: beleza, skincare, moda, fitness ou tech
-   foto: deixe "" para o bloco com degradê ou escreva o caminho da imagem */
-const TRABALHOS = [
-  { titulo:"Campanha de batom líquido", nicho:"beleza",  formato:"vídeo 9:16", descricao:"Três vídeos de swatch com fala curta e foco na cor.", foto:"", degrade:"linear-gradient(150deg,#ffd3e6,#ff9ec9)" },
-  { titulo:"Tutorial de base leve",     nicho:"beleza",  formato:"vídeo 9:16", descricao:"Passo a passo de aplicação com luz natural da manhã.", foto:"", degrade:"linear-gradient(150deg,#ffe8f3,#f1aec6)" },
-  { titulo:"Sérum de vitamina C",       nicho:"skincare",formato:"foto 4:5",   descricao:"Fotos do frasco com textura na mão e fundo delicado.", foto:"", degrade:"linear-gradient(150deg,#ffeaf4,#e0a4b4)" },
-  { titulo:"Protetor solar do dia a dia", nicho:"skincare", formato:"vídeo 9:16", descricao:"Vídeo de rotina mostrando aplicação antes do trabalho.", foto:"", degrade:"linear-gradient(150deg,#ffd9ea,#ffb0d2)" },
-  { titulo:"Prova de roupa de verão",   nicho:"moda",    formato:"vídeo 9:16", descricao:"Cinco peças em um vídeo com trocas rápidas e trilha suave.", foto:"", degrade:"linear-gradient(150deg,#ffe3ef,#eaa8c2)" },
-  { titulo:"Editorial de peças básicas", nicho:"moda",   formato:"foto 4:5",   descricao:"Ensaio com luz de janela e fundo claro para o e-commerce.", foto:"", degrade:"linear-gradient(150deg,#fff0f6,#e0a4b4)" },
-  { titulo:"Treino em casa com faixa",  nicho:"fitness", formato:"vídeo 9:16", descricao:"Demonstração de exercícios com legenda de repetições.", foto:"", degrade:"linear-gradient(150deg,#ffdcec,#ff8dbf)" },
-  { titulo:"Garrafa térmica no treino", nicho:"fitness", formato:"foto 4:5",   descricao:"Fotos do produto em uso, com clima de rotina saudável.", foto:"", degrade:"linear-gradient(150deg,#ffe8f3,#f0b3c9)" },
-  { titulo:"Fone sem fio no dia a dia", nicho:"tech",    formato:"vídeo 9:16", descricao:"Review curto com três motivos para levar na bolsa.", foto:"", degrade:"linear-gradient(150deg,#ffd7e9,#d79fb4)" },
-  { titulo:"Acessório de celular",      nicho:"tech",    formato:"vídeo 9:16", descricao:"Unboxing com foco no encaixe e no acabamento da peça.", foto:"", degrade:"linear-gradient(150deg,#ffe0ee,#c2185b)" }
-];
+   Esta lista fica de propósito vazia: a galeria inteira vem da aba
+   Portfólio do painel. Se o banco não responder, a seção mostra o
+   aviso educado em vez de trabalho nenhum inventado. */
+const TRABALHOS = [];
 
 /* ---- SERVIÇOS ---- */
 const SERVICOS = [
@@ -902,30 +901,22 @@ const SERVICOS = [
   { titulo:"Pacote mensal",         texto:"Um combinado fixo de vídeos e fotos por mês, com calendário combinado antes." }
 ];
 
-/* ---- MÉTRICAS COM CONTADOR ----
-   valor = número que vai ser animado
-   prefixo e sufixo = o que aparece antes e depois
-   decimais = quantas casas depois da vírgula */
+/* ---- O QUE EU GARANTO ----
+   Nada de número inventado aqui: são compromissos que dependem de você,
+   e não de resultado de campanha. */
 const METRICAS = [
-  { valor:120, prefixo:"+", sufixo:"",  decimais:0, rotulo:"vídeos entregues" },
-  { valor:18,  prefixo:"+", sufixo:"",  decimais:0, rotulo:"marcas atendidas" },
-  { valor:3.2, prefixo:"+", sufixo:"M", decimais:1, rotulo:"views somadas" },
-  { valor:72,  prefixo:"",  sufixo:"h", decimais:0, rotulo:"prazo de entrega" }
+  { valor:"até 72h",   rotulo:"para entregar depois de gravar" },
+  { valor:"1 rodada",  rotulo:"de ajuste já inclusa" },
+  { valor:"9:16 e 4:5", rotulo:"formatos que eu entrego" },
+  { valor:"roteiro",   rotulo:"aprovado antes de gravar" }
 ];
 
-/* ---- RESULTADOS DE CAMPANHA ---- */
+/* ---- O PASSO A PASSO DO TRABALHO ---- */
 const RESULTADOS = [
-  { destaque:"+2,4M views", titulo:"Campanha de skincare", texto:"Um único reels levou a marca ao maior alcance do trimestre." },
-  { destaque:"3x salvamentos", titulo:"Lançamento de moda", texto:"O vídeo de prova de roupa virou o conteúdo mais salvo do perfil." },
-  { destaque:"18 criativos", titulo:"Pacote mensal de tech", texto:"Cortes variados para testar ganchos diferentes na mídia paga." }
-];
-
-/* ---- DEPOIMENTOS ---- */
-const DEPOIMENTOS = [
-  { texto:"A entrega veio antes do prazo e no tom exato que a gente tinha pedido. Foi só publicar.", nome:"Cliente 01", empresa:"Marca 01" },
-  { texto:"O roteiro chegou redondo, com o benefício do produto logo nos primeiros segundos.", nome:"Cliente 02", empresa:"Marca 02" },
-  { texto:"Os cortes para anúncio renderam o melhor custo por clique que já tivemos.", nome:"Cliente 03", empresa:"Marca 03" },
-  { texto:"Comunicação leve do começo ao fim, com ajuste feito no mesmo dia. Parceria para repetir.", nome:"Cliente 04", empresa:"Marca 04" }
+  { destaque:"1. Briefing", titulo:"A gente combina tudo antes", texto:"Você me conta o produto, o objetivo e a data. Eu volto com a ideia e o valor." },
+  { destaque:"2. Roteiro", titulo:"Você aprova antes de eu gravar", texto:"Mando o roteiro escrito, com o gancho e o que vou falar. Nada é gravado sem o seu sim." },
+  { destaque:"3. Gravação e edição", titulo:"Luz natural e corte limpo", texto:"Gravo, edito, legendo e deixo pronto para publicar, no formato que o seu time precisa." },
+  { destaque:"4. Entrega", titulo:"Arquivo na sua mão em até 72 horas", texto:"Com uma rodada de ajuste inclusa, caso queira mudar alguma coisa." }
 ];
 
 /* =========================================================
@@ -934,8 +925,11 @@ const DEPOIMENTOS = [
 const pegar = (s) => document.querySelector(s);
 
 /* números da capa */
-pegar("#numerosCapa").innerHTML = NUMEROS_CAPA
-  .map(n => `<div><strong>${n.valor}</strong><span>${n.rotulo}</span></div>`).join("");
+function montarNumerosCapa(){
+  pegar("#numerosCapa").innerHTML = numerosDaCapa()
+    .map(n => `<div><strong>${n.valor}</strong><span>${n.rotulo}</span></div>`).join("");
+}
+montarNumerosCapa();
 
 /* faixa animada de logos: a lista é montada duas vezes seguidas
    para o deslize voltar ao começo sem ninguém perceber o corte */
@@ -995,8 +989,8 @@ pegar("#gridDestaques").innerHTML = lista.map(d => {
       <span class="play" aria-hidden="true"></span>
     </div>
     <div class="destaque-info">
-      <p class="destaque-numero">${d.numero}</p>
-      <span class="destaque-rotulo">${d.rotulo}</span>
+      ${d.numero ? `<p class="destaque-numero">${d.numero}</p>` : ""}
+      ${d.rotulo ? `<span class="destaque-rotulo">${d.rotulo}</span>` : ""}
       <h3>${d.titulo}</h3>
       <p>${d.contexto}</p>
     </div>
@@ -1014,27 +1008,20 @@ pegar("#gridServicos").innerHTML = SERVICOS.map((s, i) => `
     <p>${s.texto}</p>
   </article>`).join("");
 
-/* métricas */
+/* o que eu garanto, sem número inventado */
 pegar("#gridMetricas").innerHTML = METRICAS.map(m => `
   <div class="metrica revelar">
-    <strong class="contador" data-valor="${m.valor}" data-prefixo="${m.prefixo}" data-sufixo="${m.sufixo}" data-decimais="${m.decimais}">${m.prefixo}0${m.sufixo}</strong>
+    <strong style="font-size:1.5rem">${m.valor}</strong>
     <span>${m.rotulo}</span>
   </div>`).join("");
 
-/* resultados */
+/* o passo a passo do trabalho */
 pegar("#gridResultados").innerHTML = RESULTADOS.map(r => `
   <article class="resultado revelar">
     <b>${r.destaque}</b>
     <h3>${r.titulo}</h3>
     <p>${r.texto}</p>
   </article>`).join("");
-
-/* depoimentos */
-pegar("#gridDepoimentos").innerHTML = DEPOIMENTOS.map(d => `
-  <blockquote class="depoimento revelar">
-    <p>${d.texto}</p>
-    <footer><b>${d.nome}</b>, ${d.empresa}</footer>
-  </blockquote>`).join("");
 
 /* =========================================================
    FILTRO DE TRABALHOS POR NICHO
@@ -1365,6 +1352,9 @@ if(temMouse && !menosMovimento){
       montarFiltros();
       montarTrabalhos("todos");
     }
+
+    /* com os vídeos do banco na mão, os números da capa se recontam */
+    montarNumerosCapa();
   }catch(e){
     /* qualquer problema aqui é silencioso de propósito: o site continua com a lista fixa */
   }
