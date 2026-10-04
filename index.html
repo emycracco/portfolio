@@ -7,13 +7,13 @@
 <meta name="description" content="Criadora de conteúdo UGC em Curitiba. Vídeos de treino em casa, pole dance e produto para marcas de moda fitness, suplementos e equipamento.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Jost:wght@300;400;500;600&family=Permanent+Marker&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 /* =========================================================
    MODELO 11: FITNESS STICKERS, NA PALETA DA EMELLYN
 
    Do modelo original ficou tudo que é ESTILO: fontes redondas
-   (Fredoka), detalhe de marcador (Permanent Marker), sombra
+   (Fredoka), sombra
    dura, borda grossa, adesivos girados e layout com movimento.
 
    As cores do original (creme, rosa claro, vermelho) saíram.
@@ -35,7 +35,7 @@
 
   --fonte-titulo:"Fredoka", "Segoe UI", sans-serif;
   --fonte-corpo:"Jost", "Segoe UI", sans-serif;
-  --fonte-marcador:"Permanent Marker", cursive;
+  --fonte-marcador:"Fredoka", "Segoe UI", sans-serif;  /* era Permanent Marker, trocada a pedido */
 
   --borda:3px solid var(--tinta);
   --sombra-dura:6px 6px 0 var(--tinta);
@@ -72,7 +72,7 @@ section{padding:92px 0; position:relative;}
 }
 .titulo-secao{font-size:clamp(2rem, 5vw, 3.2rem);}
 .titulo-secao em{font-style:normal; color:var(--magenta);}
-.titulo-secao .marcador{font-family:var(--fonte-marcador); font-weight:400; color:var(--turquesa);}
+.titulo-secao .marcador{font-family:var(--fonte-marcador); font-weight:600; color:var(--turquesa);}
 .subtitulo-secao{font-size:1.02rem; color:var(--tinta-suave); max-width:640px; margin:14px auto 0;}
 .cabecalho-secao{text-align:center; margin-bottom:52px; position:relative; z-index:2;}
 
@@ -124,7 +124,7 @@ section{padding:92px 0; position:relative;}
 .capa-grid{display:grid; grid-template-columns:1.08fr .92fr; gap:52px; align-items:center; position:relative; z-index:2;}
 .capa h1{font-size:clamp(2.7rem, 7vw, 4.6rem);}
 .capa h1 em{font-style:normal; color:var(--magenta);}
-.capa h1 .marcador{font-family:var(--fonte-marcador); font-weight:400; color:var(--turquesa); font-size:.82em;}
+.capa h1 .marcador{font-family:var(--fonte-marcador); font-weight:600; color:var(--turquesa); font-size:.82em;}
 .capa .frase{font-size:clamp(1rem, 2.1vw, 1.14rem); color:var(--tinta-suave); max-width:540px; margin:20px 0 30px;}
 .botoes{display:flex; flex-wrap:wrap; gap:14px;}
 .btn{
@@ -222,7 +222,7 @@ section{padding:92px 0; position:relative;}
 }
 .promessas li b{font-family:var(--fonte-titulo); font-weight:600; color:var(--magenta);}
 .visto{flex:none; width:26px; height:26px; border-radius:50%; background:var(--lima); border:2px solid var(--tinta); display:flex; align-items:center; justify-content:center; font-size:.8rem; color:var(--tinta);}
-.assinatura{margin-top:26px; font-family:var(--fonte-marcador); font-size:1.9rem; color:var(--magenta); line-height:1;}
+.assinatura{margin-top:26px; font-family:var(--fonte-marcador); font-weight:600; font-size:1.9rem; color:var(--magenta); line-height:1;}
 
 /* =========================================================
    3. CONTEÚDOS DE DESTAQUE
@@ -252,7 +252,7 @@ section{padding:92px 0; position:relative;}
 .play::after{content:""; margin-left:5px; border-left:18px solid var(--tinta); border-top:11px solid transparent; border-bottom:11px solid transparent;}
 .destaque-info{padding:20px 22px 24px;}
 .destaque-numero{font-family:var(--fonte-titulo); font-weight:700; font-size:1.9rem; color:var(--magenta); line-height:1; margin:0;}
-.destaque-rotulo{display:block; margin-bottom:10px; font-family:var(--fonte-marcador); font-size:.92rem; color:var(--turquesa);}
+.destaque-rotulo{display:block; margin-bottom:10px; font-family:var(--fonte-marcador); font-weight:600; font-size:.92rem; color:var(--turquesa);}
 .destaque-info h3{font-size:1.14rem; margin-bottom:6px;}
 .destaque-info p{margin:0; color:var(--tinta-suave); font-size:.94rem;}
 
@@ -306,7 +306,7 @@ section{padding:92px 0; position:relative;}
 }
 .trabalho-info h3{font-size:1.04rem;}
 .trabalho-info p{margin:6px 0 0; color:var(--tinta-suave); font-size:.92rem;}
-.marca-trabalho{display:inline-block; margin-top:9px; font-family:var(--fonte-marcador); font-size:.88rem; color:var(--roxo);}
+.marca-trabalho{display:inline-block; margin-top:9px; font-family:var(--fonte-marcador); font-weight:600; font-size:.88rem; color:var(--roxo);}
 .sem-trabalhos{text-align:center; color:var(--tinta-suave);}
 
 /* =========================================================
@@ -341,7 +341,7 @@ section{padding:92px 0; position:relative;}
 .metrica span{display:block; margin-top:8px; font-size:.78rem; color:var(--tinta-suave);}
 .grid-resultados{display:grid; grid-template-columns:repeat(4,1fr); gap:20px;}
 .resultado{padding:26px 22px; border-radius:var(--raio); background:var(--branco); border:var(--borda); box-shadow:var(--sombra-dura-p);}
-.resultado b{display:block; font-family:var(--fonte-marcador); font-size:1.1rem; color:var(--turquesa); margin-bottom:8px;}
+.resultado b{display:block; font-family:var(--fonte-marcador); font-weight:600; font-size:1.1rem; color:var(--turquesa); margin-bottom:8px;}
 .resultado h3{font-size:1rem; margin-bottom:6px;}
 .resultado p{margin:0; color:var(--tinta-suave); font-size:.92rem;}
 
@@ -381,9 +381,13 @@ section{padding:92px 0; position:relative;}
    8. RODAPÉ
    ========================================================= */
 .rodape{padding:54px 0 42px; text-align:center; background:var(--magenta); color:#fff; border-top:var(--borda);}
-.rodape .nome{font-family:var(--fonte-marcador); font-size:2.3rem; margin:0; line-height:1;}
-.redes{display:flex; gap:12px; justify-content:center; list-style:none; padding:0; margin:22px 0;}
-.redes a{text-decoration:none;}
+.rodape .nome{font-family:var(--fonte-marcador); font-weight:600; font-size:2.3rem; margin:0; line-height:1;}
+.redes{display:flex; gap:12px; justify-content:center; list-style:none; padding:0; margin:22px 0; flex-wrap:wrap;}
+/* o rodapé é magenta e a letra dele é branca, então os botões
+   brancos precisam dizer que a letra deles é escura, senão
+   ficam brancos no branco e somem */
+.redes a{text-decoration:none; color:var(--tinta); font-size:.84rem;}
+.redes a:hover{background:var(--lima); color:var(--tinta);}
 .rodape small{display:block; margin-top:6px; font-size:.82rem; opacity:.88;}
 
 /* =========================================================
@@ -486,13 +490,12 @@ section{padding:92px 0; position:relative;}
     <div class="capa-grid">
       <div class="revelar">
         <span class="olho">Criadora de conteúdo UGC em Curitiba</span>
-        <h1>Conteúdo que <em>treina</em> <span class="marcador">e vende</span></h1>
+        <h1>Conteúdo que faz a sua marca <em>vender</em></h1>
         <p class="frase">Treino em casa, pole dance e calistenia, com roupa colorida e luz de verdade. Eu gravo vídeos que parecem recomendação de amiga, para marcas de moda fitness, suplementos e equipamento.</p>
         <div class="botoes">
           <a class="btn btn-magenta" href="#contato">Falar comigo</a>
           <a class="btn btn-lima" href="#trabalhos">Ver os trabalhos</a>
         </div>
-        <div class="capa-numeros" id="numerosCapa"></div>
       </div>
 
       <!-- FOTO DA CAPA
@@ -791,8 +794,15 @@ function numerosDaCapa(){
     { valor: nichos.size,   rotulo: nichos.size === 1 ? "nicho atendido" : "nichos atendidos" }
   ].filter(n => n.valor > 0);
 }
+/* Os três números da capa saíram de propósito.
+   Com poucos trabalhos fechados, número pequeno conta contra
+   em vez de contar a favor. Para trazer de volta um dia, basta
+   recolocar <div class="capa-numeros" id="numerosCapa"></div>
+   na capa e tirar o "if" daqui de baixo. */
 function montarNumerosCapa(){
-  pegar("#numerosCapa").innerHTML = numerosDaCapa()
+  const caixa = pegar("#numerosCapa");
+  if(!caixa) return;
+  caixa.innerHTML = numerosDaCapa()
     .map(n => `<div class="numero-adesivo"><strong>${n.valor}</strong><span>${n.rotulo}</span></div>`).join("");
 }
 montarNumerosCapa();
