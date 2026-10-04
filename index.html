@@ -1198,9 +1198,10 @@ document.addEventListener("keydown", (e) => {
   fecharCaptura();
   if(fundoVideo.classList.contains("aberto")) fecharVideo();
 });
-try{
-  if(!sessionStorage.getItem("midiakitVisto")) setTimeout(abrirCaptura, 7000);
-}catch(erro){ /* navegador sem sessionStorage: o card simplesmente não aparece */ }
+/* O card está DESLIGADO de propósito, enquanto o mídia kit não existe.
+   Prometer um material e não ter o que mandar queima mais do que ajuda.
+   Para religar, apague as duas barras do começo da linha de baixo. */
+// try{ if(!sessionStorage.getItem("midiakitVisto")) setTimeout(abrirCaptura, 7000); }catch(erro){}
 
 pegar("#formCaptura").addEventListener("submit", async (e) => {
   e.preventDefault();
