@@ -317,7 +317,15 @@ h1,h2,h3{font-family:var(--fonte-titulo); font-weight:600; line-height:1.15; mar
   overflow:hidden; box-shadow:var(--sombra); transition:transform .3s ease, box-shadow .3s ease;
 }
 .trabalho:hover{transform:translateY(-5px); box-shadow:var(--sombra-forte);}
-.trabalho .foto{border:none; border-radius:0; box-shadow:none;}
+.trabalho .foto{border:none; border-radius:0; box-shadow:none; position:relative;}
+/* card de trabalho que é um vídeo: vira link e ganha o botão de play */
+a.trabalho{display:block; text-decoration:none; color:inherit;}
+.trabalho .play{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:56px; height:56px;
+}
+.trabalho .play::after{border-left-width:15px; border-top-width:9px; border-bottom-width:9px;}
+.trabalho.com-video:hover .play{transform:translate(-50%,-50%) scale(1.08);}
 .trabalho-info{padding:22px 24px 26px;}
 .tag{
   display:inline-block; padding:5px 13px; border-radius:999px;
@@ -1037,22 +1045,36 @@ function montarTrabalhos(nicho){
   const lista = nicho === "todos" ? TRABALHOS : TRABALHOS.filter(t => t.nicho === nicho);
   pegar("#semTrabalhos").hidden = lista.length > 0;
   pegar("#gridTrabalhos").innerHTML = lista.map(t => {
-    /* troque o bloco de degradê pela imagem real preenchendo "foto" no array */
+    /* quando o trabalho tem link de vídeo, a capa é o frame do próprio vídeo
+       e o card inteiro vira um botão que abre o player aqui dentro */
+    const codigo = codigoDoYoutube(t.link || "");
+
     const visual = t.foto
       ? `<img src="${t.foto}" alt="${t.titulo}" style="aspect-ratio:4/5;object-fit:cover;width:100%">`
-      : `<div class="foto foto-45" role="img" aria-label="Espaço reservado para ${t.formato} do trabalho ${t.titulo}" style="background:${t.degrade}">
-           <p class="legenda">${t.formato}</p>
-         </div>`;
-    return `
-    <article class="trabalho revelar visivel">
+      : codigo
+        ? `<div class="foto foto-45" style="background:${t.degrade}">
+             <img class="destaque-thumb" src="https://i.ytimg.com/vi/${codigo}/oardefault.jpg" alt="Capa do vídeo ${t.titulo}" data-codigo="${codigo}" loading="lazy">
+             <span class="play" aria-hidden="true"></span>
+           </div>`
+        : `<div class="foto foto-45" role="img" aria-label="Espaço reservado para ${t.formato} do trabalho ${t.titulo}" style="background:${t.degrade}">
+             <p class="legenda">${t.formato}</p>
+           </div>`;
+
+    const miolo = `
       ${visual}
       <div class="trabalho-info">
         <span class="tag">${t.nicho}</span>
         <h3>${t.titulo}</h3>
         <p>${t.descricao}</p>
-      </div>
-    </article>`;
+      </div>`;
+
+    return codigo
+      ? `<a class="trabalho com-video revelar visivel" href="${t.link}" target="_blank" rel="noopener"
+            data-codigo="${codigo}" data-titulo="${t.titulo}" aria-label="Assistir aqui no site: ${t.titulo}">${miolo}</a>`
+      : `<article class="trabalho revelar visivel">${miolo}</article>`;
   }).join("");
+
+  ligarCapasEPrevias();
 }
 montarTrabalhos("todos");
 
@@ -1201,6 +1223,16 @@ pegar("#gridDestaques").addEventListener("click", (e) => {
   abrirVideo(codigo, card.dataset.titulo, card.href);
 });
 
+/* os cards da galeria por nicho abrem o vídeo do mesmo jeito */
+pegar("#gridTrabalhos").addEventListener("click", (e) => {
+  const card = e.target.closest("a.trabalho");
+  if(!card) return;
+  const codigo = codigoDoYoutube(card.href);
+  if(!codigo) return;
+  e.preventDefault();
+  abrirVideo(codigo, card.dataset.titulo, card.href);
+});
+
 pegar("#fecharVideo").addEventListener("click", fecharVideo);
 fundoVideo.addEventListener("click", (e) => { if(e.target === fundoVideo) fecharVideo(); });
 
@@ -1303,6 +1335,7 @@ if(temMouse && !menosMovimento){
         nicho: (v.nicho || "outros").toLowerCase(),
         formato: v.formato || "vídeo 9:16",
         descricao: v.descricao || v.marca || "",
+        link: v.link || "",
         foto: "",
         degrade: degrades[i % degrades.length]
       }));
