@@ -78,6 +78,8 @@ const ICONE = {
   cupons:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 9V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v2a2.5 2.5 0 0 1 0 6v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2a2.5 2.5 0 0 1 0-6Z"/><path d="M13 7v2M13 14v3"/></svg>',
   copiar:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 6H6a2 2 0 0 0-2 2v9"/></svg>',
   link:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a4 4 0 0 0 5.7 0l3-3a4 4 0 1 0-5.7-5.7L11.3 6"/><path d="M14 11a4 4 0 0 0-5.7 0l-3 3a4 4 0 1 0 5.7 5.7l1.7-1.7"/></svg>',
+  prospeccao:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5 12 13l8.5-6.5"/></svg>',
+  aviao:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3 10.5 13.5M21 3l-6.5 18-4-8-8-4L21 3Z"/></svg>',
   zap:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 0 1-11.9 7L4 20l1.1-4A8 8 0 1 1 20 12Z"/></svg>'
 };
 
@@ -88,6 +90,7 @@ const ABAS = [
   { id:"portfolio",  grupo:"meu site",     nome:"Portfólio",  sub:"Como o seu site está indo." },
   { id:"marcas",     grupo:"meu site",     nome:"Marcas",     sub:"A sua base de contatos de empresa." },
   { id:"cupons",     grupo:"meu site",     nome:"Cupons",     sub:"Seus cupons e links de afiliada, prontos para enviar." },
+  { id:"prospeccao", grupo:"meu site",     nome:"Prospecção", sub:"Mandar a sua apresentação para várias marcas de uma vez." },
   { id:"conteudo",   grupo:"minha rotina", nome:"Conteúdo",   sub:"A sua semana de postagens, canal por canal." },
   { id:"calendario", grupo:"minha rotina", nome:"Calendário", sub:"O mês inteiro de gravar, editar e postar." },
   { id:"campanhas",  grupo:"minha rotina", nome:"Campanhas",  sub:"Trabalhos, valores e prazos." },
@@ -118,7 +121,26 @@ const estado = {
   email: "",
   faltando: [],
   sessaoExpirou: false,
-  dados: { videos:[], marcas:[], calendario:[], campanhas:[], marcados:{}, visitas:[], cupons:[], conteudos:[] },
+  dados: { videos:[], marcas:[], calendario:[], campanhas:[], marcados:{}, visitas:[], cupons:[], conteudos:[], email_envios:[], email_optout:[] },
+
+  /* --- a aba Prospecção --- */
+  prosp: {
+    publico: "selecionadas",   /* para quem vai: selecionadas, teste, todas ou uma situação */
+    modo: "texto",             /* como escrever: texto fácil ou HTML */
+    entrega: "resend",         /* resend (manda sozinho) ou rascunho (plano B pelo Gmail) */
+    assunto: "",
+    texto: "",
+    html: "",
+    botaoTexto: "",
+    botaoLink: "",
+    pularRepetidos: true,
+    buscaHistorico: "",
+    enviando: false,
+    progresso: null,           /* { feitos, total } enquanto dispara */
+    resumo: null,              /* { enviados, falhas, pulados, cotaAcabou } no fim */
+    filaRascunho: null,        /* a fila do plano B */
+    posicaoFila: 0
+  },
   semana: new Date(), filtroConteudo: "Todos",
   buscaCupons: "", filtroCupons: "Todos",
   buscaMarcas: "", filtroSituacao: "Todas", filtroNicho: "Todos", soFavoritas: false,
@@ -248,7 +270,7 @@ async function apagarLinha(tabela, id){
 async function carregarTudo(){
   estado.faltando = [];
   estado.sessaoExpirou = false;
-  const [videos, marcas, calendario, campanhas, marcados, visitas, cupons, conteudos] = await Promise.all([
+  const [videos, marcas, calendario, campanhas, marcados, visitas, cupons, conteudos, envios, optout] = await Promise.all([
     lerTabela("videos", "ordem", true),
     lerTabela("marcas", "criado_em", false),
     lerTabela("calendario", "data", true),
@@ -256,8 +278,12 @@ async function carregarTudo(){
     lerTabela("marcados"),
     lerTabela("visitas", "data", false),
     lerTabela("cupons", "criado_em", false),
-    lerTabela("conteudos", "data", true)
+    lerTabela("conteudos", "data", true),
+    lerTabela("email_envios", "criado_em", false),
+    lerTabela("email_optout", "criado_em", false)
   ]);
+  estado.dados.email_envios = envios;
+  estado.dados.email_optout = optout;
   estado.dados.cupons = cupons;
   estado.dados.conteudos = conteudos;
   estado.dados.videos = videos;
@@ -361,6 +387,7 @@ function desenhar(){
   if(estado.aba === "portfolio")  desenharPortfolio();
   if(estado.aba === "marcas")     desenharMarcas();
   if(estado.aba === "cupons")     desenharCupons();
+  if(estado.aba === "prospeccao") desenharProspeccao();
   if(estado.aba === "conteudo")   desenharConteudo();
   if(estado.aba === "calendario") desenharCalendario();
   if(estado.aba === "campanhas")  desenharCampanhas();
@@ -639,10 +666,25 @@ function desenharMarcas(){
           ${temSemNicho ? `<option value="sem nicho" ${estado.filtroNicho === "sem nicho" ? "selected" : ""}>sem nicho</option>` : ""}
         </select>` : ""}
       </div>
+      ${(() => {
+        /* resumo da seleção, para você saber quantas vão receber o próximo disparo */
+        const selecionadas = todas.filter(m => m.selecionada && m.email).length;
+        const visiveisComEmail = lista.filter(m => m.email).length;
+        return `
+        <div class="barra-selecao">
+          <span class="conta-selecao">
+            <b>${selecionadas}</b> ${selecionadas === 1 ? "marca selecionada" : "marcas selecionadas"} para a Prospecção
+          </span>
+          ${visiveisComEmail ? `<button class="btn-mini" id="selecionarVisiveis">selecionar as ${visiveisComEmail} que aparecem aqui</button>` : ""}
+          ${selecionadas ? `<button class="btn-mini" id="limparSelecao">limpar seleção</button>` : ""}
+          ${selecionadas ? `<button class="btn-mini" id="irProspeccao">ir para a Prospecção</button>` : ""}
+        </div>`;
+      })()}
       <div class="rolagem">
         ${lista.length ? `
         <table>
           <thead><tr>
+            <th style="width:30px" title="Marcar para o próximo disparo"></th>
             <th style="width:34px"></th>
             <th>Marca</th><th>Nicho</th><th>Instagram</th><th>E-mail</th><th>Telefone</th>
             <th>Situação</th><th>Observação</th><th>Último contato</th>
@@ -650,6 +692,9 @@ function desenharMarcas(){
           <tbody>
             ${lista.map(m => `
               <tr class="linha-clicavel ${m.favorita ? "destacada" : ""}" data-id="${seguro(m.id)}">
+                <td><input type="checkbox" class="caixa-marca parar" data-selecionar="${seguro(m.id)}"
+                      ${m.selecionada ? "checked" : ""} ${m.email ? "" : "disabled"}
+                      title="${m.email ? "Marcar para o próximo disparo" : "Esta marca não tem e-mail cadastrado"}"></td>
                 <td><button class="estrela-marca parar" data-estrela="${seguro(m.id)}" title="${m.favorita ? "Tirar dos favoritos" : "Fixar no topo"}" style="border:0;background:none;font-size:1.05rem;color:${m.favorita ? "var(--rosa)" : "var(--rosa-dourado)"}">${m.favorita ? "★" : "☆"}</button></td>
                 <td>${seguro(m.nome)}</td>
                 <td>${m.nicho ? `<span class="pilula p-funil">${seguro(m.nicho)}</span>` : ""}</td>
@@ -689,6 +734,53 @@ function desenharMarcas(){
     if(!m) return;
     if(await gravar("marcas", { favorita: !m.favorita }, m.id)){ await carregarTudo(); desenhar(); }
   }));
+
+  /* ---- caixinhas de seleção para o disparo ----
+     A marca fica salva no banco, então você pode marcar hoje
+     e disparar amanhã sem perder nada. */
+  pegarTodos("[data-selecionar]").forEach(caixa => caixa.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    const m = todas.find(x => String(x.id) === caixa.dataset.selecionar);
+    if(!m) return;
+    const novo = caixa.checked;
+    if(await gravar("marcas", { selecionada: novo }, m.id)){
+      m.selecionada = novo;
+      desenharMarcas();
+    } else {
+      caixa.checked = !novo;   /* se não gravou, a caixinha volta ao que era */
+    }
+  }));
+
+  const btnVisiveis = pegar("#selecionarVisiveis");
+  if(btnVisiveis) btnVisiveis.addEventListener("click", async () => {
+    const alvos = lista.filter(m => m.email && !m.selecionada);
+    if(!alvos.length){ recado("Todas as que aparecem aqui já estão selecionadas."); return; }
+    btnVisiveis.disabled = true;
+    for(const m of alvos){
+      if(await gravar("marcas", { selecionada: true }, m.id)) m.selecionada = true;
+    }
+    await carregarTudo();
+    desenharMarcas();
+    recado(alvos.length + (alvos.length === 1 ? " marca selecionada." : " marcas selecionadas."));
+  });
+
+  const btnLimpar = pegar("#limparSelecao");
+  if(btnLimpar) btnLimpar.addEventListener("click", async () => {
+    const alvos = todas.filter(m => m.selecionada);
+    btnLimpar.disabled = true;
+    for(const m of alvos){
+      if(await gravar("marcas", { selecionada: false }, m.id)) m.selecionada = false;
+    }
+    await carregarTudo();
+    desenharMarcas();
+  });
+
+  const btnIr = pegar("#irProspeccao");
+  if(btnIr) btnIr.addEventListener("click", () => {
+    estado.aba = "prospeccao";
+    estado.prosp.publico = "selecionadas";
+    desenhar();
+  });
   pegar("#novaMarca").addEventListener("click", () => formularioMarca(null));
 
   /* importar planilha de leads */
@@ -2284,6 +2376,696 @@ async function comecar(){
 }
 
 /* botões que existem o tempo todo */
+
+/* ============================================================
+   ABA 8: PROSPECÇÃO
+   Manda a sua apresentação para várias marcas de uma vez.
+
+   De onde saem os e-mails: da sua aba MARCAS, que já existe.
+   Nenhum cadastro novo, nenhuma outra tabela de contatos.
+
+   Dois jeitos de entregar:
+   1. Resend, que manda sozinho (precisa da chave no Supabase)
+   2. Rascunho, o plano B, que monta o e-mail e abre o Gmail
+      já preenchido para você só clicar em enviar.
+
+   A chave secreta NUNCA fica aqui. Ela vive no painel do
+   Supabase, como segredo da função enviar-emails.
+   ============================================================ */
+
+/* o endereço da função que manda os e-mails, montado a partir
+   da mesma URL do banco que já está em js/banco.js */
+function enderecoDaFuncao(){
+  try{
+    const base = ((window.BANCO && window.BANCO.url) || "").replace(/\/+$/, "");
+    return base ? base + "/functions/v1/enviar-emails" : "";
+  }catch(e){ return ""; }
+}
+
+/* primeiro nome da marca, para o {{nome}} */
+function primeiroNome(nomeCompleto){
+  const limpo = String(nomeCompleto || "").trim();
+  if(!limpo) return "tudo bem";
+  return limpo.split(/\s+/)[0];
+}
+
+/* troca {{nome}} e {{marca}} pelo que for daquela marca */
+function trocarChaves(texto, marca){
+  const nome = primeiroNome(marca && marca.nome);
+  const cheio = String((marca && marca.nome) || "").trim() || nome;
+  return String(texto || "")
+    .replace(/\{\{\s*nome\s*\}\}/gi, nome)
+    .replace(/\{\{\s*marca\s*\}\}/gi, cheio);
+}
+
+/* transforma o texto simples em um e-mail limpo e bonito.
+   Os links que você escrever viram clicáveis sozinhos. */
+function textoParaHtml(texto, botaoTexto, botaoLink){
+  const paragrafos = String(texto || "")
+    .split(/\n\s*\n/)
+    .map(p => seguro(p.trim()).replace(/\n/g, "<br>"))
+    .filter(Boolean)
+    .map(p => p.replace(
+      /(https?:\/\/[^\s<]+)/g,
+      '<a href="$1" style="color:#e3157f">$1</a>'
+    ))
+    .map(p => `<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#2c0620">${p}</p>`)
+    .join("");
+
+  const botao = (botaoTexto && botaoLink)
+    ? `<p style="margin:26px 0 0"><a href="${seguro(botaoLink)}"
+         style="display:inline-block;background:#e3157f;color:#ffffff;text-decoration:none;
+                padding:13px 26px;border-radius:999px;font-size:15px;font-weight:600">${seguro(botaoTexto)}</a></p>`
+    : "";
+
+  return `<div style="max-width:560px;margin:0 auto;background:#ffffff;padding:28px 24px;
+            font-family:Arial,Helvetica,sans-serif;color:#2c0620">
+  ${paragrafos}
+  ${botao}
+  <p style="margin:30px 0 0;padding-top:16px;border-top:1px solid #eee;font-size:12px;color:#8a7080">
+    Se você não quiser mais receber meus e-mails, é só responder esta mensagem com a palavra SAIR.
+  </p>
+</div>`;
+}
+
+/* o HTML que vai sair de verdade, conforme o modo escolhido */
+function htmlDoEmail(){
+  const p = estado.prosp;
+  return p.modo === "html"
+    ? p.html
+    : textoParaHtml(p.texto, p.botaoTexto, p.botaoLink);
+}
+
+/* ---- quem vai receber ---- */
+function listaDeSituacoes(){
+  const daBase = (estado.dados.marcas || []).map(m => m.situacao).filter(Boolean);
+  return [...new Set(SITUACOES.concat(daBase))];
+}
+
+function destinatarios(){
+  const todas = estado.dados.marcas || [];
+  const p = estado.prosp;
+  const fora = { semEmail:0, repetidos:0, descadastrados:0, jaReceberam:0 };
+
+  if(p.publico === "teste"){
+    return { lista:[{ nome:"Emellyn Cracco", email:estado.email || "" }], fora };
+  }
+
+  let base;
+  if(p.publico === "selecionadas")  base = todas.filter(m => m.selecionada);
+  else if(p.publico === "todas")    base = todas.slice();
+  else                              base = todas.filter(m => String(m.situacao) === p.publico);
+
+  /* sem e-mail não dá para mandar */
+  const comEmail = base.filter(m => {
+    const tem = String(m.email || "").includes("@");
+    if(!tem) fora.semEmail++;
+    return tem;
+  });
+
+  /* quem pediu SAIR nunca mais recebe */
+  const saiu = new Set((estado.dados.email_optout || []).map(o => String(o.email || "").toLowerCase()));
+
+  /* quem já recebeu este mesmo assunto, quando a caixinha está marcada */
+  const assunto = String(estado.prosp.assunto || "").trim();
+  const jaRecebeu = new Set(
+    (estado.dados.email_envios || [])
+      .filter(e => e.status === "ok" && String(e.assunto || "") === assunto)
+      .map(e => String(e.email || "").toLowerCase())
+  );
+
+  /* e-mail repetido, que acontece quando é a mesma agência, manda uma vez só */
+  const vistos = new Set();
+  const lista = [];
+  comEmail.forEach(m => {
+    const chave = String(m.email).trim().toLowerCase();
+    if(vistos.has(chave)){ fora.repetidos++; return; }
+    if(saiu.has(chave)){ fora.descadastrados++; return; }
+    if(p.pularRepetidos && assunto && jaRecebeu.has(chave)){ fora.jaReceberam++; return; }
+    vistos.add(chave);
+    lista.push(m);
+  });
+
+  return { lista, fora };
+}
+
+/* ---- os números dos cartões coloridos ---- */
+function numerosProspeccao(){
+  const todas = estado.dados.marcas || [];
+  const envios = estado.dados.email_envios || [];
+  const faltaMarcas = estado.faltando.some(f => String(f).includes("marcas"));
+  const faltaEnvios = estado.faltando.some(f => String(f).includes("email_envios"));
+  const faltaOptout = estado.faltando.some(f => String(f).includes("email_optout"));
+
+  const comEmail = todas.filter(m => String(m.email || "").includes("@"));
+  const jaReceberam = new Set(envios.filter(e => e.status === "ok").map(e => String(e.email).toLowerCase()));
+
+  return [
+    { cor:"principal", valor: faltaMarcas ? "-" : comEmail.length, nome:"marcas com e-mail", pe:"na sua base" },
+    { cor:"azul",      valor: faltaMarcas ? "-" : comEmail.filter(m => !jaReceberam.has(String(m.email).toLowerCase())).length, nome:"a enviar", pe:"ainda não receberam nada" },
+    { cor:"verde",     valor: faltaEnvios ? "-" : jaReceberam.size, nome:"já receberam", pe:"pelo menos um e-mail" },
+    { cor:"vermelho",  valor: faltaEnvios ? "-" : envios.filter(e => e.status === "erro").length, nome:"falhas", pe:"e-mail que voltou" },
+    { cor:"ambar",     valor: faltaOptout ? "-" : (estado.dados.email_optout || []).length, nome:"descadastrados", pe:"responderam SAIR" }
+  ];
+}
+
+/* ============================================================
+   A TELA
+   ============================================================ */
+function desenharProspeccao(){
+  const p = estado.prosp;
+  const todas = estado.dados.marcas || [];
+  const envios = estado.dados.email_envios || [];
+  const temAlgumEmail = todas.some(m => String(m.email || "").includes("@"));
+  const { lista, fora } = destinatarios();
+  const selecionadas = todas.filter(m => m.selecionada && String(m.email || "").includes("@")).length;
+
+  pegar("#acoesTopo").innerHTML = "";
+
+  /* se a base ainda não tem e-mail nenhum, não adianta mostrar a tela de envio */
+  if(!temAlgumEmail){
+    pegar("#area").innerHTML = `
+      <div class="recado">
+        <p style="margin:0 0 6px"><b>A sua base ainda está sem e-mail.</b></p>
+        <p style="margin:0 0 16px">Os e-mails da Prospecção saem da sua aba Marcas. Cadastre uma marca com e-mail, ou importe a sua planilha, e depois volte aqui.</p>
+        <button class="btn btn-principal" id="irParaMarcas">Ir para a aba Marcas</button>
+      </div>`;
+    pegar("#irParaMarcas").addEventListener("click", () => { estado.aba = "marcas"; desenhar(); });
+    return;
+  }
+
+  const totalEnviados = envios.filter(e => e.status === "ok").length;
+  const exemplo = lista[0] || { nome:"Marca Exemplo" };
+  const htmlPrevia = trocarChaves(htmlDoEmail(), exemplo);
+  const assuntoPrevia = trocarChaves(p.assunto, exemplo) || "(sem assunto ainda)";
+
+  pegar("#area").innerHTML = `
+
+  <!-- ---------- 1. A CAPA ---------- -->
+  <div class="capa-prosp">
+    <div class="capa-prosp-texto">
+      <span class="capa-prosp-icone" aria-hidden="true">${ICONE.prospeccao}</span>
+      <h2>Prospecção</h2>
+      <p>Manda a sua apresentação para várias marcas de uma vez, chamando cada uma pelo nome.</p>
+      <div class="capa-prosp-etiquetas">
+        <span>teste antes, sempre</span>
+        <span>a chave vive no Supabase</span>
+        <span>quem responde SAIR sai da lista</span>
+      </div>
+    </div>
+    <div class="capa-prosp-numero">
+      <b>${totalEnviados || "-"}</b>
+      <span>enviados até agora</span>
+    </div>
+  </div>
+
+  <!-- ---------- 2. OS CARTÕES ---------- -->
+  <div class="cartoes-prosp">
+    ${numerosProspeccao().map(n => `
+      <div class="cartao-prosp cor-${n.cor}">
+        <b>${n.valor}</b>
+        <span>${n.nome}</span>
+        <i>${n.pe}</i>
+      </div>`).join("")}
+  </div>
+
+  <!-- ---------- 3. FORMULÁRIO E PRÉVIA ---------- -->
+  <div class="prosp-grid">
+
+    <div class="prosp-coluna">
+
+      <section class="cartao">
+        <div class="cartao-topo"><h2>1. Para quem vai</h2></div>
+        <div class="cartao-corpo">
+          <p class="dica-fonte">Os e-mails vêm da sua aba <b>Marcas</b>.</p>
+          <select class="campo-largo" id="publicoProsp">
+            <option value="selecionadas" ${p.publico === "selecionadas" ? "selected" : ""}>só as marcas que eu selecionei (${selecionadas})</option>
+            <option value="teste" ${p.publico === "teste" ? "selected" : ""}>só para mim, teste</option>
+            <option value="todas" ${p.publico === "todas" ? "selected" : ""}>todas as marcas que têm e-mail</option>
+            ${listaDeSituacoes().map(s => `<option value="${seguro(s)}" ${p.publico === s ? "selected" : ""}>só as marcas em ${seguro(s)}</option>`).join("")}
+          </select>
+
+          <p class="conta-destino">
+            <b>${lista.length}</b> ${lista.length === 1 ? "marca vai receber" : "marcas vão receber"}
+            ${fora.semEmail ? `<span class="fora">${fora.semEmail} sem e-mail</span>` : ""}
+            ${fora.repetidos ? `<span class="fora">${fora.repetidos} e-mail repetido</span>` : ""}
+            ${fora.descadastrados ? `<span class="fora">${fora.descadastrados} descadastrado</span>` : ""}
+            ${fora.jaReceberam ? `<span class="fora">${fora.jaReceberam} já receberam</span>` : ""}
+          </p>
+
+          ${(p.publico === "selecionadas" && !selecionadas) ? `
+            <div class="aviso-prosp">
+              Você ainda não selecionou nenhuma marca. Vá na aba Marcas e marque as caixinhas.
+              <button class="btn-mini" id="irMarcasSelecionar">ir para Marcas</button>
+            </div>` : ""}
+
+          <label class="linha-caixinha">
+            <input type="checkbox" id="pularRepetidos" ${p.pularRepetidos ? "checked" : ""}>
+            <span>pular quem já recebeu este mesmo assunto</span>
+          </label>
+        </div>
+      </section>
+
+      <section class="cartao">
+        <div class="cartao-topo">
+          <h2>2. O e-mail</h2>
+          <div class="grupo-filtro">
+            <button class="filtro" data-modo="texto" aria-pressed="${p.modo === "texto"}">texto fácil</button>
+            <button class="filtro" data-modo="html" aria-pressed="${p.modo === "html"}">HTML</button>
+          </div>
+        </div>
+        <div class="cartao-corpo">
+          <div class="campo largo">
+            <label for="assuntoProsp">Assunto</label>
+            <input id="assuntoProsp" value="${seguro(p.assunto)}" placeholder="Parceria de conteúdo com a {{marca}}">
+          </div>
+
+          ${p.modo === "texto" ? `
+            <div class="campo largo">
+              <label for="textoProsp">Texto do e-mail</label>
+              <textarea id="textoProsp" rows="11" placeholder="Oi {{nome}}, tudo bem?&#10;&#10;Sou a Emellyn, criadora de conteúdo UGC em Curitiba...">${seguro(p.texto)}</textarea>
+            </div>
+            <div class="campos">
+              <div class="campo">
+                <label for="botaoTextoProsp">Texto do botão, opcional</label>
+                <input id="botaoTextoProsp" value="${seguro(p.botaoTexto)}" placeholder="Ver meu portfólio">
+              </div>
+              <div class="campo">
+                <label for="botaoLinkProsp">Link do botão</label>
+                <input id="botaoLinkProsp" value="${seguro(p.botaoLink)}" placeholder="https://emycracco.com.br">
+              </div>
+            </div>
+          ` : `
+            <div class="campo largo">
+              <label for="htmlProsp">HTML do e-mail</label>
+              <textarea id="htmlProsp" rows="14" class="campo-codigo" placeholder="Cole aqui o HTML pronto do seu e-mail">${seguro(p.html)}</textarea>
+            </div>
+            <button class="btn btn-simples" id="comecarDoModelo">começar do modelo pronto</button>
+            <p class="dica-fonte" style="margin-top:10px">Neste modo sai exatamente o que você colou. O rodapé do SAIR precisa estar no seu HTML.</p>
+          `}
+
+          <p class="dica-fonte" style="margin-top:12px">
+            Use <b>{{nome}}</b> para o primeiro nome da marca e <b>{{marca}}</b> para o nome completo.
+          </p>
+        </div>
+      </section>
+
+      <section class="cartao">
+        <div class="cartao-topo"><h2>3. Enviar</h2></div>
+        <div class="cartao-corpo">
+          <div class="grupo-filtro" style="margin-bottom:14px">
+            <button class="filtro" data-entrega="resend" aria-pressed="${p.entrega === "resend"}">mandar sozinho</button>
+            <button class="filtro" data-entrega="rascunho" aria-pressed="${p.entrega === "rascunho"}">rascunho pelo Gmail</button>
+          </div>
+
+          ${p.entrega === "resend" ? `
+            <p class="dica-fonte">Manda direto, sem você abrir nada. Precisa da chave do Resend guardada no Supabase.</p>
+            <div class="acoes-prosp">
+              <button class="btn btn-simples" id="enviarTeste">${ICONE.aviao} enviar teste para mim</button>
+              <button class="btn btn-principal" id="dispararProsp" ${p.enviando ? "disabled" : ""}>disparar para ${lista.length}</button>
+            </div>
+            <p class="dica-fonte" style="margin-top:12px">
+              Domínio novo pede calma: comece com 20 ou 30 no primeiro dia e vá subindo ao longo de duas semanas, senão você queima o domínio e cai em spam.
+            </p>
+          ` : `
+            <p class="dica-fonte">Monta o e-mail de cada marca e abre o Gmail já preenchido, para você só clicar em enviar. Funciona sem Resend nenhum.</p>
+            <div class="acoes-prosp">
+              <button class="btn btn-principal" id="abrirFila">montar a fila de ${lista.length}</button>
+            </div>
+          `}
+
+          ${p.progresso ? `
+            <div class="progresso-prosp">
+              <div class="progresso-trilho"><div class="progresso-cheio" style="width:${Math.round(100 * p.progresso.feitos / Math.max(1, p.progresso.total))}%"></div></div>
+              <span>${p.progresso.feitos} de ${p.progresso.total} enviados</span>
+            </div>` : ""}
+
+          ${p.resumo ? `
+            <div class="resumo-prosp ${p.resumo.cotaAcabou ? "alerta" : ""}">
+              <b>${p.resumo.enviados} enviados, ${p.resumo.falhas} falhas, ${p.resumo.pulados} pulados.</b>
+              ${p.resumo.cotaAcabou ? `
+                <p>A cota diária do Resend acabou e eu parei na hora, para não perder nada.
+                Volte amanhã, cole o mesmo assunto e o mesmo texto, deixe marcada a caixinha
+                de pular quem já recebeu, e dispare de novo: ele manda só para os que faltaram.</p>` : ""}
+            </div>` : ""}
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ---------- A PRÉVIA ---------- -->
+    <div class="prosp-palco">
+      <div class="palco-topo">
+        <span class="dica-fonte">Prévia, com o nome de <b>${seguro(exemplo.nome)}</b></span>
+        <button class="btn-mini" id="previaCheia">ver em tela cheia</button>
+      </div>
+      <div class="janela-email">
+        <div class="janela-email-topo">
+          <span class="avatar-email">E</span>
+          <div>
+            <b>${seguro(assuntoPrevia)}</b>
+            <small>Emellyn Cracco &lt;${seguro(estado.email)}&gt; para você</small>
+          </div>
+        </div>
+        <div class="janela-email-corpo" id="corpoPrevia"></div>
+      </div>
+      <p class="dica-fonte" style="text-align:center;margin-top:12px">
+        Mande o teste para você mesma e abra no celular antes de disparar.
+      </p>
+    </div>
+  </div>
+
+  <!-- ---------- O HISTÓRICO ---------- -->
+  <section class="cartao">
+    <div class="cartao-topo">
+      <h2>Tudo que já saiu</h2>
+      <div class="busca">${ICONE.lupa}<input id="buscaHistorico" placeholder="buscar por e-mail" value="${seguro(p.buscaHistorico)}"></div>
+    </div>
+    <div class="rolagem">
+      ${(() => {
+        const b = p.buscaHistorico.toLowerCase();
+        const linhas = envios.filter(e => !b || String(e.email || "").toLowerCase().includes(b));
+        if(!linhas.length) return `<p class="vazio-tabela">${envios.length ? "Nenhum envio com essa busca." : "Nada saiu ainda. Quando você disparar, cada e-mail aparece aqui."}</p>`;
+        return `<table>
+          <thead><tr><th>Marca</th><th>E-mail</th><th>Assunto</th><th>Quando</th><th>Resultado</th></tr></thead>
+          <tbody>${linhas.slice(0, 300).map(e => `
+            <tr>
+              <td>${seguro(e.marca)}</td>
+              <td>${seguro(e.email)}</td>
+              <td style="max-width:240px">${seguro(e.assunto)}</td>
+              <td>${dataBR(e.criado_em)}</td>
+              <td>${e.status === "ok"
+                   ? '<span class="pilula p-cliente">entregue</span>'
+                   : `<span class="pilula p-parada" title="${seguro(e.erro)}">erro</span>`}</td>
+            </tr>`).join("")}</tbody>
+        </table>`;
+      })()}
+    </div>
+  </section>
+  `;
+
+  /* a prévia entra como texto bruto, não interpretado pelo innerHTML da página */
+  const quadro = pegar("#corpoPrevia");
+  if(quadro) quadro.innerHTML = htmlPrevia;
+
+  ligarEventosProspeccao(lista);
+}
+
+/* ============================================================
+   OS BOTÕES DA ABA
+   ============================================================ */
+function ligarEventosProspeccao(lista){
+  const p = estado.prosp;
+  const redesenhar = () => desenharProspeccao();
+
+  const sel = pegar("#publicoProsp");
+  if(sel) sel.addEventListener("change", () => { p.publico = sel.value; redesenhar(); });
+
+  const irMarcas = pegar("#irMarcasSelecionar");
+  if(irMarcas) irMarcas.addEventListener("click", () => { estado.aba = "marcas"; desenhar(); });
+
+  const pular = pegar("#pularRepetidos");
+  if(pular) pular.addEventListener("change", () => { p.pularRepetidos = pular.checked; redesenhar(); });
+
+  pegarTodos("[data-modo]").forEach(b => b.addEventListener("click", () => { p.modo = b.dataset.modo; redesenhar(); }));
+  pegarTodos("[data-entrega]").forEach(b => b.addEventListener("click", () => { p.entrega = b.dataset.entrega; redesenhar(); }));
+
+  /* os campos guardam o que você escreve sem redesenhar a tela toda,
+     para o cursor não pular. A prévia é atualizada na mão. */
+  const atualizarPrevia = () => {
+    const exemplo = lista[0] || { nome:"Marca Exemplo" };
+    const quadro = pegar("#corpoPrevia");
+    if(quadro) quadro.innerHTML = trocarChaves(htmlDoEmail(), exemplo);
+  };
+  const ligarCampo = (id, chave, mexePrevia) => {
+    const campo = pegar(id);
+    if(!campo) return;
+    campo.addEventListener("input", () => {
+      p[chave] = campo.value;
+      if(mexePrevia) atualizarPrevia();
+    });
+  };
+  ligarCampo("#textoProsp", "texto", true);
+  ligarCampo("#htmlProsp", "html", true);
+  ligarCampo("#botaoTextoProsp", "botaoTexto", true);
+  ligarCampo("#botaoLinkProsp", "botaoLink", true);
+
+  const campoAssunto = pegar("#assuntoProsp");
+  if(campoAssunto) campoAssunto.addEventListener("input", () => {
+    p.assunto = campoAssunto.value;
+    const topo = document.querySelector(".janela-email-topo b");
+    const exemplo = lista[0] || { nome:"Marca Exemplo" };
+    if(topo) topo.textContent = trocarChaves(p.assunto, exemplo) || "(sem assunto ainda)";
+  });
+
+  const modelo = pegar("#comecarDoModelo");
+  if(modelo) modelo.addEventListener("click", () => {
+    p.html = textoParaHtml(
+      p.texto || "Oi {{nome}}, tudo bem?\n\nEscreva aqui a sua apresentação.",
+      p.botaoTexto, p.botaoLink
+    );
+    redesenhar();
+  });
+
+  const cheia = pegar("#previaCheia");
+  if(cheia) cheia.addEventListener("click", () => {
+    const exemplo = lista[0] || { nome:"Marca Exemplo" };
+    abrirJanela("Prévia do e-mail",
+      `<div class="previa-cheia">${trocarChaves(htmlDoEmail(), exemplo)}</div>`, true);
+  });
+
+  const busca = pegar("#buscaHistorico");
+  if(busca) busca.addEventListener("input", () => {
+    p.buscaHistorico = busca.value;
+    redesenhar();
+    const novo = pegar("#buscaHistorico");
+    novo.focus(); novo.setSelectionRange(novo.value.length, novo.value.length);
+  });
+
+  const teste = pegar("#enviarTeste");
+  if(teste) teste.addEventListener("click", () => dispararEmails([{ nome:"Emellyn Cracco", email:estado.email }], true));
+
+  const disparar = pegar("#dispararProsp");
+  if(disparar) disparar.addEventListener("click", () => confirmarDisparo(lista));
+
+  const fila = pegar("#abrirFila");
+  if(fila) fila.addEventListener("click", () => abrirFilaRascunho(lista));
+}
+
+/* ============================================================
+   A CONFIRMAÇÃO, que nunca pode faltar
+   ============================================================ */
+function confirmarDisparo(lista){
+  const p = estado.prosp;
+  if(!String(p.assunto || "").trim()){ recado("Escreva o assunto antes de disparar.", true); return; }
+  if(!String(htmlDoEmail() || "").trim()){ recado("Escreva o texto do e-mail antes de disparar.", true); return; }
+  if(!lista.length){ recado("Não há nenhuma marca nessa seleção.", true); return; }
+
+  const nomeDaLista = {
+    selecionadas:"as marcas que você selecionou",
+    teste:"você mesma",
+    todas:"todas as marcas com e-mail"
+  }[p.publico] || ("as marcas em " + p.publico);
+
+  const semSair = p.modo === "html" && !/sair/i.test(p.html);
+
+  abrirJanela("Confirmar disparo", `
+    <p>Este e-mail vai para <b>${lista.length}</b> ${lista.length === 1 ? "marca" : "marcas"}, da lista <b>${seguro(nomeDaLista)}</b>.</p>
+    <p><b>Não dá para desfazer.</b> Depois de sair, não tem como voltar atrás.</p>
+    ${semSair ? `<div class="aviso-prosp">O seu HTML não tem a palavra SAIR em lugar nenhum. Sem o rodapé de descadastro, quem receber não sabe como pedir para sair.</div>` : ""}
+    <div class="acoes-janela">
+      <button class="btn btn-simples" id="cancelarDisparo">cancelar</button>
+      <button class="btn btn-principal" id="confirmarDisparo">sim, disparar para ${lista.length}</button>
+    </div>
+  `);
+  pegar("#cancelarDisparo").addEventListener("click", fecharJanela);
+  pegar("#confirmarDisparo").addEventListener("click", () => { fecharJanela(); dispararEmails(lista, false); });
+}
+
+/* ============================================================
+   O DISPARO, em lotes de 100
+   ============================================================ */
+async function dispararEmails(lista, ehTeste){
+  const p = estado.prosp;
+  if(!String(p.assunto || "").trim()){ recado("Escreva o assunto primeiro.", true); return; }
+  if(!lista.length || !lista[0].email){ recado("Não tem para quem mandar.", true); return; }
+
+  const endereco = enderecoDaFuncao();
+  if(!endereco){ recado("Não encontrei o endereço do banco. Confira o js/banco.js.", true); return; }
+
+  let token = "";
+  try{
+    const { data } = await window.sb.auth.getSession();
+    token = (data && data.session && data.session.access_token) || "";
+  }catch(e){ token = ""; }
+  if(!token){ recado("A sua sessão expirou. Entre de novo.", true); return; }
+
+  p.enviando = true;
+  p.resumo = null;
+  p.progresso = { feitos:0, total:lista.length };
+  desenharProspeccao();
+
+  let enviados = 0, falhas = 0, pulados = 0, cotaAcabou = false;
+  const html = htmlDoEmail();
+
+  for(let i = 0; i < lista.length; i += 100){
+    const lote = lista.slice(i, i + 100);
+    let resposta = null;
+    try{
+      const r = await fetch(endereco, {
+        method:"POST",
+        headers:{ "Content-Type":"application/json", "Authorization":"Bearer " + token },
+        body: JSON.stringify({
+          destinatarios: lote.map(m => ({ email:m.email, nome:m.nome })),
+          assunto: p.assunto,
+          html: html
+        })
+      });
+      resposta = await r.json();
+      if(!r.ok) throw new Error((resposta && resposta.erro) || "A função respondeu com erro.");
+    }catch(erro){
+      p.enviando = false;
+      p.progresso = null;
+      p.resumo = { enviados, falhas: falhas + lote.length, pulados, cotaAcabou:false };
+      desenharProspeccao();
+      recado("Não consegui falar com a função de envio. Confira se ela está publicada no Supabase.", true);
+      return;
+    }
+
+    enviados += numero(resposta.enviados);
+    falhas   += numero(resposta.falhas);
+    pulados  += numero(resposta.pulados);
+    p.progresso.feitos = Math.min(lista.length, i + lote.length);
+    desenharProspeccao();
+
+    if(resposta.cotaAcabou){ cotaAcabou = true; break; }
+  }
+
+  /* marca na base quem recebeu, com a data de hoje */
+  if(!ehTeste && enviados){
+    const hoje = hojeISO();
+    for(const m of lista){
+      if(m.id) await gravar("marcas", { ultimo_disparo: hoje }, m.id);
+    }
+  }
+
+  p.enviando = false;
+  p.progresso = null;
+  p.resumo = { enviados, falhas, pulados, cotaAcabou };
+  await carregarTudo();
+  desenharProspeccao();
+
+  if(ehTeste){
+    recado(enviados ? "Teste enviado. Abra no celular e confira os nomes." : "O teste não saiu, olhe o resumo.", !enviados);
+    return;
+  }
+  /* não limpo a sua seleção sozinho: pergunto antes */
+  if(enviados && estado.prosp.publico === "selecionadas") perguntarLimparSelecao();
+}
+
+function perguntarLimparSelecao(){
+  abrirJanela("Limpar a seleção?", `
+    <p>O disparo terminou. Quer desmarcar as caixinhas das marcas que receberam?</p>
+    <p class="dica-fonte">Se você pretende mandar para a mesma lista de novo, deixe marcado.</p>
+    <div class="acoes-janela">
+      <button class="btn btn-simples" id="manterSelecao">manter a seleção</button>
+      <button class="btn btn-principal" id="limparAgora">limpar</button>
+    </div>
+  `);
+  pegar("#manterSelecao").addEventListener("click", fecharJanela);
+  pegar("#limparAgora").addEventListener("click", async () => {
+    fecharJanela();
+    const alvos = (estado.dados.marcas || []).filter(m => m.selecionada);
+    for(const m of alvos) await gravar("marcas", { selecionada:false }, m.id);
+    await carregarTudo();
+    desenharProspeccao();
+    recado("Seleção limpa.");
+  });
+}
+
+/* ============================================================
+   O PLANO B: A FILA DE RASCUNHOS
+   Funciona sem Resend nenhum. Monta o e-mail de cada marca e
+   abre o Gmail já preenchido.
+   ============================================================ */
+function abrirFilaRascunho(lista){
+  const p = estado.prosp;
+  if(!String(p.assunto || "").trim()){ recado("Escreva o assunto primeiro.", true); return; }
+  if(!lista.length){ recado("Não há marcas nessa seleção.", true); return; }
+  p.filaRascunho = lista.slice();
+  p.posicaoFila = 0;
+  mostrarRascunhoAtual();
+}
+
+function textoPuroDoEmail(marca){
+  const p = estado.prosp;
+  if(p.modo === "texto") return trocarChaves(p.texto, marca);
+  /* no modo HTML, tira as marcações para o Gmail receber texto legível */
+  const limpo = String(trocarChaves(p.html, marca))
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  return limpo;
+}
+
+function mostrarRascunhoAtual(){
+  const p = estado.prosp;
+  const fila = p.filaRascunho || [];
+  if(p.posicaoFila >= fila.length){
+    fecharJanela();
+    recado("Fila terminada. Tudo que você marcou como enviada já está registrado.");
+    carregarTudo().then(desenharProspeccao);
+    return;
+  }
+  const marca = fila[p.posicaoFila];
+  const assunto = trocarChaves(p.assunto, marca);
+  const corpo = textoPuroDoEmail(marca);
+  const linkGmail = "https://mail.google.com/mail/?view=cm&fs=1" +
+    "&to=" + encodeURIComponent(marca.email) +
+    "&su=" + encodeURIComponent(assunto) +
+    "&body=" + encodeURIComponent(corpo);
+
+  abrirJanela(`Rascunho ${p.posicaoFila + 1} de ${fila.length}`, `
+    <p class="dica-fonte">Para <b>${seguro(marca.nome)}</b> &nbsp;·&nbsp; ${seguro(marca.email)}</p>
+    <div class="campo largo">
+      <label>Assunto</label>
+      <input id="rascunhoAssunto" value="${seguro(assunto)}" readonly>
+    </div>
+    <div class="campo largo">
+      <label>Texto</label>
+      <textarea id="rascunhoCorpo" rows="10" readonly>${seguro(corpo)}</textarea>
+    </div>
+    <div class="acoes-janela">
+      <button class="btn btn-simples" id="pularRascunho">pular</button>
+      <button class="btn btn-simples" id="copiarRascunho">${ICONE.copiar} copiar o texto</button>
+      <a class="btn btn-simples" id="abrirGmail" href="${linkGmail}" target="_blank" rel="noopener">abrir no Gmail</a>
+      <button class="btn btn-principal" id="marcarEnviada">marquei como enviada</button>
+    </div>
+  `, true);
+
+  pegar("#pularRascunho").addEventListener("click", () => { p.posicaoFila++; mostrarRascunhoAtual(); });
+  pegar("#copiarRascunho").addEventListener("click", async () => {
+    try{ await navigator.clipboard.writeText(corpo); recado("Texto copiado."); }
+    catch(e){ recado("Não consegui copiar. Selecione o texto e copie na mão.", true); }
+  });
+  pegar("#marcarEnviada").addEventListener("click", async () => {
+    const hoje = hojeISO();
+    if(marca.id) await gravar("marcas", { ultimo_disparo: hoje }, marca.id);
+    /* registra no histórico, igual ao envio automático */
+    if(window.sb){
+      try{
+        await window.sb.from("email_envios").insert({
+          email: marca.email, marca: marca.nome, assunto: assunto, status: "ok", resend_id: "gmail"
+        });
+      }catch(e){}
+    }
+    p.posicaoFila++;
+    mostrarRascunhoAtual();
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   pegar("#fecharJanela").addEventListener("click", fecharJanela);
   pegar("#fundoJanela").addEventListener("click", (e) => { if(e.target.id === "fundoJanela") fecharJanela(); });
