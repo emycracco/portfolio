@@ -2438,14 +2438,28 @@ function textoParaHtml(texto, botaoTexto, botaoLink){
                 padding:13px 26px;border-radius:999px;font-size:15px;font-weight:600">${seguro(botaoTexto)}</a></p>`
     : "";
 
-  return `<div style="max-width:560px;margin:0 auto;background:#ffffff;padding:28px 24px;
-            font-family:Arial,Helvetica,sans-serif;color:#2c0620">
-  ${paragrafos}
-  ${botao}
-  <p style="margin:30px 0 0;padding-top:16px;border-top:1px solid #eee;font-size:12px;color:#8a7080">
-    Se você não quiser mais receber meus e-mails, é só responder esta mensagem com a palavra SAIR.
-  </p>
-</div>`;
+  /* E-mail não é site: Gmail, Outlook e afins ignoram metade do CSS.
+     Por isso o corpo vai montado em tabela, que é o único jeito que
+     todos eles entendem igual. Sem isso o texto encosta na direita. */
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+         style="background:#ffffff;margin:0;padding:0">
+  <tr>
+    <td align="left" style="padding:26px 20px">
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0"
+             style="width:100%;max-width:560px">
+        <tr>
+          <td align="left" style="font-family:Arial,Helvetica,sans-serif;color:#2c0620;text-align:left">
+            ${paragrafos}
+            ${botao}
+            <p style="margin:30px 0 0;padding-top:16px;border-top:1px solid #eeeeee;font-size:12px;color:#8a7080;text-align:left">
+              Se você não quiser mais receber meus e-mails, é só responder esta mensagem com a palavra SAIR.
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>`;
 }
 
 /* o HTML que vai sair de verdade, conforme o modo escolhido */
