@@ -540,6 +540,125 @@ tbody tr.destacada td:first-child{box-shadow:inset 4px 0 0 var(--lima);}
 :focus-visible{outline:3px solid var(--roxo); outline-offset:2px;}
 a{color:var(--magenta);}
 
+/* ============================================================
+   ABA PROSPECÇÃO
+   ============================================================ */
+
+/* caixinhas de seleção na aba Marcas */
+.barra-selecao{
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  padding:11px 18px; border-bottom:var(--borda); background:var(--rosa-claro);
+}
+.conta-selecao b{font-family:"Fredoka",sans-serif; font-weight:700; color:var(--magenta); font-size:1.05rem;}
+.caixa-marca{width:17px; height:17px; accent-color:var(--magenta); cursor:var(--toque);}
+.caixa-marca:disabled{cursor:not-allowed; opacity:.35;}
+
+/* 1. a capa */
+.capa-prosp{
+  display:flex; align-items:center; justify-content:space-between; gap:22px; flex-wrap:wrap;
+  padding:26px 28px; margin-bottom:18px; border-radius:26px;
+  border:var(--borda); box-shadow:var(--sombra);
+  background:linear-gradient(135deg, var(--magenta) 0%, #8d0b50 60%, var(--tinta) 130%);
+  color:#fff;
+}
+.capa-prosp h2{font-size:1.5rem; margin:10px 0 4px; color:#fff;}
+.capa-prosp p{margin:0; font-size:.9rem; color:rgba(255,255,255,.85); max-width:460px;}
+.capa-prosp-icone{
+  display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px;
+  border-radius:13px; background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.3);
+}
+.capa-prosp-icone svg{width:21px; height:21px;}
+.capa-prosp-etiquetas{display:flex; flex-wrap:wrap; gap:7px; margin-top:14px;}
+.capa-prosp-etiquetas span{
+  padding:4px 12px; border-radius:999px; font-size:.7rem;
+  background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.26);
+}
+.capa-prosp-numero{text-align:right;}
+.capa-prosp-numero b{display:block; font-family:"Fredoka",sans-serif; font-weight:700; font-size:2.6rem; line-height:1; color:var(--lima);}
+.capa-prosp-numero span{font-size:.7rem; letter-spacing:.14em; text-transform:uppercase; color:rgba(255,255,255,.8);}
+
+/* 2. os cartões coloridos */
+.cartoes-prosp{
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(168px, 1fr));
+  gap:12px; margin-bottom:18px;
+}
+.cartao-prosp{
+  position:relative; padding:16px 18px 16px 22px; border-radius:var(--raio);
+  background:var(--branco); border:var(--borda); box-shadow:var(--sombra);
+  overflow:hidden;
+}
+.cartao-prosp::before{content:""; position:absolute; left:0; top:0; bottom:0; width:6px; background:var(--magenta);}
+.cartao-prosp.cor-verde::before{background:var(--verde);}
+.cartao-prosp.cor-ambar::before{background:#d79a00;}
+.cartao-prosp.cor-azul::before{background:var(--azul);}
+.cartao-prosp.cor-vermelho::before{background:var(--vermelho);}
+.cartao-prosp b{display:block; font-family:"Fredoka",sans-serif; font-weight:700; font-size:1.7rem; line-height:1; color:var(--magenta);}
+.cartao-prosp.cor-verde b{color:var(--verde);}
+.cartao-prosp.cor-ambar b{color:#a97900;}
+.cartao-prosp.cor-azul b{color:var(--azul);}
+.cartao-prosp.cor-vermelho b{color:var(--vermelho);}
+.cartao-prosp span{display:block; margin-top:4px; font-size:.78rem; color:var(--tinta);}
+.cartao-prosp i{display:block; font-style:normal; font-size:.68rem; color:var(--tinta-suave); margin-top:1px;}
+
+/* 3. formulário e prévia lado a lado */
+.prosp-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start; margin-bottom:18px;}
+.prosp-coluna{min-width:0;}
+.prosp-palco{
+  position:sticky; top:16px; padding:20px; border-radius:var(--raio);
+  background:#f0dfea; border:var(--borda); box-shadow:var(--sombra);
+}
+.palco-topo{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;}
+.janela-email{background:#fff; border-radius:16px; box-shadow:0 14px 34px rgba(44,6,32,.2); overflow:hidden;}
+.janela-email-topo{display:flex; gap:12px; align-items:center; padding:14px 16px; border-bottom:1px solid #eee;}
+.avatar-email{
+  width:36px; height:36px; flex:none; border-radius:50%; background:var(--magenta); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-family:"Fredoka",sans-serif; font-weight:700;
+}
+.janela-email-topo b{display:block; font-size:.98rem; line-height:1.25;}
+.janela-email-topo small{display:block; color:var(--tinta-suave); font-size:.74rem; margin-top:2px;}
+.janela-email-corpo{max-height:460px; overflow:auto; background:#fff;}
+.previa-cheia{background:#fff; border-radius:12px; overflow:auto; max-height:70vh;}
+
+/* campos e avisos da aba */
+.campo-largo{
+  width:100%; padding:10px 12px; border-radius:var(--raio-p);
+  border:2px solid var(--tinta); background:#fffdfe; font-family:inherit; font-size:.9rem; color:var(--tinta);
+}
+.campo-codigo{font-family:ui-monospace, Consolas, monospace; font-size:.8rem;}
+.dica-fonte{margin:0 0 10px; font-size:.8rem; color:var(--tinta-suave);}
+.conta-destino{margin:12px 0 0; font-size:.86rem;}
+.conta-destino b{font-family:"Fredoka",sans-serif; font-weight:700; color:var(--magenta); font-size:1.1rem;}
+.conta-destino .fora{
+  display:inline-block; margin-left:7px; padding:2px 9px; border-radius:999px;
+  background:var(--amarelo-claro); border:1px solid #e8cd93; color:var(--amarelo); font-size:.7rem;
+}
+.aviso-prosp{
+  margin:12px 0 0; padding:11px 14px; border-radius:var(--raio-p);
+  background:var(--amarelo-claro); border:2px solid #e2c278; color:var(--amarelo); font-size:.84rem;
+}
+.linha-caixinha{display:flex; align-items:center; gap:9px; margin-top:14px; font-size:.86rem;}
+.linha-caixinha input{width:16px; height:16px; accent-color:var(--magenta);}
+.acoes-prosp{display:flex; gap:10px; flex-wrap:wrap;}
+.acoes-prosp .btn svg{width:15px; height:15px;}
+
+/* progresso e resumo */
+.progresso-prosp{margin-top:16px;}
+.progresso-trilho{height:12px; border-radius:999px; background:var(--rosa-claro); border:2px solid var(--tinta); overflow:hidden;}
+.progresso-cheio{height:100%; background:var(--lima); transition:width .3s ease;}
+.progresso-prosp span{display:block; margin-top:6px; font-size:.8rem; color:var(--tinta-suave);}
+.resumo-prosp{
+  margin-top:16px; padding:14px 16px; border-radius:var(--raio-p);
+  background:var(--verde-claro); border:2px solid var(--verde); color:var(--verde); font-size:.88rem;
+}
+.resumo-prosp.alerta{background:var(--amarelo-claro); border-color:#e2c278; color:var(--amarelo);}
+.resumo-prosp p{margin:8px 0 0; line-height:1.5;}
+
+@media (max-width:1100px){
+  .prosp-grid{grid-template-columns:1fr;}
+  .prosp-palco{position:static;}
+}
+
 @media (prefers-reduced-motion:reduce){
   *{transition:none !important; animation:none !important;}
 }
