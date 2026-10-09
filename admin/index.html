@@ -540,6 +540,28 @@ tbody tr.destacada td:first-child{box-shadow:inset 4px 0 0 var(--lima);}
 :focus-visible{outline:3px solid var(--roxo); outline-offset:2px;}
 a{color:var(--magenta);}
 
+/* ---- aba Mídia kit ---- */
+.aviso-kit{
+  display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  padding:14px 18px; margin-bottom:18px; border-radius:var(--raio);
+  background:var(--lima); border:var(--borda); box-shadow:var(--sombra);
+  font-size:.86rem;
+}
+.aviso-kit b{font-family:"Fredoka",sans-serif; font-weight:600; display:block;}
+.link-kit{
+  padding:7px 14px; border-radius:999px; background:var(--branco);
+  border:2px solid var(--tinta); font-size:.8rem; white-space:nowrap;
+}
+.palco-kit{
+  padding:18px; background:#efdeea; display:flex; justify-content:center;
+  border-radius:0 0 calc(var(--raio) - 2px) calc(var(--raio) - 2px);
+}
+.palco-kit iframe{
+  width:100%; height:760px; border:var(--borda); border-radius:var(--raio-p);
+  background:#fff; box-shadow:var(--sombra);
+}
+.palco-kit.estreito iframe{width:390px; height:780px;}
+
 /* ---- quem preencheu o formulário do site, na aba Portfólio ---- */
 .cartao-leads{border-color:var(--magenta);}
 .cartao-leads .cartao-topo h2{display:flex; align-items:center; gap:9px;}
