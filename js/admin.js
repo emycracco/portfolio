@@ -2558,6 +2558,41 @@ function htmlDoEmail(){
     : textoParaHtml(p.texto, p.botaoTexto, p.botaoLink);
 }
 
+/* A VERSÃO EM TEXTO SIMPLES.
+   Todo e-mail sai em duas versões ao mesmo tempo: a bonita em HTML
+   e esta aqui, sem formatação nenhuma. Quem lê escolhe.
+
+   Isso não é capricho: e-mail que vem só em HTML é o sinal mais
+   forte de "isso é propaganda" que existe para o Gmail, e é o que
+   joga a mensagem na aba Promoções. Mandando as duas, ele entende
+   que é correspondência de verdade. */
+function textoSimplesDoEmail(){
+  const p = estado.prosp;
+  let corpo;
+
+  if(p.modo === "texto"){
+    corpo = String(p.texto || "").trim();
+    if(p.botaoTexto && p.botaoLink){
+      corpo += "\n\n" + p.botaoTexto + ": " + p.botaoLink;
+    }
+  } else {
+    /* no modo HTML, tira as marcações e deixa só o que se lê */
+    corpo = String(p.html || "")
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/(p|div|tr|h[1-6])>/gi, "\n\n")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+  }
+
+  return corpo + "\n\n" +
+    "Se você não quiser mais receber meus e-mails, é só responder esta mensagem com a palavra SAIR.";
+}
+
 /* ---- quem vai receber ---- */
 function listaDeSituacoes(){
   const daBase = (estado.dados.marcas || []).map(m => m.situacao).filter(Boolean);
@@ -3009,6 +3044,7 @@ async function dispararEmails(lista, ehTeste){
 
   let enviados = 0, falhas = 0, pulados = 0, cotaAcabou = false;
   const html = htmlDoEmail();
+  const texto = textoSimplesDoEmail();
 
   for(let i = 0; i < lista.length; i += 100){
     const lote = lista.slice(i, i + 100);
@@ -3020,7 +3056,8 @@ async function dispararEmails(lista, ehTeste){
         body: JSON.stringify({
           destinatarios: lote.map(m => ({ email:m.email, nome:m.nome })),
           assunto: p.assunto,
-          html: html
+          html: html,
+          texto: texto          /* a versão sem formatação, que tira da aba Promoções */
         })
       });
       resposta = await r.json();
