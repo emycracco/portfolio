@@ -79,6 +79,7 @@ const ICONE = {
   copiar:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 6H6a2 2 0 0 0-2 2v9"/></svg>',
   link:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a4 4 0 0 0 5.7 0l3-3a4 4 0 1 0-5.7-5.7L11.3 6"/><path d="M14 11a4 4 0 0 0-5.7 0l-3 3a4 4 0 1 0 5.7 5.7l1.7-1.7"/></svg>',
   prospeccao:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5 12 13l8.5-6.5"/></svg>',
+  midiakit:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h10l4 4v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v5h5M8 13h8M8 17h5"/></svg>',
   aviao:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3 10.5 13.5M21 3l-6.5 18-4-8-8-4L21 3Z"/></svg>',
   zap:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 0 1-11.9 7L4 20l1.1-4A8 8 0 1 1 20 12Z"/></svg>'
 };
@@ -91,6 +92,7 @@ const ABAS = [
   { id:"marcas",     grupo:"meu site",     nome:"Marcas",     sub:"A sua base de contatos de empresa." },
   { id:"cupons",     grupo:"meu site",     nome:"Cupons",     sub:"Seus cupons e links de afiliada, prontos para enviar." },
   { id:"prospeccao", grupo:"meu site",     nome:"Prospecção", sub:"Mandar a sua apresentação para várias marcas de uma vez." },
+  { id:"midiakit",   grupo:"meu site",     nome:"Mídia kit",  sub:"Como ele está hoje, pronto para mandar para a marca." },
   { id:"conteudo",   grupo:"minha rotina", nome:"Conteúdo",   sub:"A sua semana de postagens, canal por canal." },
   { id:"calendario", grupo:"minha rotina", nome:"Calendário", sub:"O mês inteiro de gravar, editar e postar." },
   { id:"campanhas",  grupo:"minha rotina", nome:"Campanhas",  sub:"Trabalhos, valores e prazos." },
@@ -124,6 +126,9 @@ const estado = {
   dados: { videos:[], marcas:[], calendario:[], campanhas:[], marcados:{}, visitas:[], cupons:[], conteudos:[], email_envios:[], email_optout:[] },
 
   /* --- a aba Prospecção --- */
+  /* --- a aba Mídia kit --- */
+  kitTela: "computador",     /* como você está olhando: computador ou celular */
+
   prosp: {
     publico: "selecionadas",   /* para quem vai: selecionadas, teste, todas ou uma situação */
     modo: "texto",             /* como escrever: texto fácil ou HTML */
@@ -388,6 +393,7 @@ function desenhar(){
   if(estado.aba === "marcas")     desenharMarcas();
   if(estado.aba === "cupons")     desenharCupons();
   if(estado.aba === "prospeccao") desenharProspeccao();
+  if(estado.aba === "midiakit")   desenharMidiaKit();
   if(estado.aba === "conteudo")   desenharConteudo();
   if(estado.aba === "calendario") desenharCalendario();
   if(estado.aba === "campanhas")  desenharCampanhas();
@@ -2464,6 +2470,87 @@ async function comecar(){
 }
 
 /* botões que existem o tempo todo */
+
+/* ============================================================
+   ABA 9: MÍDIA KIT
+
+   Mostra a página do mídia kit aqui dentro, sempre a versão
+   mais recente que está no ar. Não é uma cópia: é a página
+   de verdade, carregada ao vivo.
+
+   Ela fica fora do menu do site e com noindex, então só quem
+   recebe o link chega nela.
+   ============================================================ */
+function enderecoDoKit(){
+  /* o "t" muda sempre, para o navegador nunca mostrar uma versão velha */
+  return "/midia-kit.html?t=" + Date.now();
+}
+
+function desenharMidiaKit(){
+  const linkLimpo = window.location.origin + "/midia-kit";
+
+  pegar("#acoesTopo").innerHTML = `
+    <button class="btn btn-simples" id="copiarLinkKit">${ICONE.copiar} Copiar o link</button>
+    <button class="btn btn-simples" id="baixarKitPdf">${ICONE.baixar} Salvar em PDF</button>
+    <a class="btn btn-principal" id="abrirKit" href="${enderecoDoKit()}" target="_blank" rel="noopener">${ICONE.link} Abrir em outra aba</a>`;
+
+  pegar("#area").innerHTML = `
+    <div class="aviso-kit">
+      <div>
+        <b>Esta página não aparece no seu site.</b>
+        Ela está fora do menu e marcada para não entrar no Google. Só quem receber o link de você consegue abrir.
+      </div>
+      <code class="link-kit">${seguro(linkLimpo)}</code>
+    </div>
+
+    <section class="cartao">
+      <div class="cartao-topo">
+        <h2>Como o seu mídia kit está agora</h2>
+        <div class="grupo-filtro">
+          <button class="filtro" data-kittela="computador" aria-pressed="${estado.kitTela === "computador"}">no computador</button>
+          <button class="filtro" data-kittela="celular" aria-pressed="${estado.kitTela === "celular"}">no celular</button>
+        </div>
+      </div>
+      <div class="palco-kit ${estado.kitTela === "celular" ? "estreito" : ""}">
+        <iframe id="quadroKit" src="${enderecoDoKit()}" title="Mídia kit de Emellyn Cracco" loading="lazy"></iframe>
+      </div>
+    </section>
+
+    <section class="cartao">
+      <div class="cartao-topo"><h2>Para mudar alguma coisa</h2></div>
+      <div class="cartao-corpo">
+        <p class="dica-fonte" style="margin:0">
+          Os valores, os números e os textos do mídia kit ficam dentro do arquivo da página.
+          Para trocar qualquer coisa, me peça: diga o que mudar e eu atualizo e publico.
+          Todo mundo que já tiver o link passa a ver a versão nova, sem você precisar reenviar nada.
+        </p>
+      </div>
+    </section>
+  `;
+
+  pegarTodos("[data-kittela]").forEach(b => b.addEventListener("click", () => {
+    estado.kitTela = b.dataset.kittela;
+    desenharMidiaKit();
+  }));
+
+  pegar("#copiarLinkKit").addEventListener("click", async () => {
+    try{ await navigator.clipboard.writeText(linkLimpo); recado("Link copiado. É só colar no e-mail ou no WhatsApp."); }
+    catch(e){ recado("Não consegui copiar. O link é " + linkLimpo, true); }
+  });
+
+  pegar("#baixarKitPdf").addEventListener("click", () => {
+    const quadro = pegar("#quadroKit");
+    try{
+      quadro.contentWindow.focus();
+      quadro.contentWindow.print();
+    }catch(e){
+      /* se o navegador não deixar imprimir de dentro do quadro,
+         abre a página sozinha para você apertar Ctrl+P */
+      window.open(enderecoDoKit(), "_blank", "noopener");
+      recado("Abri o mídia kit em outra aba. Aperte Ctrl+P e escolha Salvar como PDF.");
+    }
+  });
+}
 
 /* ============================================================
    ABA 8: PROSPECÇÃO
