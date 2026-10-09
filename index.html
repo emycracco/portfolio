@@ -1165,12 +1165,22 @@ pegar("#formContato").addEventListener("submit", async (e) => {
   const email = form.email.value.trim();
   const mensagem = form.mensagem.value.trim();
 
+  /* A marca entra na base como Lead, com origem "site".
+     A origem é o que faz ela aparecer na aba Portfólio do painel,
+     separada dos leads que vieram de planilha.
+     Se a coluna origem ainda não existir no banco, manda sem ela,
+     para o formulário nunca deixar de funcionar por causa disso. */
   let guardou = false;
   if(window.sb){
+    const base = { nome, email, situacao:"Lead", obs:mensagem };
     try{
-      const { error } = await window.sb.from("marcas")
-        .insert({ nome, email, situacao:"Lead", obs:mensagem });
-      guardou = !error;
+      const { error } = await window.sb.from("marcas").insert({ ...base, origem:"site" });
+      if(error && /origem/i.test(String(error.message || ""))){
+        const segunda = await window.sb.from("marcas").insert(base);
+        guardou = !segunda.error;
+      } else {
+        guardou = !error;
+      }
     }catch(erro){ guardou = false; }
   }
   aviso.textContent = guardou
@@ -1211,8 +1221,11 @@ pegar("#formCaptura").addEventListener("submit", async (e) => {
   const nome = form.capturaNome.value.trim();
   const email = form.capturaEmail.value.trim();
   if(window.sb){
-    try{ await window.sb.from("marcas").insert({ nome, email, situacao:"Lead", obs:"Pediu o mídia kit" }); }
-    catch(erro){ /* segue mesmo assim */ }
+    const base = { nome, email, situacao:"Lead", obs:"Pediu o mídia kit" };
+    try{
+      const { error } = await window.sb.from("marcas").insert({ ...base, origem:"site" });
+      if(error && /origem/i.test(String(error.message || ""))) await window.sb.from("marcas").insert(base);
+    }catch(erro){ /* segue mesmo assim */ }
   }
   aviso.textContent = "Anotado, " + nome + ". Mando o mídia kit no seu e-mail em breve.";
   aviso.classList.add("aparecer");
