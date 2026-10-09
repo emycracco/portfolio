@@ -133,6 +133,25 @@ section{padding:54px 0; position:relative;}
 .marca-logo.cheia{padding:0;}
 .marca-logo.cheia img{object-fit:cover; border-radius:50%;}
 
+/* ---------- parceria com cupom ---------- */
+.bloco-cupom{
+  display:flex; align-items:center; justify-content:space-between; gap:28px;
+  padding:34px 32px; border-radius:var(--raio);
+  border:var(--borda); box-shadow:var(--sombra);
+  background:linear-gradient(135deg, var(--roxo) 0%, #4a0f6e 55%, var(--tinta) 130%);
+  color:#fff;
+}
+.bloco-cupom .titulo-secao{margin-bottom:12px;}
+.bloco-cupom p{margin:0 0 10px; color:rgba(255,255,255,.88); max-width:620px; font-size:.98rem;}
+.bloco-cupom p:last-child{margin-bottom:0;}
+.bloco-cupom b{color:var(--lima); font-weight:400;}
+.selo-cupom{
+  flex:none; width:96px; height:96px; border-radius:50%;
+  background:var(--lima); color:var(--tinta); border:var(--borda);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--titulo); font-weight:700; font-size:2.6rem;
+}
+
 /* ---------- entregas ---------- */
 .grid-entregas{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
 .entrega{
@@ -239,6 +258,7 @@ section{padding:54px 0; position:relative;}
   .foto-capa{max-width:320px;}
   .grid-numeros{grid-template-columns:repeat(2,1fr);}
   .grid-publico, .grid-entregas, .grid-pacotes, .colunas-preco{grid-template-columns:1fr;}
+  .bloco-cupom{flex-direction:column; align-items:flex-start; text-align:left;}
   .grid-passos{grid-template-columns:repeat(2,1fr);}
   .grid-condicoes{grid-template-columns:1fr;}
 }
@@ -300,7 +320,7 @@ section{padding:54px 0; position:relative;}
       <b>85,8% de quem assiste não me segue.</b>
       <p>Para conteúdo que vai rodar como anúncio, isso é o que importa: o vídeo precisa prender quem nunca me viu. Os meus prendem.</p>
     </div>
-    <p class="nota">Tenho 524 seguidores. Coloco esse número aqui de propósito: em UGC o vídeo roda no perfil da marca, não no meu. O que você contrata é o conteúdo performar com público frio, e é isso que os números acima mostram.</p>
+    <p class="nota">Em UGC o vídeo roda no perfil da sua marca, não no meu. Por isso o que importa não é quanta gente me segue, e sim se o conteúdo prende quem nunca me viu. Os números acima são exatamente isso.</p>
   </div>
 </section>
 
@@ -321,6 +341,21 @@ section{padding:54px 0; position:relative;}
     <h2 class="titulo-secao">Marcas que já <em>confiaram</em></h2>
     <p class="linha-apoio" style="margin-left:auto;margin-right:auto">Entre conteúdo pago, permuta e parceria com cupom próprio.</p>
     <div class="grid-marcas" id="gridMarcas"></div>
+  </div>
+</section>
+
+<!-- ================= PARCERIA COM CUPOM ================= -->
+<section>
+  <div class="container">
+    <div class="bloco-cupom">
+      <div>
+        <span class="olho" style="color:var(--lima)">Pagamento por resultado</span>
+        <h2 class="titulo-secao" style="color:#fff">Eu não só divulgo. <em style="color:var(--lima)">Eu vendo.</em></h2>
+        <p>Sou parceira com cupom próprio de <b>FIBER</b>, <b>ALVA</b> e <b>Hábito Vida</b>, e já converti vendas pelo meu código.</p>
+        <p>Se você preferir, a gente trabalha assim: eu divulgo com um cupom seu, acompanho o resultado e você paga pelo que vender, não pela postagem. O risco deixa de ser seu.</p>
+      </div>
+      <span class="selo-cupom" aria-hidden="true">%</span>
+    </div>
   </div>
 </section>
 
