@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Mídia kit | Emellyn Cracco</title>
+<meta name="description" content="Mídia kit de Emellyn Cracco, criadora de conteúdo UGC em Curitiba. Números, formatos, prazos e valores.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   MÍDIA KIT
+   Mesma linguagem do portfólio: borda grossa, sombra dura,
+   Fredoka nos títulos.
+
+   Esta página fica FORA do menu do site. Só quem recebe o
+   link chega nela. Ela também está preparada para imprimir:
+   quem quiser PDF é só mandar imprimir e salvar como PDF.
+
+   PARA ATUALIZAR VALORES: tudo está nos arrays lá embaixo,
+   no comecinho do script.
+   ========================================================= */
+:root{
+  --fundo:#f8ecf6;
+  --fundo-2:#fdf6fb;
+  --branco:#ffffff;
+  --magenta:#e3157f;
+  --magenta-claro:#ff8ac4;
+  --roxo:#6a1b9a;
+  --roxo-claro:#a855d6;
+  --turquesa:#0fa9a0;
+  --lima:#a7d41f;
+  --tinta:#2c0620;
+  --tinta-suave:#6b4260;
+
+  --titulo:"Fredoka", "Segoe UI", sans-serif;
+  --corpo:"Jost", "Segoe UI", sans-serif;
+  --borda:3px solid var(--tinta);
+  --borda-p:2px solid var(--tinta);
+  --sombra:6px 6px 0 var(--tinta);
+  --sombra-p:4px 4px 0 var(--tinta);
+  --raio:20px;
+  --raio-p:13px;
+  --largura:1060px;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0; font-family:var(--corpo); font-weight:300; line-height:1.65;
+  color:var(--tinta); background:var(--fundo); overflow-x:hidden;
+}
+img{max-width:100%; display:block;}
+a{color:inherit;}
+h1,h2,h3{font-family:var(--titulo); font-weight:600; line-height:1.1; margin:0;}
+:focus-visible{outline:3px solid var(--roxo); outline-offset:3px;}
+
+.container{width:100%; max-width:var(--largura); margin:0 auto; padding:0 22px;}
+section{padding:54px 0; position:relative;}
+.olho{
+  display:inline-block; font-weight:600; font-size:.7rem; letter-spacing:.24em;
+  text-transform:uppercase; color:var(--roxo); margin-bottom:10px;
+}
+.titulo-secao{font-size:clamp(1.7rem, 4vw, 2.5rem); margin-bottom:6px;}
+.titulo-secao em{font-style:normal; color:var(--magenta);}
+.linha-apoio{color:var(--tinta-suave); margin:0 0 26px; max-width:680px;}
+
+/* ---------- capa ---------- */
+.capa{padding:46px 0 40px;}
+.capa-grid{display:grid; grid-template-columns:1.25fr .75fr; gap:40px; align-items:center;}
+.selo{
+  display:inline-block; padding:7px 16px; border-radius:999px; background:var(--lima);
+  border:var(--borda-p); box-shadow:var(--sombra-p);
+  font-family:var(--titulo); font-weight:600; font-size:.74rem; letter-spacing:.1em; text-transform:uppercase;
+}
+.capa h1{font-size:clamp(2.2rem, 6vw, 3.6rem); margin:18px 0 6px;}
+.capa h1 em{font-style:normal; color:var(--magenta);}
+.capa .arroba{font-family:var(--titulo); font-weight:600; font-size:1.1rem; color:var(--roxo);}
+.capa .frase{margin:16px 0 22px; font-size:1.05rem; color:var(--tinta-suave); max-width:540px;}
+.nichos{display:flex; flex-wrap:wrap; gap:8px; list-style:none; padding:0; margin:0;}
+.nichos li{
+  padding:6px 14px; border-radius:999px; background:var(--branco);
+  border:var(--borda-p); box-shadow:2px 2px 0 var(--tinta);
+  font-family:var(--titulo); font-weight:500; font-size:.76rem;
+}
+.foto-capa{
+  position:relative; aspect-ratio:4/5; overflow:hidden; border-radius:var(--raio);
+  border:var(--borda); box-shadow:var(--sombra);
+  background:linear-gradient(150deg, var(--magenta-claro), var(--roxo));
+}
+.foto-capa img{width:100%; height:100%; object-fit:cover;}
+
+/* ---------- números ---------- */
+.grid-numeros{display:grid; grid-template-columns:repeat(4,1fr); gap:16px;}
+.numero{
+  padding:22px 18px; border-radius:var(--raio-p); background:var(--branco);
+  border:var(--borda); box-shadow:var(--sombra-p);
+}
+.numero b{display:block; font-family:var(--titulo); font-weight:700; font-size:1.9rem; color:var(--magenta); line-height:1.05;}
+.numero span{display:block; margin-top:6px; font-size:.78rem; color:var(--tinta-suave);}
+.destaque-numero{
+  margin-top:18px; padding:22px 24px; border-radius:var(--raio-p);
+  background:var(--tinta); color:#fff; border:var(--borda); box-shadow:var(--sombra-p);
+}
+.destaque-numero b{font-family:var(--titulo); font-weight:700; color:var(--lima); font-size:1.3rem;}
+.destaque-numero p{margin:6px 0 0; color:rgba(255,255,255,.82); font-size:.95rem;}
+.nota{margin-top:14px; font-size:.82rem; color:var(--tinta-suave);}
+
+/* ---------- público ---------- */
+.grid-publico{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+.publico{
+  padding:20px; border-radius:var(--raio-p); background:var(--branco);
+  border:var(--borda-p); box-shadow:2px 2px 0 var(--tinta);
+}
+.publico h3{font-size:.8rem; letter-spacing:.1em; text-transform:uppercase; color:var(--roxo); margin-bottom:10px;}
+.barra{margin-bottom:9px;}
+.barra-topo{display:flex; justify-content:space-between; font-size:.82rem; margin-bottom:3px;}
+.barra-trilho{height:9px; border-radius:999px; background:#efdfe9; border:1.5px solid var(--tinta); overflow:hidden;}
+.barra-cheia{height:100%; background:var(--magenta);}
+.publico .barra:nth-child(3) .barra-cheia{background:var(--roxo);}
+.publico .barra:nth-child(4) .barra-cheia{background:var(--turquesa);}
+
+/* ---------- marcas ---------- */
+.grid-marcas{display:flex; flex-wrap:wrap; gap:14px; justify-content:center;}
+.marca-logo{
+  width:92px; height:92px; border-radius:50%; background:var(--branco);
+  border:var(--borda-p); box-shadow:2px 2px 0 var(--tinta);
+  display:flex; align-items:center; justify-content:center; padding:13px; overflow:hidden;
+}
+.marca-logo img{width:100%; height:100%; object-fit:contain;}
+.marca-logo span{font-family:var(--titulo); font-weight:600; font-size:.66rem; text-align:center; line-height:1.2;}
+.marca-logo.cheia{padding:0;}
+.marca-logo.cheia img{object-fit:cover; border-radius:50%;}
+
+/* ---------- entregas ---------- */
+.grid-entregas{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+.entrega{
+  padding:22px; border-radius:var(--raio-p); background:var(--branco);
+  border:var(--borda-p); box-shadow:2px 2px 0 var(--tinta);
+}
+.entrega h3{font-size:1rem; margin-bottom:6px;}
+.entrega p{margin:0; font-size:.9rem; color:var(--tinta-suave);}
+
+/* ---------- tabelas de preço ---------- */
+.bloco-preco{
+  background:var(--branco); border:var(--borda); border-radius:var(--raio);
+  box-shadow:var(--sombra); overflow:hidden; margin-bottom:20px;
+}
+.bloco-topo{padding:14px 20px; border-bottom:var(--borda); background:var(--fundo-2);}
+.bloco-topo h3{font-size:1.02rem;}
+.bloco-topo small{display:block; color:var(--tinta-suave); font-size:.8rem; margin-top:2px;}
+.lista-preco{list-style:none; margin:0; padding:10px 20px 16px;}
+.lista-preco li{
+  display:flex; justify-content:space-between; gap:14px; align-items:baseline;
+  padding:8px 0; border-bottom:1px solid rgba(44,6,32,.1);
+}
+.lista-preco li:last-child{border-bottom:0;}
+.lista-preco b{font-family:var(--titulo); font-weight:600; color:var(--magenta); white-space:nowrap;}
+.colunas-preco{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
+
+/* ---------- pacotes ---------- */
+.grid-pacotes{display:grid; grid-template-columns:repeat(3,1fr); gap:20px; align-items:start; margin-top:14px;}
+.pacote{
+  position:relative; background:var(--branco); border:var(--borda); border-radius:var(--raio);
+  box-shadow:var(--sombra); overflow:hidden;
+}
+.pacote-topo{padding:16px 20px; border-bottom:var(--borda); background:var(--roxo); color:#fff;}
+.pacote-topo h3{font-size:1.25rem;}
+.pacote-corpo{padding:20px;}
+.pacote-itens{list-style:none; margin:0 0 16px; padding:0;}
+.pacote-itens li{display:flex; gap:10px; align-items:flex-start; padding:5px 0; font-size:.94rem;}
+.visto{
+  flex:none; width:20px; height:20px; border-radius:50%; background:var(--lima);
+  border:1.5px solid var(--tinta); display:flex; align-items:center; justify-content:center;
+  font-size:.66rem; margin-top:3px;
+}
+.pacote-valor{
+  display:inline-block; padding:10px 22px; border-radius:999px; background:var(--fundo);
+  border:var(--borda-p); box-shadow:var(--sombra-p);
+  font-family:var(--titulo); font-weight:700; font-size:1.7rem; color:var(--tinta); line-height:1;
+}
+.pacote-economia{margin:12px 0 0; font-size:.84rem; color:var(--tinta-suave);}
+.pacote-avulso{margin:2px 0 0; font-size:.78rem; color:var(--tinta-suave);}
+
+/* o pacote do meio é o destaque */
+.pacote.destaque{border-width:4px;}
+.pacote.destaque .pacote-topo{background:var(--magenta);}
+.pacote.destaque .pacote-valor{background:var(--lima);}
+.fita{
+  position:absolute; top:14px; right:-34px; z-index:3; transform:rotate(38deg);
+  background:var(--lima); color:var(--tinta); border:2px solid var(--tinta);
+  padding:5px 38px; font-family:var(--titulo); font-weight:700; font-size:.68rem;
+  letter-spacing:.1em; text-transform:uppercase;
+}
+
+/* ---------- como funciona ---------- */
+.grid-passos{display:grid; grid-template-columns:repeat(4,1fr); gap:16px;}
+.passo{
+  padding:20px; border-radius:var(--raio-p); background:var(--branco);
+  border:var(--borda-p); box-shadow:2px 2px 0 var(--tinta);
+}
+.passo b{
+  display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px;
+  border-radius:50%; background:var(--turquesa); color:#fff; border:2px solid var(--tinta);
+  font-family:var(--titulo); font-weight:700; margin-bottom:10px;
+}
+.passo h3{font-size:.98rem; margin-bottom:4px;}
+.passo p{margin:0; font-size:.88rem; color:var(--tinta-suave);}
+.grid-condicoes{display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-top:20px;}
+.condicao{
+  display:flex; gap:12px; align-items:flex-start; padding:15px 18px; border-radius:var(--raio-p);
+  background:var(--branco); border:var(--borda-p); box-shadow:2px 2px 0 var(--tinta); font-size:.92rem;
+}
+.condicao b{font-family:var(--titulo); font-weight:600; display:block;}
+
+/* ---------- contato ---------- */
+.fechamento{
+  background:var(--magenta); color:#fff; border-top:var(--borda); border-bottom:var(--borda);
+  text-align:center; padding:44px 0;
+}
+.fechamento h2{font-size:clamp(1.6rem,4vw,2.3rem); margin-bottom:8px;}
+.fechamento p{margin:0 auto 22px; max-width:560px; color:rgba(255,255,255,.9);}
+.botoes{display:flex; gap:12px; justify-content:center; flex-wrap:wrap;}
+.btn{
+  display:inline-flex; align-items:center; gap:8px; padding:13px 26px; border-radius:999px;
+  text-decoration:none; background:var(--branco); color:var(--tinta);
+  border:var(--borda-p); box-shadow:var(--sombra-p);
+  font-family:var(--titulo); font-weight:600; font-size:.84rem;
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.btn:hover{transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--tinta);}
+.btn-lima{background:var(--lima);}
+.rodape{padding:26px 0 34px; text-align:center; font-size:.82rem; color:var(--tinta-suave);}
+
+/* ---------- telas menores ---------- */
+@media (max-width:900px){
+  .capa-grid{grid-template-columns:1fr; gap:28px;}
+  .foto-capa{max-width:320px;}
+  .grid-numeros{grid-template-columns:repeat(2,1fr);}
+  .grid-publico, .grid-entregas, .grid-pacotes, .colunas-preco{grid-template-columns:1fr;}
+  .grid-passos{grid-template-columns:repeat(2,1fr);}
+  .grid-condicoes{grid-template-columns:1fr;}
+}
+@media (max-width:520px){
+  .grid-numeros, .grid-passos{grid-template-columns:1fr;}
+  section{padding:40px 0;}
+}
+
+/* ---------- impressão: para salvar em PDF ---------- */
+@media print{
+  @page{margin:12mm;}
+  body{background:#fff;}
+  .nao-imprime{display:none !important;}
+  section{padding:18px 0; break-inside:avoid;}
+  .bloco-preco, .pacote, .numero, .passo, .condicao, .publico, .entrega{box-shadow:none;}
+  .fechamento{background:#fff; color:var(--tinta); border:var(--borda);}
+  .fechamento p{color:var(--tinta-suave);}
+  .grid-numeros{grid-template-columns:repeat(4,1fr);}
+  .grid-pacotes{grid-template-columns:repeat(3,1fr);}
+  a[href^="http"]::after{content:"";}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= CAPA ================= -->
+<section class="capa">
+  <div class="container">
+    <div class="capa-grid">
+      <div>
+        <span class="selo">Mídia kit</span>
+        <h1>Emellyn <em>Cracco</em></h1>
+        <p class="arroba">@emycracco &nbsp;·&nbsp; Curitiba, atendo o Brasil todo</p>
+        <p class="frase">Criadora de conteúdo UGC. Treino em casa, pole dance e calistenia, com roupa colorida e luz de verdade. Eu gravo vídeos que parecem recomendação de amiga, prontos para a sua marca publicar ou rodar como anúncio.</p>
+        <ul class="nichos">
+          <li>Moda fitness</li>
+          <li>Suplementos</li>
+          <li>Equipamento de treino</li>
+          <li>Beleza e autocuidado</li>
+          <li>Receitas e alimentação</li>
+        </ul>
+      </div>
+      <!-- FOTO DO KIT: para trocar, substitua o arquivo foto-sobre.jpg -->
+      <div class="foto-capa">
+        <img src="foto-sobre.jpg" alt="Retrato de Emellyn Cracco" style="object-position:50% 18%">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= NÚMEROS ================= -->
+<section>
+  <div class="container">
+    <span class="olho">Instagram, últimos 30 dias</span>
+    <h2 class="titulo-secao">O meu conteúdo roda <em>fora da minha bolha</em></h2>
+    <p class="linha-apoio">Dados retirados do painel profissional do Instagram. Posso mandar o print a qualquer momento.</p>
+    <div class="grid-numeros" id="gridNumeros"></div>
+    <div class="destaque-numero">
+      <b>85,8% de quem assiste não me segue.</b>
+      <p>Para conteúdo que vai rodar como anúncio, isso é o que importa: o vídeo precisa prender quem nunca me viu. Os meus prendem.</p>
+    </div>
+    <p class="nota">Tenho 524 seguidores. Coloco esse número aqui de propósito: em UGC o vídeo roda no perfil da marca, não no meu. O que você contrata é o conteúdo performar com público frio, e é isso que os números acima mostram.</p>
+  </div>
+</section>
+
+<!-- ================= PÚBLICO ================= -->
+<section>
+  <div class="container">
+    <span class="olho">Quem me assiste</span>
+    <h2 class="titulo-secao">Mulheres de <em>25 a 44 anos</em>, no Brasil</h2>
+    <p class="linha-apoio">Se a sua marca fala com mulher adulta que treina, cuida da pele ou compra pela internet, o meu público é o seu.</p>
+    <div class="grid-publico" id="gridPublico"></div>
+  </div>
+</section>
+
+<!-- ================= MARCAS ================= -->
+<section>
+  <div class="container" style="text-align:center">
+    <span class="olho">Já trabalhei com</span>
+    <h2 class="titulo-secao">Marcas que já <em>confiaram</em></h2>
+    <p class="linha-apoio" style="margin-left:auto;margin-right:auto">Entre conteúdo pago, permuta e parceria com cupom próprio.</p>
+    <div class="grid-marcas" id="gridMarcas"></div>
+  </div>
+</section>
+
+<!-- ================= O QUE EU ENTREGO ================= -->
+<section>
+  <div class="container">
+    <span class="olho">O que eu entrego</span>
+    <h2 class="titulo-secao">Arquivo pronto para <em>publicar</em></h2>
+    <div class="grid-entregas" id="gridEntregas"></div>
+  </div>
+</section>
+
+<!-- ================= INVESTIMENTO ================= -->
+<section>
+  <div class="container">
+    <span class="olho">Investimento</span>
+    <h2 class="titulo-secao">Valores de <em>referência</em></h2>
+    <p class="linha-apoio">Todo vídeo já inclui 90 dias de uso em anúncios. Propostas personalizadas são ajustadas conforme escopo, uso e campanha.</p>
+
+    <div class="colunas-preco">
+      <div class="bloco-preco">
+        <div class="bloco-topo"><h3>Contrate uma vez</h3><small>vídeo vertical com roteiro, gravação e edição</small></div>
+        <ul class="lista-preco" id="listaAvulso"></ul>
+      </div>
+      <div class="bloco-preco">
+        <div class="bloco-topo"><h3>Com recorrência</h3><small>por mês, mínimo de 3 meses</small></div>
+        <ul class="lista-preco" id="listaRecorrencia"></ul>
+      </div>
+      <div class="bloco-preco">
+        <div class="bloco-topo"><h3>Adicionais</h3><small>para somar a qualquer contratação</small></div>
+        <ul class="lista-preco" id="listaAdicionais"></ul>
+      </div>
+    </div>
+
+    <div class="grid-pacotes" id="gridPacotes"></div>
+  </div>
+</section>
+
+<!-- ================= COMO FUNCIONA ================= -->
+<section>
+  <div class="container">
+    <span class="olho">Como funciona</span>
+    <h2 class="titulo-secao">Do briefing ao <em>arquivo final</em></h2>
+    <div class="grid-passos" id="gridPassos"></div>
+    <div class="grid-condicoes" id="gridCondicoes"></div>
+  </div>
+</section>
+
+<!-- ================= FECHAMENTO ================= -->
+<div class="fechamento">
+  <div class="container">
+    <h2>Vamos combinar a sua campanha?</h2>
+    <p>Me conte o produto, o formato e a data. Respondo em até 24 horas úteis com a proposta fechada.</p>
+    <div class="botoes">
+      <a class="btn btn-lima" href="https://wa.me/5541987260906" target="_blank" rel="noopener">WhatsApp (41) 98726-0906</a>
+      <a class="btn" href="mailto:emycracco@gmail.com">emycracco@gmail.com</a>
+      <a class="btn" href="https://instagram.com/emycracco" target="_blank" rel="noopener">@emycracco</a>
+      <a class="btn nao-imprime" href="https://emycracco.com.br" target="_blank" rel="noopener">Ver o portfólio</a>
+    </div>
+  </div>
+</div>
+
+<footer class="rodape">
+  <div class="container">
+    Emellyn Cracco &nbsp;·&nbsp; Criadora de conteúdo UGC &nbsp;·&nbsp; Curitiba &nbsp;·&nbsp;
+    emycracco.com.br &nbsp;·&nbsp; atualizado em <span id="mesAno"></span>
+  </div>
+</footer>
+
+<script>
+/* =========================================================
+   TODOS OS DADOS DO KIT ESTÃO AQUI
+   Para mudar preço, número ou texto, mexa só nesta parte.
+   ========================================================= */
+
+/* ---- NÚMEROS DO INSTAGRAM (painel profissional, 30 dias) ---- */
+const NUMEROS = [
+  { valor:"118.790", rotulo:"visualizações em 30 dias" },
+  { valor:"73.572",  rotulo:"contas que viram meu conteúdo" },
+  { valor:"9.584",   rotulo:"interações em 30 dias" },
+  { valor:"111 mil", rotulo:"visualizações só em reels" }
+];
+
+/* ---- PÚBLICO ---- */
+const PUBLICO = [
+  { titulo:"Gênero", barras:[
+    { nome:"Mulheres", valor:95.8 },
+    { nome:"Homens",   valor:4.2 }
+  ]},
+  { titulo:"Faixa etária", barras:[
+    { nome:"25 a 34 anos", valor:46.4 },
+    { nome:"35 a 44 anos", valor:25.6 },
+    { nome:"18 a 24 anos", valor:15.4 },
+    { nome:"45 a 54 anos", valor:9.3 }
+  ]},
+  { titulo:"Onde estão", barras:[
+    { nome:"Brasil",         valor:92.3 },
+    { nome:"Estados Unidos", valor:1.3 },
+    { nome:"Portugal",       valor:1.3 }
+  ]}
+];
+
+/* ---- MARCAS ---- */
+const MARCAS = [
+  { nome:"FIBER",              logo:"logos/fiber.png", cheia:true },
+  { nome:"Hábito Vida",        logo:"logos/habito-vida.png", zoom:1.22 },
+  { nome:"Dove",               logo:"logos/dove.png", zoom:1.06 },
+  { nome:"Eudora",             logo:"logos/eudora.png" },
+  { nome:"Popozuda",           logo:"logos/popozuda.png", cheia:true },
+  { nome:"Soldiers Nutrition", logo:"logos/soldiers-nutrition.png", zoom:1.12 },
+  { nome:"Tim",                logo:"logos/tim.png", zoom:1.3 },
+  { nome:"FM Basics",          logo:"logos/fm-basics.png", zoom:1.12 },
+  { nome:"Voudegata",          logo:"logos/voudegata.png", cheia:true },
+  { nome:"ALVA",               logo:"logos/alva.png", cheia:true }
+];
+
+/* ---- O QUE EU ENTREGO ---- */
+const ENTREGAS = [
+  { titulo:"Vídeo UGC vertical", texto:"Roteiro, gravação, edição e legenda. Formato 9:16, pronto para publicar ou rodar como anúncio." },
+  { titulo:"Corte para anúncio", texto:"Versões curtas do mesmo vídeo, com ganchos diferentes, pensadas para teste de criativo." },
+  { titulo:"Fotos do produto",   texto:"Produto em uso e em fundo limpo, no formato 4:5, para feed e para e-commerce." },
+  { titulo:"Unboxing",           texto:"Abertura da embalagem com reação real e foco nos detalhes que encantam." },
+  { titulo:"Stories",            texto:"Sequência de stories, para eu publicar no meu perfil ou para a sua marca publicar." },
+  { titulo:"Parceria com cupom", texto:"Divulgo com cupom próprio e acompanho a venda. Você paga por resultado, não por postagem." }
+];
+
+/* ---- TABELA DE PREÇOS ----
+   Regra base: todo vídeo já inclui 90 dias de uso em anúncios.
+   Tempo extra custa por vídeo, conforme a lista de adicionais. */
+const AVULSO = [
+  { item:"1 vídeo",   valor:"R$ 257" },
+  { item:"2 vídeos",  valor:"R$ 460" },
+  { item:"3 vídeos",  valor:"R$ 645" },
+  { item:"4 vídeos",  valor:"R$ 820" },
+  { item:"5 vídeos",  valor:"R$ 995" },
+  { item:"6 vídeos",  valor:"R$ 1.185" },
+  { item:"8 vídeos",  valor:"R$ 1.560" },
+  { item:"10 vídeos", valor:"R$ 1.920" },
+  { item:"12 vídeos", valor:"R$ 2.280" }
+];
+const RECORRENCIA = [
+  { item:"4 vídeos por mês",  valor:"R$ 720" },
+  { item:"6 vídeos por mês",  valor:"R$ 1.080" },
+  { item:"8 vídeos por mês",  valor:"R$ 1.440" },
+  { item:"10 vídeos por mês", valor:"R$ 1.800" },
+  { item:"15 vídeos por mês", valor:"R$ 2.700" },
+  { item:"20 vídeos por mês", valor:"R$ 3.600" }
+];
+const ADICIONAIS = [
+  { item:"Mais 90 dias de anúncio, por vídeo", valor:"R$ 77" },
+  { item:"3 fotos do produto",                 valor:"R$ 80" },
+  { item:"Teste A/B, dois ganchos",            valor:"R$ 50" },
+  { item:"Publicação em colaboração",          valor:"R$ 100" },
+  { item:"3 stories no meu perfil",            valor:"R$ 165" },
+  { item:"3 stories para você publicar",       valor:"R$ 130" },
+  { item:"Repost no meu TikTok",               valor:"R$ 100" }
+];
+
+/* ---- PACOTES ----
+   A economia de cada pacote é calculada sozinha, comparando
+   com os preços da tabela de cima. Assim nunca fica desatualizada
+   nem exagerada: se eu mudar um preço, a conta se refaz. */
+const PACOTES = [
+  {
+    nome:"UGC 1", destaque:false,
+    itens:["1 vídeo vertical", "3 fotos do produto", "Roteiro, gravação e edição", "90 dias de uso em anúncios"],
+    valor:307, avulso:[257, 80]
+  },
+  {
+    nome:"UGC 2", destaque:true, fita:"Mais pedido",
+    itens:["3 vídeos verticais", "3 fotos do produto", "Roteiro, gravação e edição", "180 dias de uso em anúncios"],
+    valor:660, avulso:[645, 80, 77 * 3]
+  },
+  {
+    nome:"UGC 3", destaque:false,
+    itens:["5 vídeos verticais", "6 fotos do produto", "Roteiro, gravação e edição", "180 dias de uso em anúncios"],
+    valor:997, avulso:[995, 160, 77 * 5]
+  }
+];
+
+/* ---- COMO FUNCIONA ---- */
+const PASSOS = [
+  { numero:"1", titulo:"Briefing",          texto:"Você me conta o produto, o objetivo e a data. Eu volto com a ideia e o valor fechado." },
+  { numero:"2", titulo:"Produto",           texto:"Você envia o produto físico. Eu preciso dele em mãos para gravar com verdade." },
+  { numero:"3", titulo:"Roteiro",           texto:"Mando o roteiro escrito antes de gravar. Nada é gravado sem o seu sim." },
+  { numero:"4", titulo:"Gravação e entrega", texto:"Gravo, edito, legendo e entrego o arquivo final pronto para publicar." }
+];
+const CONDICOES = [
+  { titulo:"Prazo de entrega",   texto:"Até 5 dias úteis depois que eu receber o produto, e até 72 horas úteis depois da gravação." },
+  { titulo:"Ajustes",            texto:"Uma rodada de ajuste já está inclusa em todo conteúdo entregue." },
+  { titulo:"Formatos",           texto:"Vídeo em 9:16 e fotos em 4:5. Outros formatos a combinar." },
+  { titulo:"Nota fiscal",        texto:"Emito nota fiscal. Tenho CNPJ." },
+  { titulo:"Pagamento",          texto:"PIX." },
+  { titulo:"Uso em anúncios",    texto:"Todo vídeo já vem com 90 dias de uso em mídia paga. Mais tempo é adicional, por vídeo." }
+];
+
+/* =========================================================
+   MONTAGEM DA PÁGINA
+   ========================================================= */
+const pegar = (s) => document.querySelector(s);
+const dinheiro = (n) => "R$ " + n.toLocaleString("pt-BR");
+
+pegar("#gridNumeros").innerHTML = NUMEROS
+  .map(n => `<div class="numero"><b>${n.valor}</b><span>${n.rotulo}</span></div>`).join("");
+
+pegar("#gridPublico").innerHTML = PUBLICO.map(p => `
+  <div class="publico">
+    <h3>${p.titulo}</h3>
+    ${p.barras.map(b => `
+      <div class="barra">
+        <div class="barra-topo"><span>${b.nome}</span><b>${String(b.valor).replace(".", ",")}%</b></div>
+        <div class="barra-trilho"><div class="barra-cheia" style="width:${b.valor}%"></div></div>
+      </div>`).join("")}
+  </div>`).join("");
+
+pegar("#gridMarcas").innerHTML = MARCAS.map(m => {
+  const miolo = m.logo
+    ? `<img src="${m.logo}" alt="Logo ${m.nome}" style="transform:scale(${m.zoom || 1})">`
+    : `<span>${m.nome}</span>`;
+  return `<div class="marca-logo${m.cheia ? " cheia" : ""}" title="${m.nome}">${miolo}</div>`;
+}).join("");
+/* se algum logo não carregar, o círculo mostra o nome escrito */
+pegar("#gridMarcas").querySelectorAll("img").forEach(img => {
+  img.addEventListener("error", () => {
+    const c = img.closest(".marca-logo");
+    c.classList.remove("cheia");
+    c.innerHTML = `<span>${c.title}</span>`;
+  });
+});
+
+pegar("#gridEntregas").innerHTML = ENTREGAS
+  .map(e => `<article class="entrega"><h3>${e.titulo}</h3><p>${e.texto}</p></article>`).join("");
+
+const montarLista = (seletor, lista) => {
+  pegar(seletor).innerHTML = lista
+    .map(l => `<li><span>${l.item}</span><b>${l.valor}</b></li>`).join("");
+};
+montarLista("#listaAvulso", AVULSO);
+montarLista("#listaRecorrencia", RECORRENCIA);
+montarLista("#listaAdicionais", ADICIONAIS);
+
+pegar("#gridPacotes").innerHTML = PACOTES.map(p => {
+  const soma = p.avulso.reduce((a, b) => a + b, 0);
+  const economia = soma - p.valor;
+  return `
+  <article class="pacote${p.destaque ? " destaque" : ""}">
+    ${p.fita ? `<span class="fita">${p.fita}</span>` : ""}
+    <div class="pacote-topo"><h3>${p.nome}</h3></div>
+    <div class="pacote-corpo">
+      <ul class="pacote-itens">
+        ${p.itens.map(i => `<li><span class="visto" aria-hidden="true">&#10003;</span><span>${i}</span></li>`).join("")}
+      </ul>
+      <span class="pacote-valor">${dinheiro(p.valor)}</span>
+      <p class="pacote-avulso">Contratando item por item: ${dinheiro(soma)}</p>
+      ${economia > 0 ? `<p class="pacote-economia">Você economiza <b>${dinheiro(economia)}</b></p>` : ""}
+    </div>
+  </article>`;
+}).join("");
+
+pegar("#gridPassos").innerHTML = PASSOS.map(p => `
+  <article class="passo">
+    <b aria-hidden="true">${p.numero}</b>
+    <h3>${p.titulo}</h3>
+    <p>${p.texto}</p>
+  </article>`).join("");
+
+pegar("#gridCondicoes").innerHTML = CONDICOES.map(c => `
+  <div class="condicao"><span><b>${c.titulo}</b>${c.texto}</span></div>`).join("");
+
+/* mês e ano de atualização, automático */
+const agora = new Date();
+pegar("#mesAno").textContent = agora.toLocaleDateString("pt-BR", { month:"long", year:"numeric" });
+</script>
+</body>
+</html>
