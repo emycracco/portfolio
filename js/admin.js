@@ -407,6 +407,41 @@ function ultimosDias(quantos){
   return lista;
 }
 
+/* "agora mesmo", "há 12 minutos", "ontem": mais fácil de ler
+   do que uma data seca quando o que importa é a novidade. */
+function quandoChegou(iso){
+  const q = Date.parse(iso || "");
+  if(!Number.isFinite(q)) return "";
+  const seg = Math.max(0, Math.round((Date.now() - q) / 1000));
+  if(seg < 60)    return "agora mesmo";
+  const min = Math.round(seg / 60);
+  if(min < 60)    return "há " + min + (min === 1 ? " minuto" : " minutos");
+  const h = Math.round(min / 60);
+  if(h < 24)      return "há " + h + (h === 1 ? " hora" : " horas");
+  const d = Math.round(h / 24);
+  if(d === 1)     return "ontem";
+  if(d < 30)      return "há " + d + " dias";
+  return dataBR(iso);
+}
+
+/* Enquanto você estiver na aba Portfólio, o painel confere o banco
+   sozinho de tempo em tempo, para um contato novo aparecer sem
+   você precisar recarregar a página. */
+let relogioLeads = null;
+function ligarAtualizacaoAutomatica(){
+  clearInterval(relogioLeads);
+  relogioLeads = setInterval(async () => {
+    if(estado.aba !== "portfolio") return;            /* só nesta aba */
+    if(document.hidden) return;                       /* aba do navegador em segundo plano */
+    if(pegar("#fundoJanela").classList.contains("aberto")) return;  /* não mexe com formulário aberto */
+    const antes = (estado.dados.marcas || []).length;
+    await carregarTudo();
+    const depois = (estado.dados.marcas || []).length;
+    desenharPortfolio();
+    if(depois > antes) recado("Chegou contato novo pelo site.");
+  }, 45000);
+}
+
 function desenharPortfolio(){
   const visitas = estado.dados.visitas || [];
   const videos = estado.dados.videos || [];
@@ -437,6 +472,24 @@ function desenharPortfolio(){
 
   const maior = Math.max(1, ...dias.map(d => porDia[d]));   /* nunca divide por zero */
 
+  /* ---- QUEM PREENCHEU O FORMULÁRIO DO SITE ----
+     Só entram as marcas com origem "site", para não misturar
+     com os leads que vieram da planilha importada.
+     Se a coluna origem ainda não existir no banco, a lista fica
+     vazia e o aviso explica o que fazer, sem quebrar nada. */
+  const temColunaOrigem = (estado.dados.marcas || []).some(m => "origem" in m);
+  const leadsDoSite = (estado.dados.marcas || [])
+    .filter(m => String(m.origem || "").toLowerCase() === "site")
+    .sort((a,b) => String(b.criado_em || "").localeCompare(String(a.criado_em || "")));
+
+  /* "novo" é o que chegou nas últimas 24 horas */
+  const agora = Date.now();
+  const ehNovo = (m) => {
+    const q = Date.parse(m.criado_em || "");
+    return Number.isFinite(q) && (agora - q) < 24 * 60 * 60 * 1000;
+  };
+  const novos = leadsDoSite.filter(ehNovo).length;
+
   pegar("#acoesTopo").innerHTML = `<button class="btn btn-principal" id="novoVideo">${ICONE.mais} Novo vídeo</button>`;
 
   pegar("#area").innerHTML = `
@@ -447,6 +500,33 @@ function desenharPortfolio(){
       <div class="numero"><b style="font-size:1rem">${seguro(nichoForte)}</b><small>nicho mais forte</small></div>
       <div class="numero"><b style="font-size:1rem">${seguro(origemTop)}</b><small>de onde mais vêm</small></div>
     </div>
+
+    <section class="cartao cartao-leads">
+      <div class="cartao-topo">
+        <h2>Quem preencheu o formulário do site
+          ${novos ? `<span class="selo-novo">${novos} ${novos === 1 ? "novo" : "novos"}</span>` : ""}
+        </h2>
+        <span class="atualiza-sozinho" id="avisoAtualiza">confere sozinho a cada 45 segundos</span>
+      </div>
+      <div class="rolagem">
+        ${leadsDoSite.length ? `
+        <table>
+          <thead><tr><th>Quando</th><th>Nome</th><th>E-mail</th><th>Mensagem</th><th>Situação</th></tr></thead>
+          <tbody>
+            ${leadsDoSite.slice(0, 25).map(m => `
+              <tr class="linha-clicavel lead-site ${ehNovo(m) ? "chegou-agora" : ""}" data-id="${seguro(m.id)}">
+                <td style="white-space:nowrap">${quandoChegou(m.criado_em)}</td>
+                <td><b>${seguro(m.nome)}</b></td>
+                <td>${m.email ? `<a href="mailto:${seguro(m.email)}" class="parar">${seguro(m.email)}</a>` : ""}</td>
+                <td style="max-width:360px">${seguro(m.obs)}</td>
+                <td><span class="pilula p-${String(m.situacao||"lead").toLowerCase()}">${seguro(m.situacao)}</span></td>
+              </tr>`).join("")}
+          </tbody>
+        </table>` : `<p class="vazio-tabela">${temColunaOrigem
+            ? "Ninguém preencheu o formulário ainda. Quando alguém preencher, aparece aqui na hora, antes de você precisar abrir a aba Marcas."
+            : "Falta rodar uma linha de SQL no Supabase para separar os contatos do site dos leads da planilha. Peça para o Claude."}</p>`}
+      </div>
+    </section>
 
     <div class="colunas">
       <section class="cartao">
@@ -510,6 +590,14 @@ function desenharPortfolio(){
       </div>
     </section>
   `;
+
+  /* clicar no contato abre a ficha dele, igual na aba Marcas */
+  pegarTodos(".lead-site").forEach(linha => linha.addEventListener("click", (e) => {
+    if(e.target.closest(".parar")) return;
+    const m = (estado.dados.marcas || []).find(x => String(x.id) === linha.dataset.id);
+    if(m) formularioMarca(m);
+  }));
+  ligarAtualizacaoAutomatica();
 
   pegar("#novoVideo").addEventListener("click", () => formularioVideo(null));
   pegarTodos("#corpoVideos .editar").forEach(b => b.addEventListener("click", () => {
