@@ -60,16 +60,20 @@ h1,h2{font-family:var(--titulo); font-weight:600; margin:0; line-height:1.15;}
 
 /* ---------- topo ---------- */
 .topo-links{text-align:center; margin-bottom:26px;}
+
+/* A foto é um retângulo em pé, com moldura grossa e um bloco
+   verde atrás, no mesmo estilo de adesivo do portfólio.
+   Para trocar a foto basta substituir o arquivo foto-sobre.jpg. */
 .retrato{
-  width:132px; height:132px; margin:0 auto 16px; border-radius:50%;
-  overflow:hidden; border:var(--borda); box-shadow:var(--sombra);
+  width:208px; height:262px; margin:0 auto 20px; border-radius:26px;
+  overflow:hidden; border:var(--borda);
+  box-shadow:8px 8px 0 var(--lima), 8px 8px 0 3px var(--tinta);
   background:linear-gradient(150deg, var(--magenta-claro), var(--roxo));
 }
 .retrato img{width:100%; height:100%; object-fit:cover; object-position:50% 18%;}
-.topo-links h1{font-size:1.9rem;}
+.topo-links h1{font-size:2.1rem;}
 .topo-links h1 span{color:var(--magenta);}
-.arroba{margin:4px 0 0; font-family:var(--titulo); font-weight:500; font-size:.9rem; color:var(--roxo);}
-.resumo{margin:12px auto 0; max-width:400px; font-size:.95rem; color:var(--tinta-suave);}
+.arroba{margin:5px 0 0; font-family:var(--titulo); font-weight:500; font-size:.92rem; color:var(--roxo);}
 
 /* ---------- ícones sociais ---------- */
 .redes{display:flex; gap:10px; justify-content:center; margin:20px 0 0; padding:0; list-style:none;}
@@ -107,6 +111,10 @@ h1,h2{font-family:var(--titulo); font-weight:600; margin:0; line-height:1.15;}
   font-family:var(--titulo); font-weight:700; font-size:.92rem; text-transform:uppercase;
 }
 .botao-grande.destaque .selo-botao{background:#fff;}
+
+/* quando a marca tem logo, o quadradinho vira a logo dela */
+.selo-botao.com-logo{background:var(--branco); padding:5px;}
+.selo-botao.com-logo img{width:100%; height:100%; object-fit:contain;}
 .seta-botao{margin-left:auto; flex:none; opacity:.55;}
 
 /* o código do cupom, com o botão de copiar */
@@ -123,6 +131,10 @@ h1,h2{font-family:var(--titulo); font-weight:600; margin:0; line-height:1.15;}
 .cartao-form{
   padding:22px 20px; border-radius:var(--raio);
   background:var(--branco); border:var(--borda); box-shadow:var(--sombra);
+}
+.chamada-form{
+  margin:0 0 16px; font-size:1.02rem; font-weight:400; line-height:1.5;
+  color:var(--tinta);
 }
 .campo{margin-bottom:14px;}
 .campo label{display:block; font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--roxo); margin-bottom:6px;}
@@ -164,7 +176,6 @@ h1,h2{font-family:var(--titulo); font-weight:600; margin:0; line-height:1.15;}
     <div class="retrato"><img src="/foto-sobre.jpg" alt="Emellyn Cracco" width="910" height="1608"></div>
     <h1>Emellyn <span>Cracco</span></h1>
     <p class="arroba">@emycracco</p>
-    <p class="resumo">Criadora de conteúdo UGC em Curitiba. Treino em casa, pole dance e calistenia, com roupa colorida e luz de verdade.</p>
 
     <ul class="redes">
       <li><a href="https://instagram.com/emycracco" target="_blank" rel="noopener" data-clique="Instagram" aria-label="Instagram">
@@ -181,8 +192,8 @@ h1,h2{font-family:var(--titulo); font-weight:600; margin:0; line-height:1.15;}
     </ul>
   </div>
 
-  <!-- ---------- para marcas ---------- -->
-  <span class="rotulo">Para marcas</span>
+  <!-- ---------- parcerias ---------- -->
+  <span class="rotulo">Parcerias</span>
 
   <a class="botao-grande destaque" id="botaoPortfolio"
      href="https://wa.me/5541987260906?text=Oi%20Emellyn!%20Vim%20pelo%20seu%20perfil%20e%20quero%20ver%20o%20seu%20portf%C3%B3lio."
@@ -191,13 +202,13 @@ h1,h2{font-family:var(--titulo); font-weight:600; margin:0; line-height:1.15;}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M20 12a8 8 0 0 1-11.9 7L4 20l1.1-4A8 8 0 1 1 20 12Z"/></svg>
     </span>
     <span>
-      <b>Solicitar meu portfólio</b>
-      <small>Chama no WhatsApp que eu mando na hora</small>
+      <b>Solicitar portfólio</b>
+      <small>Me chame no WhatsApp e eu te envio na hora</small>
     </span>
   </a>
 
   <div class="cartao-form">
-    <p style="margin:0 0 14px; font-size:.9rem; color:var(--tinta-suave)">
+    <p class="chamada-form">
       Prefere escrever? Deixa os seus dados que eu respondo em até 24 horas úteis.
     </p>
     <form id="formLinks" novalidate>
@@ -311,6 +322,30 @@ function iniciais(nome){
   return partes.map(p => p[0] || "").join("").toUpperCase() || "?";
 }
 
+/* Transforma "Hábito Vida" em "habito-vida", que é o nome do
+   arquivo da logo dentro da pasta /logos do site. */
+function apelidoDaMarca(nome){
+  return String(nome || "")
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/* O quadradinho da esquerda. Se existir a logo da marca, mostra a
+   logo. Se o arquivo não existir, a própria imagem se apaga e
+   ficam as iniciais, sem quadrado quebrado na tela. */
+function seloDaMarca(c){
+  const letras = seguro(iniciais(c.marca));
+  const apelido = apelidoDaMarca(c.marca);
+  const endereco = c.logo ? String(c.logo) : (apelido ? "/logos/" + apelido + ".png" : "");
+  if(!endereco) return `<span class="selo-botao" aria-hidden="true">${letras}</span>`;
+  return `<span class="selo-botao com-logo" aria-hidden="true">
+    <img src="${seguro(endereco)}" alt="" loading="lazy"
+         onerror="this.parentNode.classList.remove('com-logo');this.parentNode.textContent='${letras}'">
+  </span>`;
+}
+
 function cartaoDeBotao(c){
   const temCupom = c.tipo === "cupom" && c.cupom;
   const linha2 = [c.desconto, c.validade ? "até " + new Date(c.validade + "T00:00:00").toLocaleDateString("pt-BR") : ""]
@@ -321,7 +356,7 @@ function cartaoDeBotao(c){
     : SETA;
 
   const miolo = `
-    <span class="selo-botao" aria-hidden="true">${seguro(iniciais(c.marca))}</span>
+    ${seloDaMarca(c)}
     <span>
       <b>${seguro(c.marca)}</b>
       ${linha2 ? `<small>${seguro(linha2)}</small>` : ""}
