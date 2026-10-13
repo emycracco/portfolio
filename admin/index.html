@@ -228,12 +228,24 @@ tbody tr.destacada td:first-child{box-shadow:inset 3px 0 0 var(--rosa);}
 }
 .icone-btn:hover{color:var(--magenta); border-color:var(--rosa);}
 .icone-btn svg{width:15px; height:15px;}
-/* a coluninha das setinhas de subir e descer o vídeo */
+/* a coluninha da ordem: o número do lugar e as setinhas */
 .alcinha{white-space:nowrap;}
+.alcinha .posicao{
+  display:inline-block; min-width:17px; margin-right:5px;
+  font-size:.76rem; color:var(--tinta-suave); text-align:right;
+}
 .alcinha .icone-btn{width:26px; height:26px; border-radius:8px;}
 .alcinha .icone-btn + .icone-btn{margin-left:3px;}
 .alcinha .icone-btn[disabled]{opacity:.3;}
 .alcinha .icone-btn[disabled]:hover{background:var(--branco); color:var(--tinta);}
+
+/* a prévia do portfólio, guardada numa gaveta fechada no fim da aba */
+.gaveta-previa{padding:0;}
+.gaveta-previa > summary{list-style:none; cursor:pointer;}
+.gaveta-previa > summary::-webkit-details-marker{display:none;}
+.gaveta-previa > summary::marker{content:"";}
+.dica-abrir{font-size:.76rem; color:var(--tinta-suave);}
+.gaveta-previa[open] .dica-abrir{visibility:hidden;}
 
 /* ---------- filtros e busca ---------- */
 .ferramentas{display:flex; flex-wrap:wrap; gap:10px; align-items:center;}
