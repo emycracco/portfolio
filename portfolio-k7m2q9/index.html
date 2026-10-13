@@ -98,6 +98,38 @@ section{padding:92px 0; position:relative;}
 .girado-2{transform:rotate(3deg);}
 
 /* =========================================================
+   FAIXA DA BLACK FRIDAY
+   Fica no topo de tudo, conta os dias sozinha e some assim que
+   a data passa. Clicando, leva direto para o contato.
+   ========================================================= */
+.faixa-black{
+  position:fixed; top:0; left:0; right:0; z-index:90;
+  display:none; align-items:center; justify-content:center; gap:14px;
+  flex-wrap:wrap; padding:11px 18px;
+  background:var(--magenta); color:#fff; text-decoration:none;
+  border-bottom:3px solid var(--tinta);
+  font-size:.92rem; line-height:1.3; text-align:center;
+}
+.faixa-black.aparecer{display:flex;}
+.selo-black{
+  flex:none; padding:4px 12px; border-radius:999px;
+  background:var(--tinta); color:var(--lima);
+  font-family:var(--fonte-titulo); font-weight:600;
+  font-size:.72rem; letter-spacing:.14em; text-transform:uppercase;
+}
+.faixa-black b{font-family:var(--fonte-titulo); font-weight:600;}
+.faixa-black .conta{color:var(--lima);}
+.faixa-black .separador{opacity:.45;}
+.faixa-black .chamar{
+  font-family:var(--fonte-titulo); font-weight:600;
+  border-bottom:2px solid rgba(255,255,255,.6); padding-bottom:1px;
+}
+.faixa-black:hover .chamar{border-bottom-color:#fff;}
+/* a altura é medida pelo script, então vale para qualquer tela */
+body.tem-faixa .topo{top:calc(var(--altura-faixa, 52px) + 14px);}
+body.tem-faixa .capa{padding-top:calc(var(--altura-faixa, 52px) + 162px);}
+
+/* =========================================================
    MENU FIXO
    ========================================================= */
 .topo{position:fixed; inset:16px 0 auto 0; z-index:80;}
@@ -503,6 +535,11 @@ section{padding:92px 0; position:relative;}
   .menu a{text-align:center;}
   .topo-inner{position:relative;}
   .capa{padding-top:136px;}
+  /* no celular a faixa fica curtinha, só o essencial */
+  .faixa-black{gap:9px; padding:9px 12px; font-size:.8rem;}
+  .faixa-black .texto-extra{display:none;}
+  .selo-black{font-size:.66rem; padding:4px 10px;}
+  body.tem-faixa .capa{padding-top:calc(var(--altura-faixa, 44px) + 130px);}
   .grid-destaques, .grid-trabalhos, .grid-servicos{grid-template-columns:1fr;}
   .depoimento, .trilha-dep[data-quantos] .depoimento{flex-basis:88%;}
   .dupla-campo{grid-template-columns:1fr; gap:0;}
@@ -524,6 +561,10 @@ section{padding:92px 0; position:relative;}
 </style>
 </head>
 <body>
+
+<!-- A faixa só aparece se a Black Friday ainda não passou.
+     Quem monta o texto é o script lá embaixo, em DATA_BLACK. -->
+<a class="faixa-black" id="faixaBlack" href="#contato" hidden></a>
 
 <header class="topo">
   <div class="container">
@@ -905,6 +946,15 @@ const DEPOIMENTOS = [
      com fonte: "Print real de conversa no WhatsApp". */
 ];
 
+/* ---- FAIXA DA BLACK FRIDAY ----
+   Para mudar o ano, troque só a data aqui embaixo.
+   Para tirar a faixa antes da hora, ponha MOSTRAR_BLACK = false.
+   Depois da data ela some sozinha, sem você precisar lembrar. */
+const MOSTRAR_BLACK = true;
+const DATA_BLACK = "2026-11-27";      /* a Black Friday de 2026 */
+const TEXTO_BLACK = "Vamos planejar a campanha da sua marca?";
+const CHAMADA_BLACK = "falar comigo";
+
 /* =========================================================
    MONTAGEM DA PÁGINA
    ========================================================= */
@@ -917,7 +967,8 @@ function numerosDaCapa(){
   const links = new Set();
   DESTAQUES.concat(TRABALHOS).forEach(v => { if(v.link) links.add(v.link); });
   const totalVideos = links.size || DESTAQUES.length;
-  const nichos = new Set(TRABALHOS.map(t => t.nicho).filter(Boolean));
+  const nichos = new Set();
+  TRABALHOS.forEach(t => nichosDo(t).forEach(n => nichos.add(n)));
   return [
     { valor: totalVideos,   rotulo: totalVideos === 1 ? "vídeo no portfólio" : "vídeos no portfólio" },
     { valor: MARCAS.length, rotulo: MARCAS.length === 1 ? "marca parceira" : "marcas parceiras" },
@@ -982,6 +1033,47 @@ pegar("#gridResultados").innerHTML = RESULTADOS.map(r => `
   <article class="resultado revelar">
     <b>${r.destaque}</b><h3>${r.titulo}</h3><p>${r.texto}</p>
   </article>`).join("");
+
+/* ---- faixa da Black Friday ---- */
+function montarFaixaBlack(){
+  const faixa = pegar("#faixaBlack");
+  if(!faixa || !MOSTRAR_BLACK) return;
+
+  /* conto em dias cheios, pelo fuso de casa, para não dar um dia
+     a mais ou a menos dependendo da hora que a pessoa abrir */
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const alvo = new Date(DATA_BLACK + "T00:00:00");
+  const dias = Math.round((alvo - hoje) / 86400000);
+
+  if(dias < 0) return;               /* já passou: a faixa nem aparece */
+
+  let quando;
+  if(dias === 0)      quando = "É hoje!";
+  else if(dias === 1) quando = "Falta <span class='conta'>1 dia</span><span class='texto-extra'> pra Black Friday</span>";
+  else                quando = `Faltam <span class='conta'>${dias} dias</span><span class='texto-extra'> pra Black Friday</span>`;
+
+  faixa.innerHTML = `
+    <span class="selo-black">Black Friday</span>
+    <b>${quando}</b>
+    <span class="separador texto-extra" aria-hidden="true">·</span>
+    <span class="texto-extra">${TEXTO_BLACK}</span>
+    <span class="chamar">${CHAMADA_BLACK} &rarr;</span>`;
+  faixa.hidden = false;
+  faixa.classList.add("aparecer");
+  document.body.classList.add("tem-faixa");
+
+  /* meço a altura de verdade e empurro o menu e a capa por esse
+     tanto. Assim, se o texto quebrar em duas linhas em alguma
+     tela, nada fica por baixo da faixa. */
+  const medir = () => {
+    const altura = Math.round(faixa.getBoundingClientRect().height);
+    document.documentElement.style.setProperty("--altura-faixa", altura + "px");
+  };
+  medir();
+  window.addEventListener("resize", medir);
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(medir);
+}
+montarFaixaBlack();
 
 /* ---- depoimentos ----
    Os cartões ficam numa trilha que desliza. As setas andam um
@@ -1079,16 +1171,32 @@ function montarDestaques(lista){
 }
 montarDestaques(DESTAQUES);
 
-/* ---- filtros e galeria ---- */
+/* ---- filtros e galeria ----
+   Um vídeo pode servir a mais de um nicho. Para isso, no painel
+   você escreve os dois separados por vírgula, assim:
+
+     Skincare e corpo, Cabelos
+
+   Aí ele aparece nos dois filtros, mas continua sendo um vídeo só
+   quando a pessoa escolhe "todos". Nada de aparecer repetido. */
+function nichosDo(t){
+  return String(t.nicho || "")
+    .split(",")
+    .map(n => n.trim())
+    .filter(Boolean);
+}
+
 function montarFiltros(){
-  const nichos = ["todos", ...new Set(TRABALHOS.map(t => t.nicho).filter(Boolean))];
+  const vistos = [];
+  TRABALHOS.forEach(t => nichosDo(t).forEach(n => { if(!vistos.includes(n)) vistos.push(n); }));
+  const nichos = ["todos", ...vistos];
   pegar("#filtros").innerHTML = nichos.map((n, i) => `
     <button class="filtro" type="button" data-nicho="${n}" aria-pressed="${i === 0}">${n}</button>`).join("");
 }
 montarFiltros();
 
 function montarTrabalhos(nicho){
-  const lista = nicho === "todos" ? TRABALHOS : TRABALHOS.filter(t => t.nicho === nicho);
+  const lista = nicho === "todos" ? TRABALHOS : TRABALHOS.filter(t => nichosDo(t).includes(nicho));
   pegar("#semTrabalhos").hidden = lista.length > 0;
   pegar("#gridTrabalhos").innerHTML = lista.map(t => {
     const codigo = codigoDoYoutube(t.link || "");
@@ -1102,7 +1210,7 @@ function montarTrabalhos(nicho){
          </div>`;
     const miolo = `${visual}
       <div class="trabalho-info">
-        <span class="tag">${t.nicho}</span>
+        ${nichosDo(t).map(n => `<span class="tag">${n}</span>`).join("")}
         <h3>${t.titulo}</h3>
         <p>${t.descricao}</p>
         ${t.marca ? `<span class="marca-trabalho">${t.marca}</span>` : ""}
