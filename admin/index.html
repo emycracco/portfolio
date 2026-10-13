@@ -228,8 +228,12 @@ tbody tr.destacada td:first-child{box-shadow:inset 3px 0 0 var(--rosa);}
 }
 .icone-btn:hover{color:var(--magenta); border-color:var(--rosa);}
 .icone-btn svg{width:15px; height:15px;}
-.alcinha{color:var(--rosa-dourado); cursor:grab;}
-.alcinha:active{cursor:grabbing;}
+/* a coluninha das setinhas de subir e descer o vídeo */
+.alcinha{white-space:nowrap;}
+.alcinha .icone-btn{width:26px; height:26px; border-radius:8px;}
+.alcinha .icone-btn + .icone-btn{margin-left:3px;}
+.alcinha .icone-btn[disabled]{opacity:.3;}
+.alcinha .icone-btn[disabled]:hover{background:var(--branco); color:var(--tinta);}
 
 /* ---------- filtros e busca ---------- */
 .ferramentas{display:flex; flex-wrap:wrap; gap:10px; align-items:center;}
