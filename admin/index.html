@@ -247,6 +247,41 @@ tbody tr.destacada td:first-child{box-shadow:inset 3px 0 0 var(--rosa);}
 .dica-abrir{font-size:.76rem; color:var(--tinta-suave);}
 .gaveta-previa[open] .dica-abrir{visibility:hidden;}
 
+/* ---------- cronograma capilar ---------- */
+.painel-cabelo .cartao-corpo{text-align:center; padding:34px 22px 30px;}
+.rotulo-proximo{
+  display:block; font-size:.7rem; letter-spacing:.22em; text-transform:uppercase;
+  color:var(--tinta-suave); margin-bottom:10px;
+}
+.nome-proximo{font-size:2.1rem; margin:0; line-height:1.1;}
+.explica-proximo{margin:8px auto 0; max-width:420px; font-size:.9rem; color:var(--tinta-suave);}
+.quando-proximo{margin:18px 0 0; font-size:.92rem; color:var(--tinta-suave);}
+.quando-proximo b{color:var(--tinta);}
+.quando-proximo.atrasou b{color:var(--vermelho);}
+.botoes-cabelo{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:22px;}
+.btn.grandao{padding:14px 30px; font-size:.92rem;}
+.painel-cabelo .btn-mini{margin-top:14px;}
+
+.roda-cabelo{display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
+.passo-cabelo{
+  text-align:center; padding:18px 12px; border-radius:14px;
+  border:1px solid var(--linha); background:var(--branco);
+}
+.passo-cabelo .bolinha{
+  display:flex; align-items:center; justify-content:center;
+  width:32px; height:32px; margin:0 auto 9px; border-radius:50%;
+  border:1px solid var(--linha); color:var(--tinta-suave); font-size:.8rem;
+}
+.passo-cabelo b{display:block; font-size:.9rem;}
+.passo-cabelo small{display:block; margin-top:4px; font-size:.72rem; color:var(--tinta-suave); min-height:1em;}
+.passo-cabelo.feito .bolinha{background:var(--lima); border-color:var(--tinta); color:var(--tinta);}
+.passo-cabelo.agora{border-color:var(--rosa); box-shadow:0 0 0 2px var(--rosa) inset;}
+.passo-cabelo.agora .bolinha{background:var(--rosa); border-color:var(--rosa); color:#fff;}
+@media (max-width:720px){
+  .roda-cabelo{grid-template-columns:repeat(2,1fr);}
+  .nome-proximo{font-size:1.7rem;}
+}
+
 /* ---------- filtros e busca ---------- */
 .ferramentas{display:flex; flex-wrap:wrap; gap:10px; align-items:center;}
 .busca{
