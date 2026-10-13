@@ -381,7 +381,14 @@ body.tem-faixa .capa{padding-top:calc(var(--altura-faixa, 52px) + 162px);}
   margin:5px 0 0; color:var(--tinta-suave); font-size:.83rem; line-height:1.45;
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
 }
-.marca-trabalho{display:inline-block; margin-top:7px; font-family:var(--fonte-marcador); font-weight:600; font-size:.82rem; color:var(--roxo);}
+/* a fonte é a mesma de sempre. A única mudança é a caixa alta,
+   para o nome sair padronizado mesmo que no painel esteja escrito
+   "Flex Queen" ou "flex queen" */
+.marca-trabalho{
+  display:inline-block; margin-top:7px;
+  font-family:var(--fonte-marcador); font-weight:600; font-size:.82rem;
+  text-transform:uppercase; color:var(--roxo);
+}
 .sem-trabalhos{text-align:center; color:var(--tinta-suave);}
 
 /* =========================================================
@@ -450,7 +457,7 @@ body.tem-faixa .capa{padding-top:calc(var(--altura-faixa, 52px) + 162px);}
   font-family:var(--fonte-titulo); font-weight:700; font-size:.9rem; color:var(--tinta);
 }
 .dep-foto img{width:100%; height:100%; object-fit:contain; padding:4px;}
-.dep-quem b{display:block; font-family:var(--fonte-titulo); font-weight:600; font-size:1rem; line-height:1.2;}
+.dep-quem b{display:block; font-family:var(--fonte-titulo); font-weight:600; font-size:1rem; text-transform:uppercase; line-height:1.2;}
 .dep-estrelas{color:#f0a500; font-size:.84rem; letter-spacing:.08em;}
 .dep-quando{font-size:.74rem; color:var(--tinta-suave);}
 .dep-texto{margin:0 0 16px; color:var(--tinta); font-size:.96rem; flex:1;}
@@ -909,7 +916,7 @@ body.tem-faixa .capa{padding-top:calc(var(--altura-faixa, 52px) + 162px);}
    zoom  = aumenta um pouco o logo dentro do círculo, quando ele vem pequeno */
 const MARCAS = [
   { nome:"FIBER",              logo:"/logos/fiber.png", cheia:true },
-  { nome:"Hábito Vida",        logo:"/logos/habito-vida.png", zoom:1.22 },
+  { nome:"Hábito Vida",        logo:"/logos/habito-vida.png", cheia:true },
   { nome:"Dove",               logo:"/logos/dove.png", zoom:1.06 },
   { nome:"Eudora",             logo:"/logos/eudora.png" },
   { nome:"Popozuda",           logo:"/logos/popozuda.png", cheia:true },
