@@ -72,6 +72,8 @@ const ICONE = {
   lapis:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17v3Z"/><path d="M14.5 6.5l3 3"/></svg>',
   lixo:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 7V5h4v2M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg>',
   arrastar:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"/></svg>',
+  subir:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg>',
+  descer:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
   seta:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
   conteudo:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/></svg>',
   reciclar:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9a8 8 0 0 1 13.3-3.5L20 8"/><path d="M20 4v4h-4"/><path d="M20 15a8 8 0 0 1-13.3 3.5L4 16"/><path d="M4 20v-4h4"/></svg>',
@@ -720,7 +722,7 @@ function desenharPortfolio(){
       <div class="cartao-topo">
         <h2>Meus vídeos</h2>
         <div style="display:flex;align-items:center;gap:14px">
-          <span style="font-size:.76rem;color:var(--tinta-suave)">Arraste pela alcinha para mudar a ordem no site.</span>
+          <span style="font-size:.76rem;color:var(--tinta-suave)">Use as setinhas para mudar a ordem no site. Também dá para arrastar a linha.</span>
           <button class="btn btn-simples" id="renomearNicho">${ICONE.lapis} Renomear nicho</button>
         </div>
       </div>
@@ -728,13 +730,16 @@ function desenharPortfolio(){
         ${videos.length ? `
         <table>
           <thead><tr>
-            <th style="width:34px"></th><th>Título</th><th>Onde aparece</th><th>Nicho</th><th>Formato</th>
+            <th style="width:74px">Ordem</th><th>Título</th><th>Onde aparece</th><th>Nicho</th><th>Formato</th>
             <th>Marca</th><th>Destaque</th><th style="width:130px">Ações</th>
           </tr></thead>
           <tbody id="corpoVideos">
             ${videos.map((v,i) => `
               <tr draggable="true" data-id="${seguro(v.id)}" data-pos="${i}" class="${v.visivel === false ? "sumido" : ""}">
-                <td class="alcinha">${ICONE.arrastar}</td>
+                <td class="alcinha">
+                  <button class="icone-btn subir" data-id="${seguro(v.id)}" title="Subir um lugar" ${i === 0 ? "disabled" : ""}>${ICONE.subir}</button>
+                  <button class="icone-btn descer" data-id="${seguro(v.id)}" title="Descer um lugar" ${i === videos.length - 1 ? "disabled" : ""}>${ICONE.descer}</button>
+                </td>
                 <td>${seguro(v.titulo)}</td>
                 <td><span class="pilula ${v.secao === "trabalho" ? "p-editar" : "p-conteudo"}">${v.secao === "trabalho" ? "galeria" : "destaque"}</span></td>
                 <td>${nichosDoVideo(v).map(n => `<span class="pilula p-funil">${seguro(n)}</span>`).join(" ")}</td>
@@ -791,7 +796,35 @@ function desenharPortfolio(){
     }
   }));
 
+  pegarTodos("#corpoVideos .subir").forEach(b => b.addEventListener("click", () => moverVideo(b.dataset.id, -1)));
+  pegarTodos("#corpoVideos .descer").forEach(b => b.addEventListener("click", () => moverVideo(b.dataset.id, +1)));
   ligarArrastar();
+}
+
+/* Sobe ou desce um vídeo um lugar na lista.
+   direcao = -1 sobe, +1 desce.
+   Depois de trocar os dois de lugar, eu renumero a coluna "ordem"
+   de cima para baixo. Assim a ordem fica sempre limpa, mesmo que
+   antes tivesse número repetido ou buraco no meio. */
+async function moverVideo(id, direcao){
+  const lista = (estado.dados.videos || []).slice();
+  const i = lista.findIndex(v => String(v.id) === String(id));
+  const j = i + direcao;
+  if(i < 0 || j < 0 || j >= lista.length) return;
+
+  const guarda = lista[i];
+  lista[i] = lista[j];
+  lista[j] = guarda;
+
+  let deuRuim = 0;
+  for(let k = 0; k < lista.length; k++){
+    if(numero(lista[k].ordem) !== k){
+      if(!(await gravar("videos", { ordem: k }, lista[k].id))) deuRuim++;
+    }
+  }
+  if(deuRuim) recado("Não consegui salvar a ordem. Tente de novo.", true);
+  await carregarTudo();
+  desenhar();
 }
 
 /* arrastar as linhas para mudar a ordem */
