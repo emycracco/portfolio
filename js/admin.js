@@ -131,6 +131,7 @@ const estado = {
   /* --- a aba Mídia kit --- */
   kitTela: "computador",     /* como você está olhando: computador ou celular */
   portfolioTela: "computador",
+  filtroVideos: "todos",     /* nicho escolhido na tabela de vídeos */
 
   prosp: {
     publico: "selecionadas",   /* para quem vai: selecionadas, teste, todas ou uma situação */
@@ -611,6 +612,13 @@ function desenharPortfolio(){
 
   const linkPortfolio = window.location.origin + CAMINHO_PORTFOLIO;
 
+  /* os nichos que existem hoje, para os botõezinhos da tabela */
+  const nichosExistentes = [];
+  videos.forEach(v => nichosDoVideo(v).forEach(n => { if(!nichosExistentes.includes(n)) nichosExistentes.push(n); }));
+  nichosExistentes.sort((a,b) => a.localeCompare(b));
+  if(estado.filtroVideos !== "todos" && !nichosExistentes.includes(estado.filtroVideos)) estado.filtroVideos = "todos";
+  const lista = videosFiltrados();
+
   pegar("#acoesTopo").innerHTML = `
     <button class="btn btn-simples" id="copiarLinkPortfolio">${ICONE.copiar} Copiar o link</button>
     <button class="btn btn-principal" id="novoVideo">${ICONE.mais} Novo vídeo</button>`;
@@ -675,17 +683,55 @@ function desenharPortfolio(){
       </div>
     </section>
 
-    <section class="cartao">
+    <section class="cartao" id="meusVideos">
       <div class="cartao-topo">
-        <h2>Como o seu portfólio está agora</h2>
-        <div class="grupo-filtro">
-          <button class="filtro" data-portftela="computador" aria-pressed="${estado.portfolioTela !== "celular"}">no computador</button>
-          <button class="filtro" data-portftela="celular" aria-pressed="${estado.portfolioTela === "celular"}">no celular</button>
-          <a class="btn btn-simples" href="${CAMINHO_PORTFOLIO}?t=${Date.now()}" target="_blank" rel="noopener">${ICONE.link} Abrir em outra aba</a>
-        </div>
+        <h2>Meus vídeos</h2>
+        <button class="btn btn-simples" id="renomearNicho">${ICONE.lapis} Renomear nicho</button>
       </div>
-      <div class="palco-kit ${estado.portfolioTela === "celular" ? "estreito" : ""}">
-        <iframe src="${CAMINHO_PORTFOLIO}?t=${Date.now()}" title="Portfólio de Emellyn Cracco" loading="lazy"></iframe>
+
+      <div class="cartao-topo" style="border-top:1px solid var(--linha)">
+        <div class="grupo-filtro">
+          ${["todos", ...nichosExistentes].map(n => `
+            <button class="filtro" data-fvideo="${seguro(n)}" aria-pressed="${estado.filtroVideos === n}">${seguro(n)}</button>`).join("")}
+        </div>
+        <span style="font-size:.76rem;color:var(--tinta-suave)">
+          ${estado.filtroVideos === "todos"
+            ? "As setinhas mudam a ordem na lista inteira."
+            : "Com o nicho escolhido, as setinhas mudam a ordem dentro dele."}
+        </span>
+      </div>
+
+      <div class="rolagem">
+        ${lista.length ? `
+        <table>
+          <thead><tr>
+            <th style="width:92px">Ordem</th><th>Título</th><th>Onde aparece</th><th>Nicho</th><th>Formato</th>
+            <th>Marca</th><th>Destaque</th><th style="width:130px">Ações</th>
+          </tr></thead>
+          <tbody id="corpoVideos">
+            ${lista.map((v,i) => `
+              <tr draggable="true" data-id="${seguro(v.id)}" data-pos="${i}" class="${v.visivel === false ? "sumido" : ""}">
+                <td class="alcinha">
+                  <b class="posicao">${i + 1}</b>
+                  <button class="icone-btn subir" data-id="${seguro(v.id)}" title="Subir um lugar" ${i === 0 ? "disabled" : ""}>${ICONE.subir}</button>
+                  <button class="icone-btn descer" data-id="${seguro(v.id)}" title="Descer um lugar" ${i === lista.length - 1 ? "disabled" : ""}>${ICONE.descer}</button>
+                </td>
+                <td>${seguro(v.titulo)}</td>
+                <td><span class="pilula ${v.secao === "trabalho" ? "p-editar" : "p-conteudo"}">${v.secao === "trabalho" ? "galeria" : "destaque"}</span></td>
+                <td>${nichosDoVideo(v).map(n => `<span class="pilula p-funil">${seguro(n)}</span>`).join(" ")}</td>
+                <td>${seguro(v.formato)}</td>
+                <td>${seguro(v.marca)}</td>
+                <td>${seguro(v.destaque)}</td>
+                <td>
+                  <button class="icone-btn ver" data-id="${seguro(v.id)}" title="${v.visivel === false ? "Mostrar no site" : "Esconder do site"}">${v.visivel === false ? ICONE.olhoFechado : ICONE.olhoAberto}</button>
+                  <button class="icone-btn editar" data-id="${seguro(v.id)}" title="Editar">${ICONE.lapis}</button>
+                  <button class="icone-btn apagar" data-id="${seguro(v.id)}" title="Apagar">${ICONE.lixo}</button>
+                </td>
+              </tr>`).join("")}
+          </tbody>
+        </table>` : `<p class="vazio-tabela">${videos.length
+            ? "Nenhum vídeo neste nicho. Escolha outro ali em cima."
+            : "Nenhum vídeo cadastrado ainda. Clique em Novo vídeo para começar. Enquanto esta lista estiver vazia, o seu site mostra os três vídeos fixos de sempre."}</p>`}
       </div>
     </section>
 
@@ -718,44 +764,26 @@ function desenharPortfolio(){
       </section>
     </div>
 
-    <section class="cartao">
-      <div class="cartao-topo">
-        <h2>Meus vídeos</h2>
-        <div style="display:flex;align-items:center;gap:14px">
-          <span style="font-size:.76rem;color:var(--tinta-suave)">Use as setinhas para mudar a ordem no site. Também dá para arrastar a linha.</span>
-          <button class="btn btn-simples" id="renomearNicho">${ICONE.lapis} Renomear nicho</button>
+
+    <!-- A prévia do portfólio fica guardada e fechada aqui no fim.
+         Quando ela ficava aberta no meio da página, a rolagem do
+         mouse caía dentro dela e não chegava na tabela dos vídeos. -->
+    <details class="cartao gaveta-previa">
+      <summary class="cartao-topo">
+        <h2>Ver como o seu portfólio está agora</h2>
+        <span class="dica-abrir">clique para abrir</span>
+      </summary>
+      <div class="cartao-topo" style="border-top:1px solid var(--linha)">
+        <div class="grupo-filtro">
+          <button class="filtro" data-portftela="computador" aria-pressed="${estado.portfolioTela !== "celular"}">no computador</button>
+          <button class="filtro" data-portftela="celular" aria-pressed="${estado.portfolioTela === "celular"}">no celular</button>
+          <a class="btn btn-simples" href="${CAMINHO_PORTFOLIO}?t=${Date.now()}" target="_blank" rel="noopener">${ICONE.link} Abrir em outra aba</a>
         </div>
       </div>
-      <div class="rolagem">
-        ${videos.length ? `
-        <table>
-          <thead><tr>
-            <th style="width:74px">Ordem</th><th>Título</th><th>Onde aparece</th><th>Nicho</th><th>Formato</th>
-            <th>Marca</th><th>Destaque</th><th style="width:130px">Ações</th>
-          </tr></thead>
-          <tbody id="corpoVideos">
-            ${videos.map((v,i) => `
-              <tr draggable="true" data-id="${seguro(v.id)}" data-pos="${i}" class="${v.visivel === false ? "sumido" : ""}">
-                <td class="alcinha">
-                  <button class="icone-btn subir" data-id="${seguro(v.id)}" title="Subir um lugar" ${i === 0 ? "disabled" : ""}>${ICONE.subir}</button>
-                  <button class="icone-btn descer" data-id="${seguro(v.id)}" title="Descer um lugar" ${i === videos.length - 1 ? "disabled" : ""}>${ICONE.descer}</button>
-                </td>
-                <td>${seguro(v.titulo)}</td>
-                <td><span class="pilula ${v.secao === "trabalho" ? "p-editar" : "p-conteudo"}">${v.secao === "trabalho" ? "galeria" : "destaque"}</span></td>
-                <td>${nichosDoVideo(v).map(n => `<span class="pilula p-funil">${seguro(n)}</span>`).join(" ")}</td>
-                <td>${seguro(v.formato)}</td>
-                <td>${seguro(v.marca)}</td>
-                <td>${seguro(v.destaque)}</td>
-                <td>
-                  <button class="icone-btn ver" data-id="${seguro(v.id)}" title="${v.visivel === false ? "Mostrar no site" : "Esconder do site"}">${v.visivel === false ? ICONE.olhoFechado : ICONE.olhoAberto}</button>
-                  <button class="icone-btn editar" data-id="${seguro(v.id)}" title="Editar">${ICONE.lapis}</button>
-                  <button class="icone-btn apagar" data-id="${seguro(v.id)}" title="Apagar">${ICONE.lixo}</button>
-                </td>
-              </tr>`).join("")}
-          </tbody>
-        </table>` : `<p class="vazio-tabela">Nenhum vídeo cadastrado ainda. Clique em "Novo vídeo" para começar. Enquanto esta lista estiver vazia, o seu site mostra os três vídeos fixos de sempre.</p>`}
+      <div class="palco-kit ${estado.portfolioTela === "celular" ? "estreito" : ""}">
+        <iframe src="${CAMINHO_PORTFOLIO}?t=${Date.now()}" title="Portfólio de Emellyn Cracco" loading="lazy"></iframe>
       </div>
-    </section>
+    </details>
   `;
 
   /* clicar no contato abre a ficha dele, igual na aba Marcas */
@@ -798,24 +826,27 @@ function desenharPortfolio(){
 
   pegarTodos("#corpoVideos .subir").forEach(b => b.addEventListener("click", () => moverVideo(b.dataset.id, -1)));
   pegarTodos("#corpoVideos .descer").forEach(b => b.addEventListener("click", () => moverVideo(b.dataset.id, +1)));
+  pegarTodos("[data-fvideo]").forEach(b => b.addEventListener("click", () => {
+    estado.filtroVideos = b.dataset.fvideo;
+    desenharPortfolio();
+    const alvo = pegar("#meusVideos");
+    if(alvo) alvo.scrollIntoView({ block:"start", behavior:"smooth" });
+  }));
   ligarArrastar();
 }
 
-/* Sobe ou desce um vídeo um lugar na lista.
-   direcao = -1 sobe, +1 desce.
-   Depois de trocar os dois de lugar, eu renumero a coluna "ordem"
-   de cima para baixo. Assim a ordem fica sempre limpa, mesmo que
-   antes tivesse número repetido ou buraco no meio. */
-async function moverVideo(id, direcao){
-  const lista = (estado.dados.videos || []).slice();
-  const i = lista.findIndex(v => String(v.id) === String(id));
-  const j = i + direcao;
-  if(i < 0 || j < 0 || j >= lista.length) return;
+/* Os vídeos que a tabela está mostrando agora, conforme o nicho
+   escolhido nos botõezinhos acima dela. */
+function videosFiltrados(){
+  const todos = estado.dados.videos || [];
+  const f = estado.filtroVideos || "todos";
+  return f === "todos" ? todos.slice() : todos.filter(v => nichosDoVideo(v).includes(f));
+}
 
-  const guarda = lista[i];
-  lista[i] = lista[j];
-  lista[j] = guarda;
-
+/* Grava a ordem de todos os vídeos, de cima para baixo.
+   Assim a numeração fica sempre limpa, mesmo que antes tivesse
+   número repetido ou buraco no meio. */
+async function salvarOrdem(lista){
   let deuRuim = 0;
   for(let k = 0; k < lista.length; k++){
     if(numero(lista[k].ordem) !== k){
@@ -825,6 +856,31 @@ async function moverVideo(id, direcao){
   if(deuRuim) recado("Não consegui salvar a ordem. Tente de novo.", true);
   await carregarTudo();
   desenhar();
+}
+
+/* Sobe ou desce um vídeo um lugar. direcao = -1 sobe, +1 desce.
+
+   O pulo do gato: quando tem um nicho escolhido, ele troca de lugar
+   com o vizinho DAQUELE nicho, e não com o vizinho da lista inteira.
+   Por isso dá para reordenar tudo e também reordenar dentro do nicho,
+   usando o mesmo botão. */
+async function moverVideo(id, direcao){
+  const todos = (estado.dados.videos || []).slice();
+  const vista = videosFiltrados();
+
+  const iv = vista.findIndex(v => String(v.id) === String(id));
+  const jv = iv + direcao;
+  if(iv < 0 || jv < 0 || jv >= vista.length) return;
+
+  const a = todos.findIndex(v => String(v.id) === String(vista[iv].id));
+  const b = todos.findIndex(v => String(v.id) === String(vista[jv].id));
+  if(a < 0 || b < 0) return;
+
+  const guarda = todos[a];
+  todos[a] = todos[b];
+  todos[b] = guarda;
+
+  await salvarOrdem(todos);
 }
 
 /* arrastar as linhas para mudar a ordem */
@@ -848,13 +904,26 @@ function ligarArrastar(){
     });
     linha.addEventListener("drop", async (e) => {
       e.preventDefault();
+      const todos = (estado.dados.videos || []).slice();
       const ids = Array.from(corpo.querySelectorAll("tr")).map(l => l.dataset.id);
-      let mudou = false;
-      for(let i = 0; i < ids.length; i++){
-        const v = estado.dados.videos.find(x => String(x.id) === ids[i]);
-        if(v && numero(v.ordem) !== i){ await gravar("videos", { ordem: i }, v.id); mudou = true; }
-      }
-      if(mudou){ recado("Nova ordem salva."); await carregarTudo(); desenhar(); }
+
+      /* as linhas da tela podem ser só as de um nicho. Então eu pego
+         as posições que elas ocupavam na lista inteira e redistribuo
+         essas mesmas posições na ordem nova. Quem não está na tela
+         não sai do lugar. */
+      const posicoes = ids
+        .map(id => todos.findIndex(v => String(v.id) === id))
+        .filter(p => p >= 0)
+        .sort((a,b) => a - b);
+
+      if(posicoes.length !== ids.length) return;
+      ids.forEach((id, k) => {
+        const v = (estado.dados.videos || []).find(x => String(x.id) === id);
+        if(v) todos[posicoes[k]] = v;
+      });
+
+      await salvarOrdem(todos);
+      recado("Nova ordem salva.");
     });
   });
 }
