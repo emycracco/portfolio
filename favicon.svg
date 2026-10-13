@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- O iconezinho que aparece na abinha do navegador.
+       É um círculo no rosa magenta da marca, com o contorno
+       escuro que o site usa nos adesivos.
+       Para trocar um dia, mude só as cores aqui embaixo. -->
+  <defs>
+    <linearGradient id="rosa" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff8ac4"/>
+      <stop offset="1" stop-color="#e3157f"/>
+    </linearGradient>
+  </defs>
+  <circle cx="32" cy="32" r="27" fill="url(#rosa)" stroke="#2c0620" stroke-width="5"/>
+</svg>
