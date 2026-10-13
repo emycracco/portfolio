@@ -159,6 +159,9 @@ h1,h2{font-family:var(--titulo); font-weight:600; margin:0; line-height:1.15;}
 }
 .campo{margin-bottom:14px;}
 .campo label{display:block; font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--roxo); margin-bottom:6px;}
+/* o asterisco mostra o que é obrigatório, o resto é bem-vindo mas pode ficar em branco */
+.obrig{color:var(--magenta); margin-left:3px; font-weight:600;}
+.opcional{text-transform:none; letter-spacing:0; color:var(--tinta-suave); font-size:1.02em;}
 .campo input, .campo textarea{
   width:100%; padding:12px 14px; border-radius:var(--raio-p);
   border:var(--borda-p); background:#fffdfe;
@@ -247,23 +250,23 @@ h1,h2{font-family:var(--titulo); font-weight:600; margin:0; line-height:1.15;}
   <div class="cartao-form">
     <form id="formLinks" novalidate>
       <div class="campo">
-        <label for="nome">Nome</label>
+        <label for="nome">Nome<span class="obrig" aria-hidden="true">*</span></label>
         <input type="text" id="nome" name="nome" required autocomplete="name" placeholder="Seu nome">
       </div>
       <div class="campo">
-        <label for="email">E-mail</label>
+        <label for="email">E-mail<span class="obrig" aria-hidden="true">*</span></label>
         <input type="email" id="email" name="email" required autocomplete="email" placeholder="voce@marca.com">
       </div>
       <div class="campo">
-        <label for="empresa">Marca / Empresa</label>
+        <label for="empresa">Marca / Empresa<span class="obrig" aria-hidden="true">*</span></label>
         <input type="text" id="empresa" name="empresa" required autocomplete="organization" placeholder="Nome da marca">
       </div>
       <div class="campo">
-        <label for="orcamento">Orçamento estimado</label>
+        <label for="orcamento">Orçamento estimado <span class="opcional">(opcional)</span></label>
         <input type="text" id="orcamento" name="orcamento" placeholder="Ex: R$ 1.000 a R$ 5.000">
       </div>
       <div class="campo">
-        <label for="mensagem">Conta sobre o projeto</label>
+        <label for="mensagem">Conta sobre o projeto<span class="obrig" aria-hidden="true">*</span></label>
         <textarea id="mensagem" name="mensagem" required placeholder="Categoria, formato, prazo, objetivo da campanha..."></textarea>
       </div>
       <button type="submit" class="enviar">Enviar mensagem</button>
