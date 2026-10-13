@@ -321,12 +321,6 @@ body.tem-faixa .capa{padding-top:calc(var(--altura-faixa, 52px) + 162px);}
 }
 .filtro:hover{transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--tinta);}
 .filtro[aria-pressed="true"]{background:var(--magenta); color:#fff;}
-.conta-filtro{
-  font-style:normal; margin-left:7px; opacity:.5;
-  font-family:var(--fonte-corpo); font-weight:600; font-size:.92em;
-}
-.filtro[aria-pressed="true"] .conta-filtro{opacity:.75;}
-
 /* a linha que fica em cima da trilha: nome do nicho, quantos
    vídeos tem, e as setas para passar */
 .barra-trilha{
@@ -363,8 +357,10 @@ body.tem-faixa .capa{padding-top:calc(var(--altura-faixa, 52px) + 162px);}
   transition:transform .2s ease, box-shadow .2s ease;
 }
 .trabalho:hover{transform:translate(-3px,-3px); box-shadow:7px 7px 0 var(--tinta);}
+/* a janela do vídeo é um pouco mais alta que larga, para mostrar
+   mais do vertical sem o cartão virar uma coluna comprida */
 .capa-mini{
-  position:relative; aspect-ratio:4/5; display:flex; align-items:center; justify-content:center; overflow:hidden;
+  position:relative; aspect-ratio:18/25; display:flex; align-items:center; justify-content:center; overflow:hidden;
   border-bottom:var(--borda-p); background:linear-gradient(150deg, var(--magenta-claro), var(--roxo));
 }
 .capa-mini .play{width:46px; height:46px; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);}
@@ -1000,10 +996,15 @@ const DEPOIMENTOS = [
     quando:"",
     texto:"Gostamos demais da entrega!! Certeza que vamos fazer mais projetos juntos. RECOMENDAMOS!",
     fonte:"Avaliação da marca"
+  },
+  {
+    quem:"Voudegata",
+    foto:"/logos/voudegata.png",
+    estrelas:5,
+    quando:"",
+    texto:"Amei o vídeo! A edição ficou linda e combinou muito com a proposta. Adorei o resultado!",
+    fonte:"Print real de conversa no WhatsApp"
   }
-  /* Falta o da @voudegata, que é print de WhatsApp.
-     Quando ela mandar, acrescente aqui um bloco igual aos de cima,
-     com fonte: "Print real de conversa no WhatsApp". */
 ];
 
 /* ---- FAIXA DA BLACK FRIDAY ----
@@ -1246,18 +1247,12 @@ function nichosDo(t){
     .filter(Boolean);
 }
 
-function quantosNo(nicho){
-  return nicho === "todos"
-    ? TRABALHOS.length
-    : TRABALHOS.filter(t => nichosDo(t).includes(nicho)).length;
-}
-
 function montarFiltros(){
   const vistos = [];
   TRABALHOS.forEach(t => nichosDo(t).forEach(n => { if(!vistos.includes(n)) vistos.push(n); }));
   const nichos = ["todos", ...vistos];
   pegar("#filtros").innerHTML = nichos.map((n, i) => `
-    <button class="filtro" type="button" data-nicho="${n}" aria-pressed="${i === 0}">${n}<i class="conta-filtro">${quantosNo(n)}</i></button>`).join("");
+    <button class="filtro" type="button" data-nicho="${n}" aria-pressed="${i === 0}">${n}</button>`).join("");
 }
 montarFiltros();
 
