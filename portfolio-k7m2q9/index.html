@@ -1248,6 +1248,15 @@ montarDestaques(DESTAQUES);
 
    Aí ele aparece nos dois filtros, mas continua sendo um vídeo só
    quando a pessoa escolhe "todos". Nada de aparecer repetido. */
+/* Deixa só a primeira letra maiúscula: "skincare e corpo" vira
+   "Skincare e corpo". Não uso capitalize do CSS porque ele deixaria
+   "Skincare E Corpo", com o "e" maiúsculo, que é errado em português.
+   O nome continua guardado no painel do jeito que você escreveu. */
+function comInicialMaiuscula(texto){
+  const t = String(texto || "").trim();
+  return t ? t.charAt(0).toUpperCase() + t.slice(1) : t;
+}
+
 function nichosDo(t){
   return String(t.nicho || "")
     .split(",")
@@ -1260,7 +1269,7 @@ function montarFiltros(){
   TRABALHOS.forEach(t => nichosDo(t).forEach(n => { if(!vistos.includes(n)) vistos.push(n); }));
   const nichos = ["todos", ...vistos];
   pegar("#filtros").innerHTML = nichos.map((n, i) => `
-    <button class="filtro" type="button" data-nicho="${n}" aria-pressed="${i === 0}">${n}</button>`).join("");
+    <button class="filtro" type="button" data-nicho="${n}" aria-pressed="${i === 0}">${comInicialMaiuscula(n)}</button>`).join("");
 }
 montarFiltros();
 
@@ -1268,7 +1277,7 @@ function montarTrabalhos(nicho){
   const lista = nicho === "todos" ? TRABALHOS : TRABALHOS.filter(t => nichosDo(t).includes(nicho));
 
   /* o nome do nicho escolhido, com a quantidade do lado */
-  pegar("#nomeNicho").innerHTML = (nicho === "todos" ? "Todos os trabalhos" : nicho) +
+  pegar("#nomeNicho").innerHTML = (nicho === "todos" ? "Todos os trabalhos" : comInicialMaiuscula(nicho)) +
     `<i>${lista.length} ${lista.length === 1 ? "vídeo" : "vídeos"}</i>`;
 
   pegar("#semTrabalhos").hidden = lista.length > 0;
