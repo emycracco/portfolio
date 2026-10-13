@@ -449,6 +449,85 @@ function ligarAtualizacaoAutomatica(){
   }, 45000);
 }
 
+/* Um vídeo pode servir a mais de um nicho. No campo Nicho você
+   escreve os dois separados por vírgula, por exemplo:
+     Skincare e corpo, Cabelos
+   Ele passa a aparecer nos dois filtros do site, mas continua
+   sendo um vídeo só na listagem geral. */
+function nichosDoVideo(v){
+  return String(v.nicho || "").split(",").map(n => n.trim()).filter(Boolean);
+}
+
+/* Troca o nome de um nicho em todos os vídeos de uma vez.
+   Serve para quando você decide dividir ou renomear um nicho e
+   não quer abrir vídeo por vídeo.
+   Só mexe no pedaço que tem aquele nome: se um vídeo estiver em
+   "beleza, cabelos", o "cabelos" fica intacto. */
+function formularioRenomearNicho(){
+  const videos = estado.dados.videos || [];
+  const nomes = [];
+  videos.forEach(v => nichosDoVideo(v).forEach(n => { if(!nomes.includes(n)) nomes.push(n); }));
+  nomes.sort((a,b) => a.localeCompare(b));
+
+  if(!nomes.length){ recado("Ainda não existe nicho cadastrado nos vídeos.", true); return; }
+
+  abrirJanela("Renomear nicho", `
+    <form id="formRenomear">
+      <div class="campos">
+        <div class="campo largo"><label for="r-de">Nicho que existe hoje</label>
+          <select id="r-de">${nomes.map(n => `<option>${seguro(n)}</option>`).join("")}</select>
+        </div>
+        <div class="campo largo"><label for="r-para">Passa a se chamar</label>
+          <input id="r-para" required placeholder="Skincare e corpo">
+        </div>
+      </div>
+      <p class="dica-fonte" id="r-aviso" style="margin:0 0 6px"></p>
+      <div class="acoes-janela">
+        <button type="button" class="btn btn-simples" id="cancelar">Cancelar</button>
+        <button type="submit" class="btn btn-principal">Renomear</button>
+      </div>
+    </form>
+  `);
+  pegar("#cancelar").addEventListener("click", fecharJanela);
+
+  const contar = () => {
+    const de = pegar("#r-de").value;
+    const q = videos.filter(v => nichosDoVideo(v).includes(de)).length;
+    pegar("#r-aviso").textContent = q === 1
+      ? "1 vídeo vai mudar de nicho."
+      : q + " vídeos vão mudar de nicho.";
+  };
+  pegar("#r-de").addEventListener("change", contar);
+  contar();
+
+  pegar("#formRenomear").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const de = pegar("#r-de").value;
+    const para = pegar("#r-para").value.trim();
+    if(!para){ recado("Escreva o nome novo.", true); return; }
+    if(para === de){ recado("O nome novo é igual ao antigo.", true); return; }
+
+    const alvos = videos.filter(v => nichosDoVideo(v).includes(de));
+    if(!confirm(`Renomear "${de}" para "${para}" em ${alvos.length} vídeo(s)?`)) return;
+
+    let deuRuim = 0;
+    for(const v of alvos){
+      const novo = nichosDoVideo(v)
+        .map(n => n === de ? para : n)
+        .filter((n, i, lista) => lista.indexOf(n) === i)   /* sem repetir */
+        .join(", ");
+      if(!(await gravar("videos", { nicho: novo }, v.id))) deuRuim++;
+    }
+
+    fecharJanela();
+    recado(deuRuim
+      ? `Renomeei, mas ${deuRuim} vídeo(s) não salvaram. Tente de novo.`
+      : `Pronto. ${alvos.length} vídeo(s) agora estão em "${para}".`, deuRuim > 0);
+    await carregarTudo();
+    desenhar();
+  });
+}
+
 function desenharPortfolio(){
   const visitas = estado.dados.visitas || [];
   const videos = estado.dados.videos || [];
@@ -496,8 +575,9 @@ function desenharPortfolio(){
 
   const noAr = videos.filter(v => v.visivel !== false).length;
 
+  /* um vídeo pode servir a mais de um nicho, separados por vírgula */
   const contaNicho = {};
-  videos.forEach(v => { if(v.nicho) contaNicho[v.nicho] = (contaNicho[v.nicho] || 0) + 1; });
+  videos.forEach(v => nichosDoVideo(v).forEach(n => { contaNicho[n] = (contaNicho[n] || 0) + 1; }));
   const nichoForte = Object.keys(contaNicho).sort((a,b) => contaNicho[b] - contaNicho[a])[0] || "ainda não";
 
   const listaOrigens = Object.entries(origens).sort((a,b) => b[1] - a[1]);
@@ -639,7 +719,10 @@ function desenharPortfolio(){
     <section class="cartao">
       <div class="cartao-topo">
         <h2>Meus vídeos</h2>
-        <span style="font-size:.76rem;color:var(--tinta-suave)">Arraste pela alcinha para mudar a ordem no site.</span>
+        <div style="display:flex;align-items:center;gap:14px">
+          <span style="font-size:.76rem;color:var(--tinta-suave)">Arraste pela alcinha para mudar a ordem no site.</span>
+          <button class="btn btn-simples" id="renomearNicho">${ICONE.lapis} Renomear nicho</button>
+        </div>
       </div>
       <div class="rolagem">
         ${videos.length ? `
@@ -654,7 +737,7 @@ function desenharPortfolio(){
                 <td class="alcinha">${ICONE.arrastar}</td>
                 <td>${seguro(v.titulo)}</td>
                 <td><span class="pilula ${v.secao === "trabalho" ? "p-editar" : "p-conteudo"}">${v.secao === "trabalho" ? "galeria" : "destaque"}</span></td>
-                <td>${v.nicho ? `<span class="pilula p-funil">${seguro(v.nicho)}</span>` : ""}</td>
+                <td>${nichosDoVideo(v).map(n => `<span class="pilula p-funil">${seguro(n)}</span>`).join(" ")}</td>
                 <td>${seguro(v.formato)}</td>
                 <td>${seguro(v.marca)}</td>
                 <td>${seguro(v.destaque)}</td>
@@ -689,6 +772,7 @@ function desenharPortfolio(){
   }));
 
   pegar("#novoVideo").addEventListener("click", () => formularioVideo(null));
+  pegar("#renomearNicho").addEventListener("click", () => formularioRenomearNicho());
   pegarTodos("#corpoVideos .editar").forEach(b => b.addEventListener("click", () => {
     formularioVideo(videos.find(v => String(v.id) === b.dataset.id));
   }));
@@ -755,7 +839,12 @@ function formularioVideo(video){
             <option value="trabalho" ${v.secao === "trabalho" ? "selected" : ""}>Galeria de trabalhos por nicho</option>
           </select>
         </div>
-        <div class="campo"><label for="v-nicho">Nicho</label><input id="v-nicho" placeholder="beleza, skincare, moda..." value="${seguro(v.nicho)}"></div>
+        <div class="campo largo"><label for="v-nicho">Nicho <span style="text-transform:none;letter-spacing:0">(dois nichos? separe por vírgula)</span></label>
+          <input id="v-nicho" list="listaNichosVideo" placeholder="Skincare e corpo, Cabelos" value="${seguro(v.nicho)}">
+          <datalist id="listaNichosVideo">
+            ${(() => { const n = []; (estado.dados.videos||[]).forEach(x => nichosDoVideo(x).forEach(y => { if(!n.includes(y)) n.push(y); })); return n.sort().map(y => `<option value="${seguro(y)}">`).join(""); })()}
+          </datalist>
+        </div>
         <div class="campo"><label for="v-formato">Formato</label><input id="v-formato" placeholder="vídeo 9:16" value="${seguro(v.formato)}"></div>
         <div class="campo"><label for="v-marca">Marca</label><input id="v-marca" value="${seguro(v.marca)}"></div>
         <div class="campo"><label for="v-destaque">Destaque</label><input id="v-destaque" placeholder="2,4M views" value="${seguro(v.destaque)}"></div>
