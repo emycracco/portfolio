@@ -459,13 +459,34 @@ function desenharPortfolio(){
   const hoje = hojeISO();
   const origens = {};
 
+  /* As visitas vêm separadas por página, e os cliques dos botões
+     da página de links também entram aqui, marcados com "clique:".
+     Então separo as três coisas antes de contar qualquer número. */
+  const ehClique = (v) => String(v.pagina || "").startsWith("clique:");
+  const ehPortfolio = (v) => String(v.pagina || "").startsWith("/p/");
+  const ehLinks = (v) => !ehClique(v) && !ehPortfolio(v);
+
+  const cliques = {};
+  let aberturasLinks = 0, aberturasPortfolio = 0;
+
   visitas.forEach(v => {
     const dia = String(v.data || "").slice(0,10);
+
+    if(ehClique(v)){
+      const nome = String(v.pagina).replace(/^clique:\s*/, "").trim() || "sem nome";
+      cliques[nome] = (cliques[nome] || 0) + 1;
+      return;                      /* clique não é visita, não entra no gráfico */
+    }
+
+    if(ehPortfolio(v)) aberturasPortfolio++; else aberturasLinks++;
+
     if(dia in porDia){ porDia[dia]++; visitas14++; }
     if(dia === hoje) visitasHoje++;
     const de = (v.origem || "direto").trim() || "direto";
     origens[de] = (origens[de] || 0) + 1;
   });
+
+  const listaCliques = Object.entries(cliques).sort((a,b) => b[1] - a[1]);
 
   const noAr = videos.filter(v => v.visivel !== false).length;
 
@@ -500,12 +521,25 @@ function desenharPortfolio(){
 
   pegar("#area").innerHTML = `
     <div class="faixa-numeros">
-      <div class="numero"><b>${visitas14}</b><small>visitas em 14 dias</small></div>
+      <div class="numero"><b>${aberturasLinks}</b><small>abriram a página de links</small><i>o seu público</i></div>
+      <div class="numero"><b>${aberturasPortfolio}</b><small>abriram o portfólio</small><i>marcas te considerando</i></div>
       <div class="numero"><b>${visitasHoje}</b><small>visitas hoje</small></div>
       <div class="numero"><b>${noAr}</b><small>vídeos no ar</small></div>
-      <div class="numero"><b style="font-size:1rem">${seguro(nichoForte)}</b><small>nicho mais forte</small></div>
       <div class="numero"><b style="font-size:1rem">${seguro(origemTop)}</b><small>de onde mais vêm</small></div>
     </div>
+
+    ${listaCliques.length ? `
+    <section class="cartao">
+      <div class="cartao-topo">
+        <h2>Em que clicaram na página de links</h2>
+        <span style="font-size:.76rem;color:var(--tinta-suave)">serve para você saber onde vale investir conteúdo</span>
+      </div>
+      <div class="cartao-corpo">
+        <ul class="origens">
+          ${listaCliques.slice(0,12).map(([nome,q]) => `<li><span>${seguro(nome)}</span><b>${q}</b></li>`).join("")}
+        </ul>
+      </div>
+    </section>` : ""}
 
     <section class="cartao cartao-leads">
       <div class="cartao-topo">
@@ -2481,13 +2515,20 @@ async function comecar(){
    Ela fica fora do menu do site e com noindex, então só quem
    recebe o link chega nela.
    ============================================================ */
+/* Os endereços embaralhados. Eles existem para o portfólio e o
+   mídia kit não ficarem no caminho de curioso. Se um dia vazarem
+   demais, me peça para trocar: é só mudar estas duas linhas e
+   renomear as pastas. */
+const CAMINHO_PORTFOLIO = "/p/kx7m2q9t/";
+const CAMINHO_KIT = "/mk/r4j8vn3s/";
+
 function enderecoDoKit(){
   /* o "t" muda sempre, para o navegador nunca mostrar uma versão velha */
-  return "/midia-kit.html?t=" + Date.now();
+  return CAMINHO_KIT + "?t=" + Date.now();
 }
 
 function desenharMidiaKit(){
-  const linkLimpo = window.location.origin + "/midia-kit";
+  const linkLimpo = window.location.origin + CAMINHO_KIT;
 
   pegar("#acoesTopo").innerHTML = `
     <button class="btn btn-simples" id="copiarLinkKit">${ICONE.copiar} Copiar o link</button>
