@@ -63,6 +63,7 @@ const ICONE = {
   calendario:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
   campanhas: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3 12h18"/></svg>',
   checklist: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>',
+  cabelo:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-3.9 0-6 3.4-6 7.5 0 3.6.8 6.3 1.4 7.8M12 3c3.9 0 6 3.4 6 7.5 0 3.6-.8 6.3-1.4 7.8"/><path d="M12 3c-1.6 2.4-2 5-2 7.5 0 3.6.4 6.3 1 7.8M12 3c1.6 2.4 2 5 2 7.5 0 3.6-.4 6.3-1 7.8"/><path d="M8 21h8"/></svg>',
   mais:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
   subir:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5M8 9l4-4 4 4M4 19h16"/></svg>',
   baixar:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10M8 11l4 4 4-4M4 19h16"/></svg>',
@@ -98,8 +99,19 @@ const ABAS = [
   { id:"conteudo",   grupo:"minha rotina", nome:"Conteúdo",   sub:"A sua semana de postagens, canal por canal." },
   { id:"calendario", grupo:"minha rotina", nome:"Calendário", sub:"O mês inteiro de gravar, editar e postar." },
   { id:"campanhas",  grupo:"minha rotina", nome:"Campanhas",  sub:"Trabalhos, valores e prazos." },
-  { id:"checklist",  grupo:"minha rotina", nome:"Checklist",  sub:"O que ainda falta no seu portfólio." }
+  { id:"checklist",  grupo:"minha rotina", nome:"Checklist",  sub:"O que ainda falta no seu portfólio." },
+  { id:"cabelo",     grupo:"minha rotina", nome:"Cronograma capilar", sub:"Em que passo do tratamento você está." }
 ];
+
+/* Os quatro passos do cronograma, na ordem em que se repetem.
+   Depois da umectação volta para a reconstrução. */
+const PASSOS_CABELO = [
+  { id:"reconstrucao", nome:"Reconstrução", cor:"p-atrasado", texto:"Repõe massa. É a mais forte, não dá para abusar." },
+  { id:"nutricao",     nome:"Nutrição",     cor:"p-pago",     texto:"Repõe óleo. Deixa o fio macio e com brilho." },
+  { id:"hidratacao",   nome:"Hidratação",   cor:"p-funil",    texto:"Repõe água. É a mais leve das quatro." },
+  { id:"umectacao",    nome:"Umectação",    cor:"p-editar",   texto:"Óleo antes de lavar, deixa agir e depois shampoo." }
+];
+const LAVAGEM = "lavagem";
 
 const FUNIL = ["Briefing", "Roteiro", "Aprovação Roteiro", "Gravação", "Edição", "Aprovado", "Entregue"];
 
@@ -125,7 +137,7 @@ const estado = {
   email: "",
   faltando: [],
   sessaoExpirou: false,
-  dados: { videos:[], marcas:[], calendario:[], campanhas:[], marcados:{}, visitas:[], cupons:[], conteudos:[], email_envios:[], email_optout:[] },
+  dados: { videos:[], marcas:[], calendario:[], campanhas:[], marcados:{}, visitas:[], cupons:[], conteudos:[], email_envios:[], email_optout:[], cabelo:[] },
 
   /* --- a aba Prospecção --- */
   /* --- a aba Mídia kit --- */
@@ -279,7 +291,7 @@ async function apagarLinha(tabela, id){
 async function carregarTudo(){
   estado.faltando = [];
   estado.sessaoExpirou = false;
-  const [videos, marcas, calendario, campanhas, marcados, visitas, cupons, conteudos, envios, optout] = await Promise.all([
+  const [videos, marcas, calendario, campanhas, marcados, visitas, cupons, conteudos, envios, optout, cabelo] = await Promise.all([
     lerTabela("videos", "ordem", true),
     lerTabela("marcas", "criado_em", false),
     lerTabela("calendario", "data", true),
@@ -289,8 +301,10 @@ async function carregarTudo(){
     lerTabela("cupons", "criado_em", false),
     lerTabela("conteudos", "data", true),
     lerTabela("email_envios", "criado_em", false),
-    lerTabela("email_optout", "criado_em", false)
+    lerTabela("email_optout", "criado_em", false),
+    lerTabela("cabelo", "data", false)
   ]);
+  estado.dados.cabelo = cabelo;
   estado.dados.email_envios = envios;
   estado.dados.email_optout = optout;
   estado.dados.cupons = cupons;
@@ -402,6 +416,196 @@ function desenhar(){
   if(estado.aba === "calendario") desenharCalendario();
   if(estado.aba === "campanhas")  desenharCampanhas();
   if(estado.aba === "checklist")  desenharChecklist();
+  if(estado.aba === "cabelo")     desenharCabelo();
+}
+
+/* ============================================================
+   ABA: CRONOGRAMA CAPILAR
+
+   A ideia é uma só: o ciclo anda pelo que você FAZ, não pelo
+   calendário. Se você passou máscara, anda um passo. Se só lavou
+   com condicionador, fica parado esperando. Então você nunca
+   precisa lembrar em que ponto está.
+   ============================================================ */
+function passoPorId(id){
+  return PASSOS_CABELO.find(p => p.id === id) || null;
+}
+
+/* O último tratamento de verdade, ignorando as lavagens simples */
+function ultimoTratamento(){
+  return (estado.dados.cabelo || [])
+    .filter(r => r.tipo !== LAVAGEM && passoPorId(r.tipo))
+    .sort((a,b) => String(b.data).localeCompare(String(a.data)))[0] || null;
+}
+
+function proximoPasso(){
+  const ultimo = ultimoTratamento();
+  if(!ultimo) return PASSOS_CABELO[0];
+  const i = PASSOS_CABELO.findIndex(p => p.id === ultimo.tipo);
+  return PASSOS_CABELO[(i + 1) % PASSOS_CABELO.length];
+}
+
+function somarDias(dataISO, dias){
+  const d = new Date(dataISO + "T00:00:00");
+  d.setDate(d.getDate() + dias);
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+
+async function registrarCabelo(tipo, data, produto, obs){
+  const linha = { tipo, data: data || hojeISO(), produto: produto || "", obs: obs || "" };
+  if(await gravar("cabelo", linha)){
+    recado(tipo === LAVAGEM ? "Lavagem anotada." : "Anotado. O próximo já mudou.");
+    await carregarTudo();
+    desenhar();
+  }
+}
+
+function desenharCabelo(){
+  const tudo = (estado.dados.cabelo || [])
+    .slice()
+    .sort((a,b) => String(b.data).localeCompare(String(a.data)));
+
+  const ultimo = ultimoTratamento();
+  const proximo = proximoPasso();
+  const ultimaCoisa = tudo[0] || null;
+
+  const diasDesde = ultimo ? diasEntre(hojeISO(), String(ultimo.data).slice(0,10)) : null;
+  const sugestao = ultimo ? somarDias(String(ultimo.data).slice(0,10), 7) : hojeISO();
+  const atrasado = diasDesde !== null && diasDesde > 7;
+
+  let linhaTempo;
+  if(!ultimo){
+    linhaTempo = "Primeira vez por aqui. Comece pela reconstrução.";
+  } else if(diasDesde === 0){
+    linhaTempo = "O último tratamento foi hoje.";
+  } else if(diasDesde === 1){
+    linhaTempo = "O último tratamento foi ontem.";
+  } else {
+    linhaTempo = "O último tratamento foi há " + diasDesde + " dias.";
+  }
+
+  pegar("#acoesTopo").innerHTML = "";
+
+  pegar("#area").innerHTML = `
+    <section class="cartao painel-cabelo">
+      <div class="cartao-corpo">
+        <span class="rotulo-proximo">O próximo é</span>
+        <h2 class="nome-proximo">${seguro(proximo.nome)}</h2>
+        <p class="explica-proximo">${seguro(proximo.texto)}</p>
+
+        <p class="quando-proximo ${atrasado ? "atrasou" : ""}">
+          ${seguro(linhaTempo)}
+          ${ultimo ? `<br><b>${atrasado ? "Já passou da hora" : "Sugestão: " + dataBR(sugestao)}</b>` : ""}
+        </p>
+
+        <div class="botoes-cabelo">
+          <button class="btn btn-principal grandao" id="fizHoje">Fiz hoje</button>
+          <button class="btn btn-simples grandao" id="soLavei">Só lavei</button>
+        </div>
+        <button class="btn-mini" id="foiOutro">Foi em outro dia, ou foi outro passo</button>
+      </div>
+    </section>
+
+    <section class="cartao">
+      <div class="cartao-topo"><h2>A roda do cronograma</h2>
+        <span style="font-size:.76rem;color:var(--tinta-suave)">um passo a cada lavagem com máscara</span>
+      </div>
+      <div class="cartao-corpo">
+        <div class="roda-cabelo">
+          ${PASSOS_CABELO.map(p => {
+            const ehProximo = p.id === proximo.id;
+            const ehUltimo = ultimo && p.id === ultimo.tipo;
+            return `
+            <div class="passo-cabelo ${ehProximo ? "agora" : ""} ${ehUltimo ? "feito" : ""}">
+              <span class="bolinha" aria-hidden="true">${ehUltimo ? "&#10003;" : ehProximo ? "&#9679;" : ""}</span>
+              <b>${seguro(p.nome)}</b>
+              <small>${ehProximo ? "é o próximo" : ehUltimo ? "foi o último" : ""}</small>
+            </div>`;
+          }).join("")}
+        </div>
+      </div>
+    </section>
+
+    <section class="cartao">
+      <div class="cartao-topo">
+        <h2>O que você já fez</h2>
+        <span style="font-size:.76rem;color:var(--tinta-suave)">${tudo.length} ${tudo.length === 1 ? "registro" : "registros"}</span>
+      </div>
+      <div class="rolagem">
+        ${tudo.length ? `
+        <table>
+          <thead><tr><th style="width:120px">Quando</th><th>O que foi</th><th>Produto</th><th>Observação</th><th style="width:56px"></th></tr></thead>
+          <tbody>
+            ${tudo.slice(0, 40).map(r => {
+              const p = passoPorId(r.tipo);
+              return `
+              <tr>
+                <td style="white-space:nowrap">${dataBR(r.data)}</td>
+                <td><span class="pilula ${p ? p.cor : "p-conteudo"}">${p ? seguro(p.nome) : "Só lavei"}</span></td>
+                <td>${seguro(r.produto)}</td>
+                <td>${seguro(r.obs)}</td>
+                <td><button class="icone-btn apagar" data-cabelo="${seguro(r.id)}" title="Apagar">${ICONE.lixo}</button></td>
+              </tr>`;
+            }).join("")}
+          </tbody>
+        </table>` : `<p class="vazio-tabela">Nada anotado ainda. Quando você passar a primeira máscara, clique em "Fiz hoje" e o cronograma começa a andar sozinho.</p>`}
+      </div>
+    </section>
+  `;
+
+  pegar("#fizHoje").addEventListener("click", () => formularioCabelo(proximo.id, hojeISO()));
+  pegar("#soLavei").addEventListener("click", () => registrarCabelo(LAVAGEM, hojeISO(), "", ""));
+  pegar("#foiOutro").addEventListener("click", () => formularioCabelo(proximo.id, hojeISO(), true));
+
+  pegarTodos("[data-cabelo]").forEach(b => b.addEventListener("click", async () => {
+    if(!confirm("Apagar este registro? O próximo passo se recalcula sozinho.")) return;
+    if(await apagarLinha("cabelo", b.dataset.cabelo)){
+      recado("Registro apagado.");
+      await carregarTudo();
+      desenhar();
+    }
+  }));
+}
+
+/* A janelinha para anotar com data, produto e observação.
+   "escolher" abre também a lista dos passos, para quando você
+   quiser fazer um diferente do sugerido. */
+function formularioCabelo(tipoSugerido, data, escolher){
+  abrirJanela("Anotar no cronograma", `
+    <form id="formCabelo">
+      <div class="campos">
+        <div class="campo"><label for="c-data">Quando foi</label>
+          <input id="c-data" type="date" value="${data}" required>
+        </div>
+        <div class="campo"><label for="c-tipo">O que você fez</label>
+          <select id="c-tipo">
+            ${PASSOS_CABELO.map(p => `<option value="${p.id}" ${p.id === tipoSugerido ? "selected" : ""}>${p.nome}</option>`).join("")}
+            <option value="${LAVAGEM}">Só lavei, shampoo e condicionador</option>
+          </select>
+        </div>
+        <div class="campo largo"><label for="c-produto">Produto usado (opcional)</label>
+          <input id="c-produto" placeholder="qual máscara, qual óleo" list="listaProdutosCabelo">
+          <datalist id="listaProdutosCabelo">
+            ${[...new Set((estado.dados.cabelo || []).map(r => r.produto).filter(Boolean))].map(p => `<option value="${seguro(p)}">`).join("")}
+          </datalist>
+        </div>
+        <div class="campo largo"><label for="c-obs">Observação (opcional)</label>
+          <input id="c-obs" placeholder="como o cabelo ficou">
+        </div>
+      </div>
+      <div class="acoes-janela">
+        <button type="button" class="btn btn-simples" id="cancelar">Cancelar</button>
+        <button type="submit" class="btn btn-principal">Anotar</button>
+      </div>
+    </form>
+  `);
+  pegar("#cancelar").addEventListener("click", fecharJanela);
+  pegar("#formCabelo").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const d = pegar("#c-data").value || hojeISO();
+    fecharJanela();
+    await registrarCabelo(pegar("#c-tipo").value, d, pegar("#c-produto").value.trim(), pegar("#c-obs").value.trim());
+  });
 }
 
 /* ============================================================
