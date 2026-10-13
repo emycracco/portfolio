@@ -128,6 +128,7 @@ const estado = {
   /* --- a aba Prospecção --- */
   /* --- a aba Mídia kit --- */
   kitTela: "computador",     /* como você está olhando: computador ou celular */
+  portfolioTela: "computador",
 
   prosp: {
     publico: "selecionadas",   /* para quem vai: selecionadas, teste, todas ou uma situação */
@@ -463,7 +464,12 @@ function desenharPortfolio(){
      da página de links também entram aqui, marcados com "clique:".
      Então separo as três coisas antes de contar qualquer número. */
   const ehClique = (v) => String(v.pagina || "").startsWith("clique:");
-  const ehPortfolio = (v) => String(v.pagina || "").startsWith("/p/");
+  /* o "/p/" é o endereço antigo do portfólio: fica aqui só para as
+     visitas registradas antes da troca não sumirem da conta */
+  const ehPortfolio = (v) => {
+    const p = String(v.pagina || "");
+    return p.startsWith(CAMINHO_PORTFOLIO) || p.startsWith("/p/") || p.startsWith("/portfolio");
+  };
   const ehLinks = (v) => !ehClique(v) && !ehPortfolio(v);
 
   const cliques = {};
@@ -499,15 +505,19 @@ function desenharPortfolio(){
 
   const maior = Math.max(1, ...dias.map(d => porDia[d]));   /* nunca divide por zero */
 
-  /* ---- QUEM PREENCHEU O FORMULÁRIO DO SITE ----
-     Só entram as marcas com origem "site", para não misturar
-     com os leads que vieram da planilha importada.
+  /* ---- QUEM PREENCHEU OS FORMULÁRIOS ----
+     Entram os dois formulários: o do portfólio (origem "site") e o
+     da página de links (origem "links"). Os leads que vieram da
+     planilha importada continuam de fora, para não misturar.
      Se a coluna origem ainda não existir no banco, a lista fica
      vazia e o aviso explica o que fazer, sem quebrar nada. */
   const temColunaOrigem = (estado.dados.marcas || []).some(m => "origem" in m);
+  const ORIGEM_NOME = { site:"portfólio", links:"página de links" };
   const leadsDoSite = (estado.dados.marcas || [])
-    .filter(m => String(m.origem || "").toLowerCase() === "site")
+    .filter(m => ["site","links"].includes(String(m.origem || "").toLowerCase()))
     .sort((a,b) => String(b.criado_em || "").localeCompare(String(a.criado_em || "")));
+  const doPortfolio = leadsDoSite.filter(m => String(m.origem).toLowerCase() === "site").length;
+  const dosLinks = leadsDoSite.filter(m => String(m.origem).toLowerCase() === "links").length;
 
   /* "novo" é o que chegou nas últimas 24 horas */
   const agora = Date.now();
@@ -517,9 +527,21 @@ function desenharPortfolio(){
   };
   const novos = leadsDoSite.filter(ehNovo).length;
 
-  pegar("#acoesTopo").innerHTML = `<button class="btn btn-principal" id="novoVideo">${ICONE.mais} Novo vídeo</button>`;
+  const linkPortfolio = window.location.origin + CAMINHO_PORTFOLIO;
+
+  pegar("#acoesTopo").innerHTML = `
+    <button class="btn btn-simples" id="copiarLinkPortfolio">${ICONE.copiar} Copiar o link</button>
+    <button class="btn btn-principal" id="novoVideo">${ICONE.mais} Novo vídeo</button>`;
 
   pegar("#area").innerHTML = `
+    <div class="aviso-kit">
+      <div>
+        <b>O seu portfólio não aparece no site.</b>
+        Ele está fora do menu e marcado para não entrar no Google. Só quem receber o link de você consegue abrir.
+      </div>
+      <code class="link-kit">${seguro(linkPortfolio)}</code>
+    </div>
+
     <div class="faixa-numeros">
       <div class="numero"><b>${aberturasLinks}</b><small>abriram a página de links</small><i>o seu público</i></div>
       <div class="numero"><b>${aberturasPortfolio}</b><small>abriram o portfólio</small><i>marcas te considerando</i></div>
@@ -543,28 +565,45 @@ function desenharPortfolio(){
 
     <section class="cartao cartao-leads">
       <div class="cartao-topo">
-        <h2>Quem preencheu o formulário do site
+        <h2>Quem preencheu os formulários
           ${novos ? `<span class="selo-novo">${novos} ${novos === 1 ? "novo" : "novos"}</span>` : ""}
         </h2>
-        <span class="atualiza-sozinho" id="avisoAtualiza">confere sozinho a cada 45 segundos</span>
+        <span class="atualiza-sozinho" id="avisoAtualiza">${leadsDoSite.length
+          ? `${doPortfolio} pelo portfólio · ${dosLinks} pela página de links`
+          : "confere sozinho a cada 45 segundos"}</span>
       </div>
       <div class="rolagem">
         ${leadsDoSite.length ? `
         <table>
-          <thead><tr><th>Quando</th><th>Nome</th><th>E-mail</th><th>Mensagem</th><th>Situação</th></tr></thead>
+          <thead><tr><th>Quando</th><th>Onde</th><th>Nome</th><th>E-mail</th><th>Mensagem</th><th>Situação</th></tr></thead>
           <tbody>
             ${leadsDoSite.slice(0, 25).map(m => `
               <tr class="linha-clicavel lead-site ${ehNovo(m) ? "chegou-agora" : ""}" data-id="${seguro(m.id)}">
                 <td style="white-space:nowrap">${quandoChegou(m.criado_em)}</td>
+                <td style="white-space:nowrap"><span class="pilula p-funil">${seguro(ORIGEM_NOME[String(m.origem).toLowerCase()] || m.origem)}</span></td>
                 <td><b>${seguro(m.nome)}</b></td>
                 <td>${m.email ? `<a href="mailto:${seguro(m.email)}" class="parar">${seguro(m.email)}</a>` : ""}</td>
-                <td style="max-width:360px">${seguro(m.obs)}</td>
+                <td style="max-width:320px">${seguro(m.obs)}</td>
                 <td><span class="pilula p-${String(m.situacao||"lead").toLowerCase()}">${seguro(m.situacao)}</span></td>
               </tr>`).join("")}
           </tbody>
         </table>` : `<p class="vazio-tabela">${temColunaOrigem
-            ? "Ninguém preencheu o formulário ainda. Quando alguém preencher, aparece aqui na hora, antes de você precisar abrir a aba Marcas."
+            ? "Ninguém preencheu nenhum dos dois formulários ainda. Quando alguém preencher, aparece aqui na hora, antes de você precisar abrir a aba Marcas."
             : "Falta rodar uma linha de SQL no Supabase para separar os contatos do site dos leads da planilha. Peça para o Claude."}</p>`}
+      </div>
+    </section>
+
+    <section class="cartao">
+      <div class="cartao-topo">
+        <h2>Como o seu portfólio está agora</h2>
+        <div class="grupo-filtro">
+          <button class="filtro" data-portftela="computador" aria-pressed="${estado.portfolioTela !== "celular"}">no computador</button>
+          <button class="filtro" data-portftela="celular" aria-pressed="${estado.portfolioTela === "celular"}">no celular</button>
+          <a class="btn btn-simples" href="${CAMINHO_PORTFOLIO}?t=${Date.now()}" target="_blank" rel="noopener">${ICONE.link} Abrir em outra aba</a>
+        </div>
+      </div>
+      <div class="palco-kit ${estado.portfolioTela === "celular" ? "estreito" : ""}">
+        <iframe src="${CAMINHO_PORTFOLIO}?t=${Date.now()}" title="Portfólio de Emellyn Cracco" loading="lazy"></iframe>
       </div>
     </section>
 
@@ -638,6 +677,16 @@ function desenharPortfolio(){
     if(m) formularioMarca(m);
   }));
   ligarAtualizacaoAutomatica();
+
+  /* o link do portfólio, pronto para colar no WhatsApp ou no e-mail */
+  pegar("#copiarLinkPortfolio").addEventListener("click", async () => {
+    try{ await navigator.clipboard.writeText(linkPortfolio); recado("Link do portfólio copiado. É só colar e enviar."); }
+    catch(e){ recado("Não consegui copiar. O link é " + linkPortfolio, true); }
+  });
+  pegarTodos("[data-portftela]").forEach(b => b.addEventListener("click", () => {
+    estado.portfolioTela = b.dataset.portftela;
+    desenharPortfolio();
+  }));
 
   pegar("#novoVideo").addEventListener("click", () => formularioVideo(null));
   pegarTodos("#corpoVideos .editar").forEach(b => b.addEventListener("click", () => {
@@ -1707,6 +1756,9 @@ function situacaoValidade(c){
   return { classe:"p-funil", etiqueta:"vale até " + dataBR(c.validade), vencido:false };
 }
 
+/* como cada tipo aparece escrito no cartão */
+const NOME_DO_TIPO = { cupom:"cupom", vitrine:"vitrine", produto:"produto", oculto:"fora da página" };
+
 function desenharCupons(){
   const todos = estado.dados.cupons || [];
   const busca = estado.buscaCupons.toLowerCase();
@@ -1782,6 +1834,7 @@ function desenharCupons(){
               ${c.obs ? `<p class="cupom-obs">${seguro(c.obs)}</p>` : ""}
 
               <footer class="cupom-rodape">
+                <span class="pilula p-funil">${seguro(NOME_DO_TIPO[String(c.tipo || "cupom").toLowerCase()] || "cupom")}</span>
                 <span class="pilula ${v.classe}">${v.etiqueta}</span>
                 <span data-copias="${seguro(c.id)}">${numero(c.copias) === 1 ? "copiado 1 vez" : "copiado " + numero(c.copias) + " vezes"}</span>
                 <button class="icone-btn" data-editar="${seguro(c.id)}" title="Editar">${ICONE.lapis}</button>
@@ -1823,10 +1876,21 @@ function desenharCupons(){
 
 function formularioCupom(cupom){
   const c = cupom || {};
+  /* "tipo" decide em que bloco da página de links o botão entra.
+     Quem foi cadastrado antes deste campo existir entra como cupom. */
+  const tipoAtual = String(c.tipo || "cupom").toLowerCase();
   abrirJanela(cupom ? "Editar cupom" : "Novo cupom", `
     <form id="formCupom">
       <div class="campos">
         <div class="campo"><label for="p-marca">Marca</label><input id="p-marca" required value="${seguro(c.marca)}"></div>
+        <div class="campo"><label for="p-tipo">Onde aparece na página de links</label>
+          <select id="p-tipo">
+            <option value="cupom" ${tipoAtual === "cupom" ? "selected" : ""}>Meus cupons</option>
+            <option value="vitrine" ${tipoAtual === "vitrine" ? "selected" : ""}>Minhas vitrines (Shopee, Mercado Livre)</option>
+            <option value="produto" ${tipoAtual === "produto" ? "selected" : ""}>O que eu uso (paralelas, argolas)</option>
+            <option value="oculto" ${tipoAtual === "oculto" ? "selected" : ""}>Não mostrar na página</option>
+          </select>
+        </div>
         <div class="campo"><label for="p-cupom">Código do cupom</label><input id="p-cupom" placeholder="EMY10" value="${seguro(c.cupom)}"></div>
         <div class="campo"><label for="p-desconto">Desconto</label><input id="p-desconto" placeholder="10% de desconto" value="${seguro(c.desconto)}"></div>
         <div class="campo"><label for="p-validade">Vale até</label><input id="p-validade" type="date" value="${c.validade ? String(c.validade).slice(0,10) : ""}"></div>
@@ -1858,6 +1922,7 @@ function formularioCupom(cupom){
     e.preventDefault();
     const linha = {
       marca: pegar("#p-marca").value.trim(),
+      tipo: pegar("#p-tipo").value,
       cupom: pegar("#p-cupom").value.trim(),
       desconto: pegar("#p-desconto").value.trim(),
       link: pegar("#p-link").value.trim(),
@@ -2519,8 +2584,8 @@ async function comecar(){
    mídia kit não ficarem no caminho de curioso. Se um dia vazarem
    demais, me peça para trocar: é só mudar estas duas linhas e
    renomear as pastas. */
-const CAMINHO_PORTFOLIO = "/p/kx7m2q9t/";
-const CAMINHO_KIT = "/mk/r4j8vn3s/";
+const CAMINHO_PORTFOLIO = "/portfolio-k7m2q9/";
+const CAMINHO_KIT = "/midia-kit-j8vn3s/";
 
 function enderecoDoKit(){
   /* o "t" muda sempre, para o navegador nunca mostrar uma versão velha */
