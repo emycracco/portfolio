@@ -401,6 +401,8 @@ section{padding:92px 0; position:relative;}
 .contato-grid{display:grid; grid-template-columns:1.05fr .95fr; gap:38px;}
 .cartao{padding:32px 28px; border-radius:var(--raio); background:var(--branco); border:var(--borda); box-shadow:var(--sombra-dura);}
 .campo{margin-bottom:18px;}
+/* nome e e-mail ficam lado a lado quando há espaço */
+.dupla-campo{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
 .campo label{display:block; font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--tinta-suave); margin-bottom:7px;}
 .campo input, .campo textarea{
   width:100%; padding:13px 15px; border-radius:var(--raio-p);
@@ -496,6 +498,7 @@ section{padding:92px 0; position:relative;}
   .capa{padding-top:136px;}
   .grid-destaques, .grid-trabalhos, .grid-servicos{grid-template-columns:1fr;}
   .depoimento, .trilha-dep[data-quantos] .depoimento{flex-basis:88%;}
+  .dupla-campo{grid-template-columns:1fr; gap:0;}
   section{padding:70px 0;}
   .adesivo-solto{display:none;}
   .listras{inset:12px -6px -12px 6px;}
@@ -689,17 +692,27 @@ section{padding:92px 0; position:relative;}
 
     <div class="contato-grid">
       <form class="cartao revelar" id="formContato" novalidate>
-        <div class="campo">
-          <label for="nome">Seu nome</label>
-          <input type="text" id="nome" name="nome" required autocomplete="name" placeholder="Como posso te chamar">
+        <div class="dupla-campo">
+          <div class="campo">
+            <label for="nome">Nome</label>
+            <input type="text" id="nome" name="nome" required autocomplete="name" placeholder="Seu nome">
+          </div>
+          <div class="campo">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" name="email" required autocomplete="email" placeholder="voce@marca.com">
+          </div>
         </div>
         <div class="campo">
-          <label for="email">Seu e-mail</label>
-          <input type="email" id="email" name="email" required autocomplete="email" placeholder="voce@suamarca.com">
+          <label for="empresa">Marca / Empresa</label>
+          <input type="text" id="empresa" name="empresa" required autocomplete="organization" placeholder="Nome da marca">
         </div>
         <div class="campo">
-          <label for="mensagem">Sua mensagem</label>
-          <textarea id="mensagem" name="mensagem" required placeholder="Conte o produto, o formato e a data que você precisa"></textarea>
+          <label for="orcamento">Orçamento estimado</label>
+          <input type="text" id="orcamento" name="orcamento" placeholder="Ex: R$ 1.000 a R$ 5.000">
+        </div>
+        <div class="campo">
+          <label for="mensagem">Conta sobre o projeto</label>
+          <textarea id="mensagem" name="mensagem" required placeholder="Categoria, formato, prazo, objetivo da campanha..."></textarea>
         </div>
         <button type="submit" class="btn btn-magenta">Enviar mensagem</button>
         <p class="aviso" id="avisoForm" role="status" aria-live="polite"></p>
@@ -868,7 +881,7 @@ const DEPOIMENTOS = [
     quem:"FM Basics",
     foto:"/logos/fm-basics.png",
     estrelas:5,
-    quando:"31/08/2026",
+    quando:"",   /* a data não aparece mais na página */
     texto:"Sempre surpreendendo!",
     fonte:"Avaliação da marca"
   },
@@ -876,7 +889,7 @@ const DEPOIMENTOS = [
     quem:"FM Basics",
     foto:"/logos/fm-basics.png",
     estrelas:5,
-    quando:"23/08/2026",
+    quando:"",
     texto:"Gostamos demais da entrega!! Certeza que vamos fazer mais projetos juntos. RECOMENDAMOS!",
     fonte:"Avaliação da marca"
   }
@@ -992,7 +1005,7 @@ function montarDepoimentos(){
         ${foto}
         <span class="dep-quem">
           <b>${d.quem}</b>
-          ${estrelas}${d.quando ? ` <span class="dep-quando">· ${d.quando}</span>` : ""}
+          ${estrelas}
         </span>
       </header>
       <p class="dep-texto">"${d.texto}"</p>
@@ -1339,23 +1352,37 @@ pegar("#formContato").addEventListener("submit", async (e) => {
   const form = e.target;
   const aviso = pegar("#avisoForm");
   if(!form.checkValidity()){
-    aviso.textContent = "Preencha nome, e-mail e mensagem para eu conseguir te responder.";
+    aviso.textContent = "Preencha nome, e-mail, marca e o projeto para eu conseguir te responder.";
     aviso.classList.add("aparecer");
     form.reportValidity();
     return;
   }
   const nome = form.nome.value.trim();
   const email = form.email.value.trim();
+  const empresa = form.empresa.value.trim();
+  const orcamento = form.orcamento.value.trim();
   const mensagem = form.mensagem.value.trim();
 
   /* A marca entra na base como Lead, com origem "site".
      A origem é o que faz ela aparecer na aba Portfólio do painel,
      separada dos leads que vieram de planilha.
+
+     O nome da coluna "nome" na tabela é o nome da MARCA, então é
+     a empresa que vai ali. Quem escreveu e quanto pretende gastar
+     vão escritos na observação, assim não precisa mexer no banco.
+
      Se a coluna origem ainda não existir no banco, manda sem ela,
      para o formulário nunca deixar de funcionar por causa disso. */
+  const anotacao = [
+    "Quem escreveu: " + nome,
+    orcamento ? "Orçamento estimado: " + orcamento : "Orçamento estimado: não informado",
+    "",
+    mensagem
+  ].join("\n");
+
   let guardou = false;
   if(window.sb){
-    const base = { nome, email, situacao:"Lead", obs:mensagem };
+    const base = { nome: empresa || nome, email, situacao:"Lead", obs:anotacao };
     try{
       const { error } = await window.sb.from("marcas").insert({ ...base, origem:"site" });
       if(error && /origem/i.test(String(error.message || ""))){
