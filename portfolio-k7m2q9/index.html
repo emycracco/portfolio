@@ -289,9 +289,14 @@ body.tem-faixa .capa{padding-top:calc(var(--altura-faixa, 52px) + 162px);}
 .play::after{content:""; margin-left:5px; border-left:18px solid var(--tinta); border-top:11px solid transparent; border-bottom:11px solid transparent;}
 .destaque-info{padding:20px 22px 24px;}
 .destaque-numero{font-family:var(--fonte-titulo); font-weight:700; font-size:1.9rem; color:var(--magenta); line-height:1; margin:0;}
-.destaque-rotulo{display:block; margin-bottom:10px; font-family:var(--fonte-marcador); font-weight:600; font-size:.92rem; color:var(--turquesa);}
+.destaque-rotulo{
+  display:block; margin-bottom:10px;
+  font-family:var(--fonte-marcador); font-weight:600; font-size:.76rem;
+  letter-spacing:.09em; text-transform:uppercase; color:var(--turquesa);
+}
 .destaque-info h3{font-size:1.14rem; margin-bottom:6px;}
 .destaque-info p{margin:0; color:var(--tinta-suave); font-size:.94rem;}
+.destaque-info .marca-trabalho{margin-top:10px;}
 
 /* A FAIXA ESCURA DOS DESTAQUES
    Emprestada do modelo 14. Os vídeos de treino e de pole são
@@ -308,6 +313,11 @@ body.tem-faixa .capa{padding-top:calc(var(--altura-faixa, 52px) + 162px);}
 #destaques .olho{color:var(--lima);}
 #destaques .destaque{box-shadow:6px 6px 0 var(--lima);}
 #destaques .destaque:hover{box-shadow:10px 10px 0 var(--lima);}
+/* o texto da seção é branco por causa do fundo escuro, mas o
+   cartãozinho é branco: aqui dentro a letra volta a ser escura,
+   senão o título some */
+#destaques .destaque-info{color:var(--tinta);}
+#destaques .destaque-info h3{color:var(--tinta);}
 
 /* =========================================================
    4. TRABALHOS POR NICHO
@@ -1233,6 +1243,7 @@ function montarDestaques(lista){
         ${d.rotulo ? `<span class="destaque-rotulo">${d.rotulo}</span>` : ""}
         <h3>${d.titulo}</h3>
         <p>${d.contexto}</p>
+        ${d.marca ? `<span class="marca-trabalho">${d.marca}</span>` : ""}
       </div>
     </a>`;
   }).join("");
@@ -1488,6 +1499,10 @@ ligarCapasEPrevias();
       .from("videos").select("*").eq("visivel", true).order("ordem", { ascending:true });
     if(error || !data || !data.length) return;
 
+    /* Cada vídeo que você quer nos dois lugares tem DUAS linhas no
+       painel: uma marcada como destaque e outra como galeria. É assim
+       que ele aparece lá em cima e também dentro do nicho dele, sem
+       repetir duas vezes na mesma lista. */
     const destaques = data.filter(v => v.secao !== "trabalho");
     const trabalhos = data.filter(v => v.secao === "trabalho");
 
@@ -1496,7 +1511,10 @@ ligarCapasEPrevias();
         link: v.link || "", capa: "",
         numero: v.destaque || "", rotulo: v.nicho || "",
         titulo: v.titulo || "",
-        contexto: v.descricao || v.marca || v.formato || ""
+        marca: v.marca || "",
+        /* se não tiver contexto escrito, não repito a marca aqui,
+           senão ela apareceria duas vezes no mesmo cartão */
+        contexto: v.descricao || v.formato || ""
       })));
     }
     if(trabalhos.length){
