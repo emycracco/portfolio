@@ -575,7 +575,7 @@ function desenharPortfolio(){
       <div class="rolagem">
         ${leadsDoSite.length ? `
         <table>
-          <thead><tr><th>Quando</th><th>Onde</th><th>Nome</th><th>E-mail</th><th>Mensagem</th><th>Situação</th></tr></thead>
+          <thead><tr><th>Quando</th><th>Onde</th><th>Marca</th><th>E-mail</th><th>O que escreveram</th><th>Situação</th></tr></thead>
           <tbody>
             ${leadsDoSite.slice(0, 25).map(m => `
               <tr class="linha-clicavel lead-site ${ehNovo(m) ? "chegou-agora" : ""}" data-id="${seguro(m.id)}">
@@ -583,7 +583,7 @@ function desenharPortfolio(){
                 <td style="white-space:nowrap"><span class="pilula p-funil">${seguro(ORIGEM_NOME[String(m.origem).toLowerCase()] || m.origem)}</span></td>
                 <td><b>${seguro(m.nome)}</b></td>
                 <td>${m.email ? `<a href="mailto:${seguro(m.email)}" class="parar">${seguro(m.email)}</a>` : ""}</td>
-                <td style="max-width:320px">${seguro(m.obs)}</td>
+                <td style="max-width:320px; white-space:pre-line">${seguro(m.obs)}</td>
                 <td><span class="pilula p-${String(m.situacao||"lead").toLowerCase()}">${seguro(m.situacao)}</span></td>
               </tr>`).join("")}
           </tbody>
