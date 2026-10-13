@@ -67,7 +67,7 @@ h1,h2{font-family:var(--titulo); font-weight:600; margin:0; line-height:1.15;}
 .retrato{
   width:208px; height:262px; margin:0 auto 20px; border-radius:26px;
   overflow:hidden; border:var(--borda);
-  box-shadow:8px 8px 0 var(--magenta), 8px 8px 0 3px var(--tinta);
+  box-shadow:8px 8px 0 var(--lima), 8px 8px 0 3px var(--tinta);
   background:linear-gradient(150deg, var(--magenta-claro), var(--roxo));
 }
 .retrato img{width:100%; height:100%; object-fit:cover; object-position:50% 18%;}
@@ -133,9 +133,25 @@ h1,h2{font-family:var(--titulo); font-weight:600; margin:0; line-height:1.15;}
   padding:22px 20px; border-radius:var(--raio);
   background:var(--branco); border:var(--borda); box-shadow:var(--sombra);
 }
-.chamada-form{
-  margin:0 0 16px; font-size:1.02rem; font-weight:400; line-height:1.5;
-  color:var(--tinta);
+/* ---------- a gavetinha do formulário ---------- */
+.gaveta{margin-bottom:12px;}
+/* o summary continua com o display que o navegador dá, senão o
+   Chrome para de fechar a gaveta. O visual de botão fica no span
+   de dentro. */
+.gaveta-topo{list-style:none; cursor:var(--toque);}
+.gaveta-topo::-webkit-details-marker{display:none;}
+.gaveta-topo::marker{content:"";}
+.gaveta-topo .botao-grande{margin-bottom:0;}
+.seta-gaveta{
+  margin-left:auto; flex:none; opacity:.55;
+  transition:transform .22s ease;
+}
+.gaveta[open] .gaveta-topo .botao-grande{margin-bottom:12px;}
+.gaveta[open] .seta-gaveta{transform:rotate(180deg);}
+.gaveta .cartao-form{animation:abrirGaveta .22s ease;}
+@keyframes abrirGaveta{
+  from{opacity:0; transform:translateY(-6px);}
+  to{opacity:1; transform:none;}
 }
 .campo{margin-bottom:14px;}
 .campo label{display:block; font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--roxo); margin-bottom:6px;}
@@ -208,10 +224,23 @@ h1,h2{font-family:var(--titulo); font-weight:600; margin:0; line-height:1.15;}
     </span>
   </a>
 
+  <!-- O formulário fica guardado numa gavetinha. Quem quiser escrever
+       clica no botão e ele abre logo abaixo, sem poluir a página. -->
+  <details class="gaveta" id="gavetaForm">
+    <summary class="gaveta-topo">
+      <span class="botao-grande">
+        <span class="selo-botao" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" style="width:20px;height:20px"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5 12 13l8.5-6.5"/></svg>
+        </span>
+        <span>
+          <b>Prefere escrever?</b>
+          <small>Deixa os seus dados que eu respondo em até 24 horas úteis</small>
+        </span>
+        <svg class="seta-gaveta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </span>
+    </summary>
+
   <div class="cartao-form">
-    <p class="chamada-form">
-      Prefere escrever? Deixa os seus dados que eu respondo em até 24 horas úteis.
-    </p>
     <form id="formLinks" novalidate>
       <div class="campo">
         <label for="nome">Nome</label>
@@ -237,6 +266,7 @@ h1,h2{font-family:var(--titulo); font-weight:600; margin:0; line-height:1.15;}
       <p class="aviso" id="avisoForm" role="status" aria-live="polite"></p>
     </form>
   </div>
+  </details>
 
   <!-- ---------- cupons, vitrines e produtos ---------- -->
   <div id="listas"></div>
@@ -306,6 +336,11 @@ async function anotar(oQue){
   }catch(e){}
   anotar("/");
 })();
+
+/* abrir a gavetinha do formulário também conta, só na abertura */
+pegar("#gavetaForm").addEventListener("toggle", (e) => {
+  if(e.target.open) anotar("clique: abriu o formulario");
+});
 
 /* todo clique em botão marcado é contado, sem atrapalhar a ida */
 document.addEventListener("click", (e) => {
