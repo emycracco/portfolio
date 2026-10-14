@@ -385,17 +385,43 @@ function apelidoDaMarca(nome){
     .replace(/^-+|-+$/g, "");
 }
 
-/* O quadradinho da esquerda. Se existir a logo da marca, mostra a
-   logo. Se o arquivo não existir, a própria imagem se apaga e
-   ficam as iniciais, sem quadrado quebrado na tela. */
+/* Os nomes de arquivo que vale a pena tentar para uma marca.
+   "LOREN FIT WEAR" vira loren-fit-wear, depois loren-fit, depois
+   loren. Assim a logo continua aparecendo mesmo que você mude o
+   nome do cupom no painel, sem precisar renomear arquivo. */
+function candidatosDeLogo(nome){
+  const partes = apelidoDaMarca(nome).split("-").filter(Boolean);
+  const lista = [];
+  for(let n = partes.length; n >= 1; n--){
+    lista.push("/logos/" + partes.slice(0, n).join("-") + ".png");
+  }
+  return lista;
+}
+
+/* Quando um nome não existe, tenta o próximo da fila. Acabando a
+   fila, ficam as iniciais, sem quadrado quebrado na tela. */
+function proximaLogo(img){
+  const restam = String(img.getAttribute("data-restam") || "").split("|").filter(Boolean);
+  if(restam.length){
+    img.setAttribute("data-restam", restam.slice(1).join("|"));
+    img.src = restam[0];
+    return;
+  }
+  const pai = img.parentNode;
+  pai.classList.remove("com-logo");
+  pai.textContent = img.getAttribute("data-letras") || "";
+}
+
+/* O quadradinho da esquerda. */
 function seloDaMarca(c){
   const letras = seguro(iniciais(c.marca));
-  const apelido = apelidoDaMarca(c.marca);
-  const endereco = c.logo ? String(c.logo) : (apelido ? "/logos/" + apelido + ".png" : "");
-  if(!endereco) return `<span class="selo-botao" aria-hidden="true">${letras}</span>`;
+  const lista = c.logo ? [String(c.logo)] : candidatosDeLogo(c.marca);
+  if(!lista.length) return `<span class="selo-botao" aria-hidden="true">${letras}</span>`;
   return `<span class="selo-botao com-logo" aria-hidden="true">
-    <img src="${seguro(endereco)}" alt="" loading="lazy"
-         onerror="this.parentNode.classList.remove('com-logo');this.parentNode.textContent='${letras}'">
+    <img src="${seguro(lista[0])}" alt="" loading="lazy"
+         data-restam="${seguro(lista.slice(1).join("|"))}"
+         data-letras="${letras}"
+         onerror="proximaLogo(this)">
   </span>`;
 }
 

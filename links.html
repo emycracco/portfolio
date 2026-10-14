@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Emellyn Cracco | Links</title>
+<!-- o iconezinho da abinha do navegador -->
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="description" content="Criadora de conteúdo UGC em Curitiba. Cupons, vitrines e contato para marcas.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   PÁGINA DE LINKS
+   É esta que vai na bio do Instagram e do TikTok, no lugar
+   do Linktree. Mesmo visual do portfólio.
+
+   Os cupons, as vitrines e os produtos NÃO estão escritos
+   aqui dentro: eles vêm da aba Cupons do seu painel.
+   Você cadastra lá, aparece aqui sozinho.
+   ========================================================= */
+:root{
+  --fundo:#f8ecf6;
+  --branco:#ffffff;
+  --magenta:#e3157f;
+  --magenta-claro:#ff8ac4;
+  --roxo:#6a1b9a;
+  --turquesa:#0fa9a0;
+  --lima:#a7d41f;
+  --tinta:#2c0620;
+  --tinta-suave:#6b4260;
+
+  --titulo:"Fredoka","Segoe UI",sans-serif;
+  --corpo:"Jost","Segoe UI",sans-serif;
+  --borda:3px solid var(--tinta);
+  --borda-p:2px solid var(--tinta);
+  --sombra:5px 5px 0 var(--tinta);
+  --raio:20px;
+  --raio-p:14px;
+
+  --seta:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 26 26"><path d="M4 2 L4 20 L8.6 15.7 L11.5 22 L14.8 20.5 L11.9 14.4 L18.2 14.4 Z" fill="%23e3157f" stroke="white" stroke-width="1.3" stroke-linejoin="round"/></svg>') 4 2, auto;
+  --toque:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="28" viewBox="0 0 24 28"><path d="M9 2.2c0-1.2 1-2.2 2.2-2.2s2.2 1 2.2 2.2V12h.6c.2-.9 1-1.6 2-1.6s1.8.6 2 1.5c.35-.32.8-.5 1.3-.5 1.1 0 2 .9 2 2v.6c.55.35.9.95.9 1.6v3.5c0 4.2-3.4 7.6-7.6 7.6h-1.6c-2.3 0-4.4-1-5.8-2.8L2.6 18.6c-.7-.9-.5-2.2.4-2.8.8-.6 1.9-.5 2.6.2L9 19V2.2Z" fill="%23e3157f" stroke="white" stroke-width="1.1" stroke-linejoin="round"/></svg>') 11 1, pointer;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; font-family:var(--corpo); font-weight:300; line-height:1.6;
+  color:var(--tinta);
+  background:
+    radial-gradient(700px 420px at 10% -8%, #ffe3f3 0%, rgba(255,227,243,0) 60%),
+    radial-gradient(620px 420px at 100% 6%, #f0e6ff 0%, rgba(240,230,255,0) 55%),
+    var(--fundo);
+  min-height:100vh;
+}
+html,body{cursor:var(--seta);}
+a,button{cursor:var(--toque); font-family:inherit;}
+img{max-width:100%; display:block;}
+:focus-visible{outline:3px solid var(--roxo); outline-offset:3px; border-radius:10px;}
+h1,h2{font-family:var(--titulo); font-weight:600; margin:0; line-height:1.15;}
+
+.folha{width:100%; max-width:520px; margin:0 auto; padding:34px 20px 48px;}
+
+/* ---------- topo ---------- */
+.topo-links{text-align:center; margin-bottom:26px;}
+
+/* A foto é um retângulo em pé, com moldura grossa e um bloco
+   verde atrás, no mesmo estilo de adesivo do portfólio.
+   Para trocar a foto basta substituir o arquivo foto-sobre.jpg. */
+.retrato{
+  width:208px; height:262px; margin:0 auto 20px; border-radius:26px;
+  overflow:hidden; border:var(--borda);
+  box-shadow:8px 8px 0 var(--lima), 8px 8px 0 3px var(--tinta);
+  background:linear-gradient(150deg, var(--magenta-claro), var(--roxo));
+}
+.retrato img{width:100%; height:100%; object-fit:cover; object-position:50% 18%;}
+.topo-links h1{font-size:2.1rem;}
+.topo-links h1 span{color:var(--magenta);}
+.arroba{margin:5px 0 0; font-family:var(--titulo); font-weight:500; font-size:.92rem; color:var(--roxo);}
+
+/* ---------- ícones sociais ---------- */
+.redes{display:flex; gap:10px; justify-content:center; margin:20px 0 0; padding:0; list-style:none;}
+.redes a{
+  width:48px; height:48px; border-radius:50%; background:var(--branco);
+  border:var(--borda-p); box-shadow:3px 3px 0 var(--tinta);
+  display:flex; align-items:center; justify-content:center; color:var(--tinta);
+  transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.redes a:hover{transform:translate(-2px,-2px); box-shadow:5px 5px 0 var(--tinta); background:var(--lima);}
+.redes svg{width:21px; height:21px;}
+
+/* ---------- blocos ---------- */
+.rotulo{
+  display:block; text-align:center; margin:34px 0 14px;
+  font-family:var(--corpo); font-weight:600; font-size:.7rem;
+  letter-spacing:.26em; text-transform:uppercase; color:var(--roxo);
+}
+.botao-grande{
+  display:flex; align-items:center; gap:14px; width:100%; text-align:left;
+  padding:16px 20px; margin-bottom:12px; border-radius:var(--raio);
+  background:var(--branco); border:var(--borda); box-shadow:var(--sombra);
+  text-decoration:none; color:var(--tinta);
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.botao-grande:hover{transform:translate(-3px,-3px); box-shadow:8px 8px 0 var(--tinta);}
+.botao-grande:active{transform:translate(2px,2px); box-shadow:1px 1px 0 var(--tinta);}
+.botao-grande.destaque{background:var(--magenta); color:#fff;}
+.botao-grande b{display:block; font-family:var(--titulo); font-weight:600; font-size:1rem;}
+/* nome da marca sempre em caixa alta, mesma fonte de antes */
+#listas .botao-grande b{text-transform:uppercase;}
+.botao-grande small{display:block; font-size:.8rem; opacity:.78; margin-top:1px;}
+.selo-botao{
+  flex:none; width:44px; height:44px; border-radius:12px;
+  background:var(--lima); border:var(--borda-p); color:var(--tinta);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--titulo); font-weight:700; font-size:.92rem; text-transform:uppercase;
+}
+/* o quadradinho do botão rosa fica verde, lembrando o WhatsApp */
+.botao-grande.destaque .selo-botao{background:var(--lima); color:var(--tinta);}
+
+/* quando a marca tem logo, o quadradinho vira a logo dela */
+.selo-botao.com-logo{background:var(--branco); padding:5px;}
+.selo-botao.com-logo img{width:100%; height:100%; object-fit:contain;}
+.seta-botao{margin-left:auto; flex:none; opacity:.55;}
+
+/* o código do cupom, com o botão de copiar */
+.cupom-codigo{
+  flex:none; margin-left:auto; display:flex; align-items:center; gap:7px;
+  padding:6px 12px; border-radius:999px;
+  background:var(--lima); border:var(--borda-p);
+  font-family:var(--titulo); font-weight:700; font-size:.78rem; color:var(--tinta);
+  white-space:nowrap;
+}
+.cupom-codigo svg{width:13px; height:13px;}
+
+/* ---------- formulário ---------- */
+.cartao-form{
+  padding:22px 20px; border-radius:var(--raio);
+  background:var(--branco); border:var(--borda); box-shadow:var(--sombra);
+}
+/* ---------- a gavetinha do formulário ---------- */
+.gaveta{margin-bottom:12px;}
+/* o summary continua com o display que o navegador dá, senão o
+   Chrome para de fechar a gaveta. O visual de botão fica no span
+   de dentro. */
+.gaveta-topo{list-style:none; cursor:var(--toque);}
+.gaveta-topo::-webkit-details-marker{display:none;}
+.gaveta-topo::marker{content:"";}
+.gaveta-topo .botao-grande{margin-bottom:0;}
+.seta-gaveta{
+  margin-left:auto; flex:none; opacity:.55;
+  transition:transform .22s ease;
+}
+.gaveta[open] .gaveta-topo .botao-grande{margin-bottom:12px;}
+.gaveta[open] .seta-gaveta{transform:rotate(180deg);}
+.gaveta .cartao-form{animation:abrirGaveta .22s ease;}
+@keyframes abrirGaveta{
+  from{opacity:0; transform:translateY(-6px);}
+  to{opacity:1; transform:none;}
+}
+.campo{margin-bottom:14px;}
+.campo label{display:block; font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--roxo); margin-bottom:6px;}
+/* o asterisco mostra o que é obrigatório, o resto é bem-vindo mas pode ficar em branco */
+.obrig{color:var(--magenta); margin-left:3px; font-weight:600;}
+.opcional{text-transform:none; letter-spacing:0; color:var(--tinta-suave); font-size:1.02em;}
+.campo input, .campo textarea{
+  width:100%; padding:12px 14px; border-radius:var(--raio-p);
+  border:var(--borda-p); background:#fffdfe;
+  font-family:inherit; font-size:.95rem; color:var(--tinta);
+}
+.campo input:focus, .campo textarea:focus{border-color:var(--magenta); outline:none;}
+.campo textarea{min-height:92px; resize:vertical;}
+.enviar{
+  width:100%; padding:14px; border-radius:999px; color:#fff; background:var(--magenta);
+  border:var(--borda); box-shadow:4px 4px 0 var(--tinta);
+  font-family:var(--titulo); font-weight:600; font-size:.88rem;
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.enviar:hover{transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--tinta);}
+.enviar:active{transform:translate(2px,2px); box-shadow:0 0 0 var(--tinta);}
+.aviso{
+  display:none; margin-top:14px; padding:12px 15px; border-radius:var(--raio-p);
+  background:var(--lima); border:var(--borda-p); color:var(--tinta); font-size:.9rem;
+}
+.aviso.aparecer{display:block;}
+
+/* ---------- rodapé ---------- */
+.rodape-links{margin-top:40px; text-align:center; font-size:.76rem; color:var(--tinta-suave);}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition:none !important; animation:none !important;}
+}
+</style>
+</head>
+<body>
+
+<main class="folha">
+
+  <div class="topo-links">
+    <!-- FOTO: para trocar, substitua o arquivo foto-sobre.jpg -->
+    <div class="retrato"><img src="/foto-sobre.jpg" alt="Emellyn Cracco" width="910" height="1608"></div>
+    <h1>Emellyn <span>Cracco</span></h1>
+    <p class="arroba">@emycracco</p>
+
+    <ul class="redes">
+      <li><a href="https://instagram.com/emycracco" target="_blank" rel="noopener" data-clique="Instagram" aria-label="Instagram">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a></li>
+      <!-- O TikTok saiu daqui a pedido. Para trazer de volta um dia,
+           basta descomentar este bloco.
+      <li><a href="https://www.tiktok.com/@emycracco" target="_blank" rel="noopener" data-clique="TikTok" aria-label="TikTok">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M14 3v12.2a3.8 3.8 0 1 1-3.3-3.77"/><path d="M14 3c.4 2.6 2.2 4.3 5 4.5"/></svg></a></li>
+      -->
+      <li><a href="https://wa.me/5541987260906" target="_blank" rel="noopener" data-clique="WhatsApp icone" aria-label="WhatsApp">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 0 1-11.9 7L4 20l1.1-4A8 8 0 1 1 20 12Z"/></svg></a></li>
+      <li><a href="mailto:emycracco@gmail.com" data-clique="E-mail icone" aria-label="E-mail">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5 12 13l8.5-6.5"/></svg></a></li>
+    </ul>
+  </div>
+
+  <!-- ---------- parcerias ---------- -->
+  <span class="rotulo">Parcerias</span>
+
+  <a class="botao-grande destaque" id="botaoPortfolio"
+     href="https://wa.me/5541987260906?text=Oi%20Emellyn!%20Vim%20pelo%20seu%20perfil%20e%20quero%20ver%20o%20seu%20portf%C3%B3lio."
+     target="_blank" rel="noopener" data-clique="Solicitar portfolio">
+    <span class="selo-botao" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M20 12a8 8 0 0 1-11.9 7L4 20l1.1-4A8 8 0 1 1 20 12Z"/></svg>
+    </span>
+    <span>
+      <b>Solicitar portfólio</b>
+      <small>Me chame no WhatsApp e eu te envio na hora</small>
+    </span>
+  </a>
+
+  <!-- O formulário fica guardado numa gavetinha. Quem quiser escrever
+       clica no botão e ele abre logo abaixo, sem poluir a página. -->
+  <details class="gaveta" id="gavetaForm">
+    <summary class="gaveta-topo">
+      <span class="botao-grande">
+        <span class="selo-botao" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" style="width:20px;height:20px"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5 12 13l8.5-6.5"/></svg>
+        </span>
+        <span>
+          <b>Prefere escrever?</b>
+          <small>Deixa os seus dados que eu respondo em até 24 horas úteis</small>
+        </span>
+        <svg class="seta-gaveta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </span>
+    </summary>
+
+  <div class="cartao-form">
+    <form id="formLinks" novalidate>
+      <div class="campo">
+        <label for="nome">Nome<span class="obrig" aria-hidden="true">*</span></label>
+        <input type="text" id="nome" name="nome" required autocomplete="name" placeholder="Seu nome">
+      </div>
+      <div class="campo">
+        <label for="email">E-mail<span class="obrig" aria-hidden="true">*</span></label>
+        <input type="email" id="email" name="email" required autocomplete="email" placeholder="voce@marca.com">
+      </div>
+      <div class="campo">
+        <label for="empresa">Marca / Empresa<span class="obrig" aria-hidden="true">*</span></label>
+        <input type="text" id="empresa" name="empresa" required autocomplete="organization" placeholder="Nome da marca">
+      </div>
+      <div class="campo">
+        <label for="orcamento">Orçamento estimado <span class="opcional">(opcional)</span></label>
+        <input type="text" id="orcamento" name="orcamento" placeholder="Ex: R$ 1.000 a R$ 5.000">
+      </div>
+      <div class="campo">
+        <label for="mensagem">Conta sobre o projeto<span class="obrig" aria-hidden="true">*</span></label>
+        <textarea id="mensagem" name="mensagem" required placeholder="Categoria, formato, prazo, objetivo da campanha..."></textarea>
+      </div>
+      <button type="submit" class="enviar">Enviar mensagem</button>
+      <p class="aviso" id="avisoForm" role="status" aria-live="polite"></p>
+    </form>
+  </div>
+  </details>
+
+  <!-- ---------- cupons, vitrines e produtos ---------- -->
+  <div id="listas"></div>
+
+  <p class="rodape-links">
+    Emellyn Cracco &nbsp;·&nbsp; Curitiba &nbsp;·&nbsp; <span id="ano"></span>
+  </p>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="/js/banco.js"></script>
+<script>
+const pegar = (s) => document.querySelector(s);
+const seguro = (v) => String(v == null ? "" : v)
+  .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+  .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+
+pegar("#ano").textContent = new Date().getFullYear();
+
+/* =========================================================
+   CONTADOR
+
+   Duas coisas são registradas, as duas na mesma tabela de
+   visitas que já existe:
+
+   1. a abertura desta página, com pagina "/"
+   2. o clique em cada botão, com pagina "clique: nome"
+
+   Assim você vê, no painel, quanta gente chegou e em que
+   cada uma clicou. Nada que identifique ninguém é guardado.
+   ========================================================= */
+function ehRoboOuTeste(){
+  const nome = navigator.userAgent || "";
+  if(/bot|crawl|spider|slurp|bingpreview|headless|lighthouse|pingdom|monitor|scanner|curl|wget|python-requests|facebookexternalhit|whatsapp|telegram/i.test(nome)) return true;
+  if(navigator.webdriver === true) return true;
+  const local = ["localhost","127.0.0.1","[::1]",""];
+  return location.protocol === "file:" || local.includes(location.hostname);
+}
+
+async function anotar(oQue){
+  if(!window.sb || ehRoboOuTeste()) return;
+  try{
+    const agora = new Date();
+    const data = agora.getFullYear() + "-" +
+      String(agora.getMonth()+1).padStart(2,"0") + "-" +
+      String(agora.getDate()).padStart(2,"0");
+    let origem = "direto";
+    if(document.referrer){
+      try{
+        const host = new URL(document.referrer).hostname.replace("www.","");
+        if(host && host !== location.hostname) origem = host;
+      }catch(e){}
+    }
+    await window.sb.from("visitas").insert({ data, pagina: oQue, origem });
+  }catch(e){}
+}
+
+/* a abertura da página conta uma vez a cada meia hora */
+(function contarAbertura(){
+  if(ehRoboOuTeste()) return;
+  try{
+    const chave = "ultimaVisita:links";
+    const ultima = Number(localStorage.getItem(chave) || 0);
+    if(Date.now() - ultima < 30*60*1000) return;
+    localStorage.setItem(chave, String(Date.now()));
+  }catch(e){}
+  anotar("/");
+})();
+
+/* abrir a gavetinha do formulário também conta, só na abertura */
+pegar("#gavetaForm").addEventListener("toggle", (e) => {
+  if(e.target.open) anotar("clique: abriu o formulario");
+});
+
+/* todo clique em botão marcado é contado, sem atrapalhar a ida */
+document.addEventListener("click", (e) => {
+  const alvo = e.target.closest("[data-clique]");
+  if(alvo) anotar("clique: " + alvo.dataset.clique);
+});
+
+/* =========================================================
+   OS BOTÕES QUE VÊM DO PAINEL
+   Cupons, vitrines e produtos saem da aba Cupons do admin.
+   ========================================================= */
+const SETA = '<svg class="seta-botao" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M7 17 17 7M9 7h8v8"/></svg>';
+const COPIA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 6H6a2 2 0 0 0-2 2v9"/></svg>';
+
+const GRUPOS = [
+  { tipo:"cupom",   rotulo:"Meus cupons" },
+  { tipo:"vitrine", rotulo:"Minhas vitrines" },
+  { tipo:"produto", rotulo:"O que eu uso" }
+];
+
+function iniciais(nome){
+  const partes = String(nome||"").trim().split(/\s+/).slice(0,2);
+  return partes.map(p => p[0] || "").join("").toUpperCase() || "?";
+}
+
+/* Transforma "Hábito Vida" em "habito-vida", que é o nome do
+   arquivo da logo dentro da pasta /logos do site. */
+function apelidoDaMarca(nome){
+  return String(nome || "")
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/* Os nomes de arquivo que vale a pena tentar para uma marca.
+   "LOREN FIT WEAR" vira loren-fit-wear, depois loren-fit, depois
+   loren. Assim a logo continua aparecendo mesmo que você mude o
+   nome do cupom no painel, sem precisar renomear arquivo. */
+function candidatosDeLogo(nome){
+  const partes = apelidoDaMarca(nome).split("-").filter(Boolean);
+  const lista = [];
+  for(let n = partes.length; n >= 1; n--){
+    lista.push("/logos/" + partes.slice(0, n).join("-") + ".png");
+  }
+  return lista;
+}
+
+/* Quando um nome não existe, tenta o próximo da fila. Acabando a
+   fila, ficam as iniciais, sem quadrado quebrado na tela. */
+function proximaLogo(img){
+  const restam = String(img.getAttribute("data-restam") || "").split("|").filter(Boolean);
+  if(restam.length){
+    img.setAttribute("data-restam", restam.slice(1).join("|"));
+    img.src = restam[0];
+    return;
+  }
+  const pai = img.parentNode;
+  pai.classList.remove("com-logo");
+  pai.textContent = img.getAttribute("data-letras") || "";
+}
+
+/* O quadradinho da esquerda. */
+function seloDaMarca(c){
+  const letras = seguro(iniciais(c.marca));
+  const lista = c.logo ? [String(c.logo)] : candidatosDeLogo(c.marca);
+  if(!lista.length) return `<span class="selo-botao" aria-hidden="true">${letras}</span>`;
+  return `<span class="selo-botao com-logo" aria-hidden="true">
+    <img src="${seguro(lista[0])}" alt="" loading="lazy"
+         data-restam="${seguro(lista.slice(1).join("|"))}"
+         data-letras="${letras}"
+         onerror="proximaLogo(this)">
+  </span>`;
+}
+
+function cartaoDeBotao(c){
+  const temCupom = c.tipo === "cupom" && c.cupom;
+  const linha2 = [c.desconto, c.validade ? "até " + new Date(c.validade + "T00:00:00").toLocaleDateString("pt-BR") : ""]
+    .filter(Boolean).join(" · ");
+
+  const direita = temCupom
+    ? `<span class="cupom-codigo" data-copiar="${seguro(c.cupom)}">${COPIA}${seguro(c.cupom)}</span>`
+    : SETA;
+
+  const miolo = `
+    ${seloDaMarca(c)}
+    <span>
+      <b>${seguro(c.marca)}</b>
+      ${linha2 ? `<small>${seguro(linha2)}</small>` : ""}
+    </span>
+    ${direita}`;
+
+  return c.link
+    ? `<a class="botao-grande" href="${seguro(c.link)}" target="_blank" rel="noopener" data-clique="${seguro(c.marca)}">${miolo}</a>`
+    : `<div class="botao-grande" data-clique="${seguro(c.marca)}">${miolo}</div>`;
+}
+
+(async function montarListas(){
+  if(!window.sb) return;
+  let linhas = [];
+  try{
+    const { data, error } = await window.sb
+      .from("cupons").select("*").eq("ativo", true);
+    if(error || !data) return;
+    linhas = data;
+  }catch(e){ return; }
+  if(!linhas.length) return;
+
+  /* ordem: o que você numerou primeiro, depois os favoritos, depois por marca */
+  linhas.sort((a,b) =>
+    (Number(a.ordem||0) - Number(b.ordem||0)) ||
+    ((b.favorito?1:0) - (a.favorito?1:0)) ||
+    String(a.marca||"").localeCompare(String(b.marca||""))
+  );
+
+  const area = pegar("#listas");
+  let html = "";
+  GRUPOS.forEach(g => {
+    const doGrupo = linhas.filter(c => String(c.tipo || "cupom").toLowerCase() === g.tipo);
+    if(!doGrupo.length) return;
+    html += `<span class="rotulo">${g.rotulo}</span>` + doGrupo.map(cartaoDeBotao).join("");
+  });
+  area.innerHTML = html;
+
+  /* copiar o código do cupom sem sair da página */
+  area.addEventListener("click", async (e) => {
+    const chip = e.target.closest("[data-copiar]");
+    if(!chip) return;
+    e.preventDefault();
+    e.stopPropagation();
+    try{
+      await navigator.clipboard.writeText(chip.dataset.copiar);
+      const antes = chip.innerHTML;
+      chip.textContent = "copiado";
+      setTimeout(() => { chip.innerHTML = antes; }, 1600);
+      anotar("clique: cupom " + chip.dataset.copiar);
+    }catch(erro){}
+  });
+})();
+
+/* =========================================================
+   O FORMULÁRIO
+   Cai na sua aba Marcas como Lead, igual ao do portfólio.
+   ========================================================= */
+pegar("#formLinks").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const aviso = pegar("#avisoForm");
+
+  if(!form.checkValidity()){
+    aviso.textContent = "Preencha nome, e-mail, marca e o projeto para eu conseguir te responder.";
+    aviso.classList.add("aparecer");
+    form.reportValidity();
+    return;
+  }
+
+  const nome = form.nome.value.trim();
+  const email = form.email.value.trim();
+  const empresa = form.empresa.value.trim();
+  const orcamento = form.orcamento.value.trim();
+  const mensagem = form.mensagem.value.trim();
+
+  /* igual ao formulário do portfólio: na coluna "nome" vai a marca,
+     e quem escreveu e o orçamento ficam escritos na observação */
+  const anotacao = [
+    "Quem escreveu: " + nome,
+    orcamento ? "Orçamento estimado: " + orcamento : "Orçamento estimado: não informado",
+    "",
+    mensagem
+  ].join("\n");
+
+  let guardou = false;
+  if(window.sb){
+    const base = { nome: empresa || nome, email, situacao:"Lead", obs:anotacao };
+    try{
+      const { error } = await window.sb.from("marcas").insert({ ...base, origem:"links" });
+      if(error && /origem/i.test(String(error.message || ""))){
+        const segunda = await window.sb.from("marcas").insert(base);
+        guardou = !segunda.error;
+      } else {
+        guardou = !error;
+      }
+    }catch(erro){ guardou = false; }
+  }
+
+  aviso.textContent = guardou
+    ? "Recebido, " + nome + ". Respondo no seu e-mail em até 24 horas úteis."
+    : "Recebi por aqui, " + nome + ", mas para garantir me chame também no WhatsApp.";
+  aviso.classList.add("aparecer");
+  form.reset();
+  anotar("clique: formulario enviado");
+});
+</script>
+</body>
+</html>
