@@ -119,9 +119,11 @@ h1,h2{font-family:var(--titulo); font-weight:600; margin:0; line-height:1.15;}
 /* o quadradinho do botão rosa fica verde, lembrando o WhatsApp */
 .botao-grande.destaque .selo-botao{background:var(--lima); color:var(--tinta);}
 
-/* quando a marca tem logo, o quadradinho vira a logo dela */
-.selo-botao.com-logo{background:var(--branco); padding:5px;}
-.selo-botao.com-logo img{width:100%; height:100%; object-fit:contain;}
+/* Quando a marca tem logo, a logo PREENCHE o quadradinho, sem
+   sobrar moldura em volta. O overflow corta os cantos no mesmo
+   arredondado da borda. */
+.selo-botao.com-logo{background:var(--branco); padding:0; overflow:hidden;}
+.selo-botao.com-logo img{width:100%; height:100%; object-fit:cover; display:block;}
 .seta-botao{margin-left:auto; flex:none; opacity:.55;}
 
 /* o código do cupom, com o botão de copiar */
@@ -163,8 +165,10 @@ h1,h2{font-family:var(--titulo); font-weight:600; margin:0; line-height:1.15;}
    O título delas não vai em caixa alta, só os nomes das marcas. */
 #listas .gaveta-topo .botao-grande b{text-transform:none;}
 .gaveta-grupo{margin-bottom:12px;}
-.gaveta-grupo .selo-botao{background:var(--roxo-claro, var(--lima));}
-.gaveta-grupo .selo-botao svg{width:21px; height:21px;}
+/* só o quadradinho do TÍTULO da gavetinha, não os das marcas de
+   dentro dela, senão ele pinta por cima da logo */
+.gaveta-grupo > .gaveta-topo .selo-botao{background:var(--lima);}
+.gaveta-grupo > .gaveta-topo .selo-botao svg{width:21px; height:21px;}
 .campo{margin-bottom:14px;}
 .campo label{display:block; font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--roxo); margin-bottom:6px;}
 /* o asterisco mostra o que é obrigatório, o resto é bem-vindo mas pode ficar em branco */
