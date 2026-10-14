@@ -3858,7 +3858,9 @@ function mostrarRascunhoAtual(){
 
 document.addEventListener("DOMContentLoaded", () => {
   pegar("#fecharJanela").addEventListener("click", fecharJanela);
-  pegar("#fundoJanela").addEventListener("click", (e) => { if(e.target.id === "fundoJanela") fecharJanela(); });
+  /* A janela NÃO fecha mais clicando no fundo escuro. Um clique
+     sem querer fora dela apagava tudo que estava sendo digitado.
+     Para fechar: o X, o botão Cancelar, ou a tecla Esc. */
   document.addEventListener("keydown", (e) => { if(e.key === "Escape") fecharJanela(); });
 
   pegar("#abrirMenu").addEventListener("click", () => {
