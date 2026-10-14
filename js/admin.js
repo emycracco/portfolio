@@ -407,6 +407,8 @@ function desenhar(){
       : "";
   }
 
+  desenharAvisoFollowUp();
+
   if(estado.aba === "portfolio")  desenharPortfolio();
   if(estado.aba === "marcas")     desenharMarcas();
   if(estado.aba === "cupons")     desenharCupons();
@@ -417,6 +419,58 @@ function desenhar(){
   if(estado.aba === "campanhas")  desenharCampanhas();
   if(estado.aba === "checklist")  desenharChecklist();
   if(estado.aba === "cabelo")     desenharCabelo();
+}
+
+/* ============================================================
+   AVISO DE FOLLOW-UP
+
+   Quem você mandou e-mail faz uma semana e continua como "Lead"
+   na aba Marcas provavelmente não respondeu, porque assim que
+   alguém responde você muda a situação para "Conversando".
+
+   O painel não lê o seu e-mail, então ele não tem como saber da
+   resposta sozinho. É esse clique na situação que ensina ele.
+   ============================================================ */
+const DIAS_PARA_CUTUCAR = 7;
+
+function marcasParaCutucar(){
+  return (estado.dados.marcas || [])
+    .filter(m => {
+      if(!m.ultimo_disparo) return false;                       /* nunca recebeu e-mail */
+      if(String(m.situacao || "Lead") !== "Lead") return false;  /* já respondeu ou foi parada */
+      return diasEntre(hojeISO(), String(m.ultimo_disparo).slice(0,10)) >= DIAS_PARA_CUTUCAR;
+    })
+    .sort((a,b) => String(a.ultimo_disparo).localeCompare(String(b.ultimo_disparo)));
+}
+
+function desenharAvisoFollowUp(){
+  const alvo = pegar("#avisosFalta");
+  if(!alvo) return;
+
+  const lista = marcasParaCutucar();
+  if(!lista.length) return;
+
+  const nomes = lista.slice(0, 4).map(m => m.nome).filter(Boolean).join(", ");
+  const resto = lista.length > 4 ? " e mais " + (lista.length - 4) : "";
+  const quantas = lista.length === 1
+    ? "1 marca está sem retorno"
+    : lista.length + " marcas estão sem retorno";
+
+  alvo.insertAdjacentHTML("beforeend", `
+    <div class="aviso-cutucar">
+      <div>
+        <b>${quantas} há ${DIAS_PARA_CUTUCAR} dias ou mais.</b>
+        <span>${seguro(nomes)}${resto}. Vale mandar um follow-up.</span>
+      </div>
+      <button class="btn-mini" id="verCutucar">ver na aba Marcas</button>
+    </div>`);
+
+  const botao = pegar("#verCutucar");
+  if(botao) botao.addEventListener("click", () => {
+    estado.aba = "marcas";
+    estado.filtroSituacao = "Lead";
+    desenhar();
+  });
 }
 
 /* ============================================================
