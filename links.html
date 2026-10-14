@@ -154,11 +154,17 @@ h1,h2{font-family:var(--titulo); font-weight:600; margin:0; line-height:1.15;}
 }
 .gaveta[open] .gaveta-topo .botao-grande{margin-bottom:12px;}
 .gaveta[open] .seta-gaveta{transform:rotate(180deg);}
-.gaveta .cartao-form{animation:abrirGaveta .22s ease;}
+.gaveta .cartao-form, .gaveta .miolo-gaveta{animation:abrirGaveta .22s ease;}
 @keyframes abrirGaveta{
   from{opacity:0; transform:translateY(-6px);}
   to{opacity:1; transform:none;}
 }
+/* as gavetinhas dos grupos de botões: Meus cupons, Onde eu treino...
+   O título delas não vai em caixa alta, só os nomes das marcas. */
+#listas .gaveta-topo .botao-grande b{text-transform:none;}
+.gaveta-grupo{margin-bottom:12px;}
+.gaveta-grupo .selo-botao{background:var(--roxo-claro, var(--lima));}
+.gaveta-grupo .selo-botao svg{width:21px; height:21px;}
 .campo{margin-bottom:14px;}
 .campo label{display:block; font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--roxo); margin-bottom:6px;}
 /* o asterisco mostra o que é obrigatório, o resto é bem-vindo mas pode ficar em branco */
@@ -364,11 +370,38 @@ document.addEventListener("click", (e) => {
 const SETA = '<svg class="seta-botao" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M7 17 17 7M9 7h8v8"/></svg>';
 const COPIA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 6H6a2 2 0 0 0-2 2v9"/></svg>';
 
+/* Os desenhinhos de cada gavetinha */
+const DESENHO = {
+  tag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11V4a1 1 0 0 1 1-1h7l9 9-8 8-9-9Z"/><circle cx="7.5" cy="7.5" r="1.3"/></svg>',
+  sacola:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12H6L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>',
+  estrela:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.7 5.7 6.3.9-4.5 4.4 1 6.2-5.5-3-5.5 3 1-6.2L3 9.6l6.3-.9L12 3Z"/></svg>',
+  halter:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 8v8M4 10v4M17.5 8v8M20 10v4M6.5 12h11"/></svg>'
+};
+
+/* Cada grupo vira uma gavetinha. "un" é como contar os botões de
+   dentro, para a pessoa saber o que vai achar antes de abrir. */
 const GRUPOS = [
-  { tipo:"cupom",   rotulo:"Meus cupons" },
-  { tipo:"vitrine", rotulo:"Minhas vitrines" },
-  { tipo:"produto", rotulo:"O que eu uso" }
+  { tipo:"cupom",   rotulo:"Meus cupons",    desenho:"tag",     un1:"cupom",      un:"cupons" },
+  { tipo:"vitrine", rotulo:"Meus achadinhos",desenho:"sacola",  un1:"lista",      un:"listas" },
+  { tipo:"produto", rotulo:"O que eu uso",   desenho:"estrela", un1:"produto",    un:"produtos" },
+  { tipo:"treino",  rotulo:"Onde eu treino", desenho:"halter",  un1:"plataforma", un:"plataformas" }
 ];
+
+const SETA_GAVETA = '<svg class="seta-gaveta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+
+function gavetaDoGrupo(g, botoes, quantos){
+  const conta = quantos + " " + (quantos === 1 ? g.un1 : g.un);
+  return `<details class="gaveta gaveta-grupo">
+    <summary class="gaveta-topo">
+      <span class="botao-grande">
+        <span class="selo-botao" aria-hidden="true">${DESENHO[g.desenho] || ""}</span>
+        <span><b>${g.rotulo}</b><small>${conta}</small></span>
+        ${SETA_GAVETA}
+      </span>
+    </summary>
+    <div class="miolo-gaveta">${botoes}</div>
+  </details>`;
+}
 
 function iniciais(nome){
   const partes = String(nome||"").trim().split(/\s+/).slice(0,2);
@@ -471,7 +504,7 @@ function cartaoDeBotao(c){
   GRUPOS.forEach(g => {
     const doGrupo = linhas.filter(c => String(c.tipo || "cupom").toLowerCase() === g.tipo);
     if(!doGrupo.length) return;
-    html += `<span class="rotulo">${g.rotulo}</span>` + doGrupo.map(cartaoDeBotao).join("");
+    html += gavetaDoGrupo(g, doGrupo.map(cartaoDeBotao).join(""), doGrupo.length);
   });
   area.innerHTML = html;
 
