@@ -2159,11 +2159,20 @@ function situacaoValidade(c){
 /* como cada tipo aparece escrito no cartão */
 const NOME_DO_TIPO = { cupom:"cupom", vitrine:"vitrine", produto:"produto", oculto:"fora da página" };
 
-function desenharCupons(){
-  const todos = estado.dados.cupons || [];
-  const busca = estado.buscaCupons.toLowerCase();
+/* A MESMA ordem que a página de links usa, para o que você vê aqui
+   ser exatamente o que a sua visitante vê lá. Primeiro o número que
+   você escolheu com as setinhas, depois os favoritos, depois marca. */
+function cuponsOrdenados(){
+  return (estado.dados.cupons || []).slice().sort((a,b) =>
+    (numero(a.ordem) - numero(b.ordem)) ||
+    ((b.favorito ? 1 : 0) - (a.favorito ? 1 : 0)) ||
+    String(a.marca || "").localeCompare(String(b.marca || ""))
+  );
+}
 
-  let lista = todos.filter(c => {
+function cuponsFiltrados(){
+  const busca = estado.buscaCupons.toLowerCase();
+  return cuponsOrdenados().filter(c => {
     const combina = !busca ||
       String(c.marca||"").toLowerCase().includes(busca) ||
       String(c.cupom||"").toLowerCase().includes(busca) ||
@@ -2176,12 +2185,47 @@ function desenharCupons(){
       (estado.filtroCupons === "Favoritos" && c.favorito);
     return combina && filtroOk;
   });
+}
 
-  /* os favoritos vêm primeiro, depois os mais copiados */
-  lista = lista.slice().sort((a,b) => {
-    if(!!b.favorito - !!a.favorito) return !!b.favorito - !!a.favorito;
-    return numero(b.copias) - numero(a.copias);
-  });
+/* Grava a ordem escolhida. Numera de 1 em diante, assim o zero
+   continua querendo dizer "cupom novo, ainda sem lugar". */
+async function salvarOrdemCupons(lista){
+  let deuRuim = 0;
+  for(let k = 0; k < lista.length; k++){
+    if(numero(lista[k].ordem) !== k + 1){
+      if(!(await gravar("cupons", { ordem: k + 1 }, lista[k].id))) deuRuim++;
+    }
+  }
+  if(deuRuim) recado("Não consegui salvar a ordem. Tente de novo.", true);
+  await carregarTudo();
+  desenhar();
+}
+
+/* Sobe ou desce um cupom um lugar. direcao = -1 sobe, +1 desce.
+   Troca de lugar com o vizinho DA LISTA QUE VOCÊ ESTÁ VENDO, então
+   funciona igual com filtro ligado ou desligado. */
+async function moverCupom(id, direcao){
+  const todos = cuponsOrdenados();
+  const vista = cuponsFiltrados();
+
+  const iv = vista.findIndex(c => String(c.id) === String(id));
+  const jv = iv + direcao;
+  if(iv < 0 || jv < 0 || jv >= vista.length) return;
+
+  const a = todos.findIndex(c => String(c.id) === String(vista[iv].id));
+  const b = todos.findIndex(c => String(c.id) === String(vista[jv].id));
+  if(a < 0 || b < 0) return;
+
+  const guarda = todos[a];
+  todos[a] = todos[b];
+  todos[b] = guarda;
+
+  await salvarOrdemCupons(todos);
+}
+
+function desenharCupons(){
+  const todos = estado.dados.cupons || [];
+  const lista = cuponsFiltrados();
 
   const ativos = todos.filter(c => c.ativo !== false && !situacaoValidade(c).vencido).length;
   const vencendo = todos.filter(c => {
@@ -2211,11 +2255,16 @@ function desenharCupons(){
       <div class="cartao-corpo">
         ${lista.length ? `
         <div class="grid-cupons">
-          ${lista.map(c => {
+          ${lista.map((c, i) => {
             const v = situacaoValidade(c);
             const morto = v.vencido || c.ativo === false;
             return `
             <article class="cupom ${c.favorito ? "destacado" : ""} ${morto ? "vencido" : ""}">
+              <div class="ordem-cupom">
+                <b class="posicao">${i + 1}</b>
+                <button class="icone-btn subir" data-ordem="${seguro(c.id)}" title="Subir um lugar" ${i === 0 ? "disabled" : ""}>${ICONE.subir}</button>
+                <button class="icone-btn descer" data-ordem="${seguro(c.id)}" title="Descer um lugar" ${i === lista.length - 1 ? "disabled" : ""}>${ICONE.descer}</button>
+              </div>
               <header class="cupom-topo">
                 <div>
                   <b>${seguro(c.marca)}</b>
@@ -2253,6 +2302,8 @@ function desenharCupons(){
     const novo = pegar("#buscaCupons");
     novo.focus(); novo.setSelectionRange(novo.value.length, novo.value.length);
   });
+  pegarTodos(".ordem-cupom .subir").forEach(b => b.addEventListener("click", () => moverCupom(b.dataset.ordem, -1)));
+  pegarTodos(".ordem-cupom .descer").forEach(b => b.addEventListener("click", () => moverCupom(b.dataset.ordem, +1)));
   pegarTodos("[data-fcupom]").forEach(b => b.addEventListener("click", () => { estado.filtroCupons = b.dataset.fcupom; desenharCupons(); }));
   pegar("#novoCupom").addEventListener("click", () => formularioCupom(null));
 
@@ -2333,6 +2384,12 @@ function formularioCupom(cupom){
     };
     if(!linha.marca){ recado("O nome da marca é obrigatório.", true); return; }
     if(!linha.cupom && !linha.link){ recado("Preencha ao menos o código do cupom ou o link.", true); return; }
+    /* cupom novo nasce no fim da lista, para não pular na frente
+       da ordem que você já arrumou com as setinhas */
+    if(!c.id){
+      const maior = (estado.dados.cupons || []).reduce((m,x) => Math.max(m, numero(x.ordem)), 0);
+      linha.ordem = maior + 1;
+    }
     if(await gravar("cupons", linha, c.id)){
       fecharJanela(); recado("Cupom salvo."); await carregarTudo(); desenhar();
     }
