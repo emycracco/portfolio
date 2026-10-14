@@ -2157,7 +2157,7 @@ function situacaoValidade(c){
 }
 
 /* como cada tipo aparece escrito no cartão */
-const NOME_DO_TIPO = { cupom:"cupom", vitrine:"vitrine", produto:"produto", oculto:"fora da página" };
+const NOME_DO_TIPO = { cupom:"cupom", vitrine:"achadinhos", produto:"produto", treino:"treino online", oculto:"fora da página" };
 
 /* A MESMA ordem que a página de links usa, para o que você vê aqui
    ser exatamente o que a sua visitante vê lá. Primeiro o número que
@@ -2337,8 +2337,9 @@ function formularioCupom(cupom){
         <div class="campo"><label for="p-tipo">Onde aparece na página de links</label>
           <select id="p-tipo">
             <option value="cupom" ${tipoAtual === "cupom" ? "selected" : ""}>Meus cupons</option>
-            <option value="vitrine" ${tipoAtual === "vitrine" ? "selected" : ""}>Minhas vitrines (Shopee, Mercado Livre)</option>
+            <option value="vitrine" ${tipoAtual === "vitrine" ? "selected" : ""}>Meus achadinhos (Shopee, Mercado Livre)</option>
             <option value="produto" ${tipoAtual === "produto" ? "selected" : ""}>O que eu uso (paralelas, argolas)</option>
+            <option value="treino" ${tipoAtual === "treino" ? "selected" : ""}>Onde eu treino (Queima Diária, Flex Queen)</option>
             <option value="oculto" ${tipoAtual === "oculto" ? "selected" : ""}>Não mostrar na página</option>
           </select>
         </div>
