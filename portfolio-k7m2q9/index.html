@@ -9,7 +9,7 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="description" content="Criadora de conteúdo UGC em Curitiba. Vídeos de treino em casa, pole dance e produto para marcas de moda fitness, suplementos e equipamento.">
+<meta name="description" content="Criadora de conteúdo UGC em Curitiba. Vídeos e fotos de produto para marcas de fitness, beleza e lifestyle, do roteiro à edição.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -204,6 +204,36 @@ body.tem-faixa .capa{padding-top:calc(var(--altura-faixa, 52px) + 162px);}
 .adesivo-solto{position:absolute; z-index:3;}
 .adesivo-solto-1{top:-14px; left:-6px;}
 .adesivo-solto-2{bottom:34px; right:-16px;}
+.adesivo-solto-3{top:44%; left:-30px;}
+
+/* FLUTUAÇÃO DA CAPA
+   Movimento bem devagar e curto, só para o olho perceber que a
+   página está viva. Nada de quicar. A moldura e os adesivos
+   sobem e descem fora de compasso, para não parecer um bloco só.
+   Quem pediu menos movimento no sistema não recebe nada disso,
+   a regra do prefers-reduced-motion lá embaixo desliga tudo. */
+@keyframes flutua{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(-7px);}
+}
+@keyframes flutua-girado-1{
+  0%,100%{transform:rotate(-4deg) translateY(0);}
+  50%{transform:rotate(-4deg) translateY(-9px);}
+}
+@keyframes flutua-girado-2{
+  0%,100%{transform:rotate(3deg) translateY(0);}
+  50%{transform:rotate(3deg) translateY(-9px);}
+}
+.capa .moldura{animation:flutua 7s ease-in-out infinite;}
+.capa .adesivo-solto-1{animation:flutua-girado-1 8s ease-in-out infinite;}
+.capa .adesivo-solto-2{animation:flutua-girado-2 9s ease-in-out infinite; animation-delay:-3s;}
+.capa .adesivo-solto-3{animation:flutua-girado-2 8.5s ease-in-out infinite; animation-delay:-5s;}
+
+/* a frase curta do diferencial, logo abaixo da frase da capa */
+.frase-dif{
+  margin:0 0 26px; font-weight:500; color:var(--tinta);
+  border-left:4px solid var(--lima); padding-left:14px;
+}
 
 /* FAIXA DE MARCAS: os círculos com os logos deslizando,
    os mesmos do site atual, só que com a borda grossa e a
@@ -655,7 +685,8 @@ body.tem-faixa .capa{padding-top:calc(var(--altura-faixa, 52px) + 162px);}
       <div class="revelar">
         <span class="olho">Criadora de conteúdo UGC em Curitiba</span>
         <h1>Conteúdo que faz a sua marca <em>vender</em></h1>
-        <p class="frase">Treino em casa, pole dance e calistenia, com roupa colorida e luz de verdade. Eu gravo vídeos que parecem recomendação de amiga, para marcas de moda fitness, suplementos e equipamento.</p>
+        <p class="frase">Eu gravo vídeos que parecem indicação de amiga, não propaganda. Você recebe o arquivo pronto para publicar ou rodar como anúncio.</p>
+        <p class="frase-dif">Eu não enceno rotina fitness, eu vivo. E entrego beleza e treino na mesma gravação.</p>
         <div class="botoes">
           <a class="btn btn-magenta" href="#contato">Falar comigo</a>
           <a class="btn btn-lima" href="#trabalhos">Ver os trabalhos</a>
@@ -669,8 +700,9 @@ body.tem-faixa .capa{padding-top:calc(var(--altura-faixa, 52px) + 162px);}
         <div class="moldura">
           <img src="/foto-capa.jpg" alt="Emellyn Cracco sorrindo ao ar livre, com regata rosa e calça jeans" width="910" height="1153">
         </div>
-        <span class="adesivo adesivo-lima adesivo-solto adesivo-solto-1 girado-1">pole dance</span>
-        <span class="adesivo adesivo-turquesa adesivo-solto adesivo-solto-2 girado-2">treino em casa</span>
+        <span class="adesivo adesivo-lima adesivo-solto adesivo-solto-1 girado-1">roteiro próprio</span>
+        <span class="adesivo adesivo-turquesa adesivo-solto adesivo-solto-2 girado-2">edição inclusa</span>
+        <span class="adesivo adesivo-lima adesivo-solto adesivo-solto-3 girado-2">entrega em 72h</span>
       </div>
     </div>
   </div>
@@ -700,8 +732,9 @@ body.tem-faixa .capa{padding-top:calc(var(--altura-faixa, 52px) + 162px);}
       <div class="sobre-texto revelar">
         <span class="olho">Sobre mim</span>
         <h2 id="tituloSobre" class="titulo-secao">Conteúdo feito com <em>cuidado</em> e estratégia</h2>
-        <p>Oi, eu sou a Emellyn. Moro em Curitiba, treino em casa e faço pole dance, e é daí que vem o meu conteúdo: movimento de verdade, roupa colorida, luz natural e aquele detalhe que faz alguém parar de rolar o feed. Gravo vídeos UGC que não parecem propaganda, parecem conversa.</p>
-        <p>Trabalho em parceria com a sua marca do briefing ao arquivo final, cuidando de roteiro, gravação, edição e legenda. Você recebe conteúdo pronto para publicar, no formato que o seu time precisa.</p>
+        <p>Pode me chamar de Emy. Gravo principalmente para marcas de fitness, beleza e lifestyle. Atendo o Brasil inteiro: a sua marca manda o produto pelo correio e recebe o vídeo pronto de volta.</p>
+        <p>Cuido de tudo, do roteiro à edição. Você aprova o roteiro antes de eu gravar, pede um ajuste se precisar e recebe o arquivo pronto para publicar ou subir como anúncio. Gravo em casa ou fora dela, com preferência por luz natural, e ajusto o cenário conforme a necessidade da sua marca.</p>
+        <p>Fora do trabalho eu gosto de treinar e sou atleta de pole dance. Esse lifestyle aparece de forma natural no meu conteúdo e nas redes sociais.</p>
 
         <ul class="promessas">
           <li><span class="visto" aria-hidden="true">&#10003;</span><span><b>Roteiro aprovado antes de gravar</b>, para você não ter surpresa.</span></li>
