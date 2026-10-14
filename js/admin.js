@@ -602,9 +602,14 @@ function formularioCabelo(tipoSugerido, data, escolher){
   pegar("#cancelar").addEventListener("click", fecharJanela);
   pegar("#formCabelo").addEventListener("submit", async (e) => {
     e.preventDefault();
-    const d = pegar("#c-data").value || hojeISO();
+    /* Lê TUDO antes de fechar. Fechar apaga o conteúdo da janela,
+       e depois disso os campos não existem mais. */
+    const d       = pegar("#c-data").value || hojeISO();
+    const tipo    = pegar("#c-tipo").value;
+    const produto = pegar("#c-produto").value.trim();
+    const obs     = pegar("#c-obs").value.trim();
     fecharJanela();
-    await registrarCabelo(pegar("#c-tipo").value, d, pegar("#c-produto").value.trim(), pegar("#c-obs").value.trim());
+    await registrarCabelo(tipo, d, produto, obs);
   });
 }
 
