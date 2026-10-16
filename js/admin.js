@@ -64,6 +64,7 @@ const ICONE = {
   campanhas: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3 12h18"/></svg>',
   checklist: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>',
   cabelo:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-3.9 0-6 3.4-6 7.5 0 3.6.8 6.3 1.4 7.8M12 3c3.9 0 6 3.4 6 7.5 0 3.6-.8 6.3-1.4 7.8"/><path d="M12 3c-1.6 2.4-2 5-2 7.5 0 3.6.4 6.3 1 7.8M12 3c1.6 2.4 2 5 2 7.5 0 3.6-.4 6.3-1 7.8"/><path d="M8 21h8"/></svg>',
+  links:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a4 4 0 0 0 5.7.3l3-3A4 4 0 0 0 13 4.7l-1.7 1.7"/><path d="M14 11a4 4 0 0 0-5.7-.3l-3 3A4 4 0 0 0 11 19.3l1.7-1.7"/></svg>',
   mais:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
   subir:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5M8 9l4-4 4 4M4 19h16"/></svg>',
   baixar:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10M8 11l4 4 4-4M4 19h16"/></svg>',
@@ -100,7 +101,8 @@ const ABAS = [
   { id:"calendario", grupo:"minha rotina", nome:"Calendário", sub:"O mês inteiro de gravar, editar e postar." },
   { id:"campanhas",  grupo:"minha rotina", nome:"Campanhas",  sub:"Trabalhos, valores e prazos." },
   { id:"checklist",  grupo:"minha rotina", nome:"Checklist",  sub:"O que ainda falta no seu portfólio." },
-  { id:"cabelo",     grupo:"minha rotina", nome:"Cronograma capilar", sub:"Em que passo do tratamento você está." }
+  { id:"cabelo",     grupo:"minha rotina", nome:"Cronograma capilar", sub:"Em que passo do tratamento você está." },
+  { id:"links",      grupo:"minha rotina", nome:"Links úteis", sub:"Os endereços que você sempre precisa, num lugar só." }
 ];
 
 /* Os quatro passos do cronograma, na ordem em que se repetem.
@@ -137,7 +139,8 @@ const estado = {
   email: "",
   faltando: [],
   sessaoExpirou: false,
-  dados: { videos:[], marcas:[], calendario:[], campanhas:[], marcados:{}, visitas:[], cupons:[], conteudos:[], email_envios:[], email_optout:[], cabelo:[] },
+  dados: { videos:[], marcas:[], calendario:[], campanhas:[], marcados:{}, visitas:[], cupons:[], conteudos:[], email_envios:[], email_optout:[], cabelo:[], links:[] },
+  buscaLinks: "", filtroGrupoLink: "Todos",
 
   /* --- a aba Prospecção --- */
   /* --- a aba Mídia kit --- */
@@ -291,7 +294,7 @@ async function apagarLinha(tabela, id){
 async function carregarTudo(){
   estado.faltando = [];
   estado.sessaoExpirou = false;
-  const [videos, marcas, calendario, campanhas, marcados, visitas, cupons, conteudos, envios, optout, cabelo] = await Promise.all([
+  const [videos, marcas, calendario, campanhas, marcados, visitas, cupons, conteudos, envios, optout, cabelo, links] = await Promise.all([
     lerTabela("videos", "ordem", true),
     lerTabela("marcas", "criado_em", false),
     lerTabela("calendario", "data", true),
@@ -302,8 +305,10 @@ async function carregarTudo(){
     lerTabela("conteudos", "data", true),
     lerTabela("email_envios", "criado_em", false),
     lerTabela("email_optout", "criado_em", false),
-    lerTabela("cabelo", "data", false)
+    lerTabela("cabelo", "data", false),
+    lerTabela("links", "ordem", true)
   ]);
+  estado.dados.links = links;
   estado.dados.cabelo = cabelo;
   estado.dados.email_envios = envios;
   estado.dados.email_optout = optout;
@@ -419,6 +424,187 @@ function desenhar(){
   if(estado.aba === "campanhas")  desenharCampanhas();
   if(estado.aba === "checklist")  desenharChecklist();
   if(estado.aba === "cabelo")     desenharCabelo();
+  if(estado.aba === "links")      desenharLinks();
+}
+
+/* ============================================================
+   ABA: LINKS ÚTEIS
+
+   Para os endereços que você usa toda hora e hoje ficam
+   espalhados nos favoritos. Cada link tem um grupo, que é texto
+   livre: escreva o que quiser e o painel junta os iguais.
+   ============================================================ */
+function gruposDeLinks(){
+  const lista = [];
+  (estado.dados.links || []).forEach(l => {
+    const g = String(l.grupo || "").trim() || "Sem grupo";
+    if(!lista.includes(g)) lista.push(g);
+  });
+  return lista.sort((a,b) => a.localeCompare(b));
+}
+
+function linksFiltrados(){
+  const busca = estado.buscaLinks.toLowerCase();
+  return (estado.dados.links || [])
+    .filter(l => {
+      const g = String(l.grupo || "").trim() || "Sem grupo";
+      const combina = !busca ||
+        String(l.titulo||"").toLowerCase().includes(busca) ||
+        String(l.url||"").toLowerCase().includes(busca) ||
+        String(l.obs||"").toLowerCase().includes(busca) ||
+        g.toLowerCase().includes(busca);
+      const grupoOk = estado.filtroGrupoLink === "Todos" || g === estado.filtroGrupoLink;
+      return combina && grupoOk;
+    })
+    .sort((a,b) => {
+      /* os sem grupo vão para o fim, não para o começo */
+      const ga = String(a.grupo||"").trim(), gb = String(b.grupo||"").trim();
+      if(!ga !== !gb) return ga ? -1 : 1;
+      return ga.localeCompare(gb) ||
+             (numero(a.ordem) - numero(b.ordem)) ||
+             String(a.titulo||"").localeCompare(String(b.titulo||""));
+    });
+}
+
+/* O endereço curtinho, só o site, para caber embaixo do título */
+function siteDoLink(url){
+  try{ return new URL(String(url)).hostname.replace(/^www\./, ""); }
+  catch(e){ return String(url || "").slice(0, 40); }
+}
+
+function desenharLinks(){
+  const todos = estado.dados.links || [];
+  const lista = linksFiltrados();
+  const grupos = gruposDeLinks();
+
+  pegar("#acoesTopo").innerHTML =
+    `<button class="btn btn-principal" id="novoLink">${ICONE.mais} Novo link</button>`;
+
+  /* separa a lista por grupo, mantendo a ordem já calculada */
+  const porGrupo = [];
+  lista.forEach(l => {
+    const g = String(l.grupo || "").trim() || "Sem grupo";
+    let bloco = porGrupo.find(x => x.nome === g);
+    if(!bloco){ bloco = { nome:g, itens:[] }; porGrupo.push(bloco); }
+    bloco.itens.push(l);
+  });
+
+  pegar("#area").innerHTML = `
+    <div class="faixa-numeros tres">
+      <div class="numero"><b>${todos.length}</b><small>links guardados</small></div>
+      <div class="numero"><b>${grupos.length}</b><small>${grupos.length === 1 ? "grupo" : "grupos"}</small></div>
+      <div class="numero"><b>${lista.length}</b><small>aparecendo agora</small></div>
+    </div>
+
+    <section class="cartao">
+      <div class="cartao-topo">
+        <div class="busca">${ICONE.lupa}<input id="buscaLinks" placeholder="buscar link" value="${seguro(estado.buscaLinks)}"></div>
+        <div class="grupo-filtro">
+          ${["Todos"].concat(grupos).map(g => `
+            <button class="filtro" data-fgrupo="${seguro(g)}" aria-pressed="${estado.filtroGrupoLink === g}">${seguro(g)}</button>`).join("")}
+        </div>
+      </div>
+      <div class="cartao-corpo">
+        ${porGrupo.length ? porGrupo.map(bloco => `
+          <div class="bloco-links">
+            <h3 class="titulo-grupo">${seguro(bloco.nome)}</h3>
+            <div class="grid-links">
+              ${bloco.itens.map(l => `
+                <article class="link-util">
+                  <a class="nome-link" href="${seguro(l.url)}" target="_blank" rel="noopener">
+                    <b>${seguro(l.titulo)}</b>
+                    <small>${seguro(siteDoLink(l.url))}</small>
+                  </a>
+                  ${l.obs ? `<p class="obs-link">${seguro(l.obs)}</p>` : ""}
+                  <div class="acoes-link">
+                    <button class="btn-mini" data-copialink="${seguro(l.id)}">copiar</button>
+                    <button class="icone-btn" data-editalink="${seguro(l.id)}" title="Editar">${ICONE.lapis}</button>
+                  </div>
+                </article>`).join("")}
+            </div>
+          </div>`).join("")
+        : `<p class="recado">${todos.length
+            ? "Nenhum link com esse filtro."
+            : "Nenhum link guardado ainda. Clique em Novo link e comece pelos que você mais abre no dia a dia."}</p>`}
+      </div>
+    </section>
+  `;
+
+  const campoBusca = pegar("#buscaLinks");
+  campoBusca.addEventListener("input", () => {
+    estado.buscaLinks = campoBusca.value;
+    desenharLinks();
+    const novo = pegar("#buscaLinks");
+    novo.focus(); novo.setSelectionRange(novo.value.length, novo.value.length);
+  });
+  pegarTodos("[data-fgrupo]").forEach(b => b.addEventListener("click", () => {
+    estado.filtroGrupoLink = b.dataset.fgrupo; desenharLinks();
+  }));
+  pegar("#novoLink").addEventListener("click", () => formularioLink(null));
+
+  const acha = (id) => todos.find(l => String(l.id) === id);
+  pegarTodos("[data-copialink]").forEach(b => b.addEventListener("click", () => {
+    const l = acha(b.dataset.copialink); if(l) copiar(l.url, "Link");
+  }));
+  pegarTodos("[data-editalink]").forEach(b => b.addEventListener("click", () => {
+    formularioLink(acha(b.dataset.editalink));
+  }));
+}
+
+function formularioLink(link){
+  const l = link || {};
+  abrirJanela(link ? "Editar link" : "Novo link", `
+    <form id="formLink">
+      <div class="campos">
+        <div class="campo largo"><label for="l-titulo">Nome</label>
+          <input id="l-titulo" required placeholder="Painel da Resend" value="${seguro(l.titulo)}"></div>
+        <div class="campo largo"><label for="l-url">Endereço</label>
+          <input id="l-url" required placeholder="https://..." value="${seguro(l.url)}"></div>
+        <div class="campo"><label for="l-grupo">Grupo</label>
+          <input id="l-grupo" list="listaGruposLink" placeholder="Ferramentas" value="${seguro(l.grupo)}">
+          <datalist id="listaGruposLink">
+            ${gruposDeLinks().map(g => `<option value="${seguro(g)}">`).join("")}
+          </datalist>
+        </div>
+        <div class="campo"><label for="l-ordem">Ordem no grupo</label>
+          <input id="l-ordem" type="number" min="0" value="${numero(l.ordem)}"></div>
+        <div class="campo largo"><label for="l-obs">Para que serve</label>
+          <input id="l-obs" placeholder="um lembrete curto" value="${seguro(l.obs)}"></div>
+      </div>
+      <p class="dica-fonte">Nunca guarde senha aqui. Só o endereço.</p>
+      <div class="acoes-janela">
+        ${link ? `<button type="button" class="btn btn-simples" id="apagarLink">Apagar</button>` : ""}
+        <button type="button" class="btn btn-simples" id="cancelar">Cancelar</button>
+        <button type="submit" class="btn btn-principal">Salvar</button>
+      </div>
+    </form>
+  `);
+  pegar("#cancelar").addEventListener("click", fecharJanela);
+  if(link){
+    pegar("#apagarLink").addEventListener("click", async () => {
+      if(!confirm('Apagar o link "' + l.titulo + '"?')) return;
+      if(await apagarLinha("links", l.id)){
+        fecharJanela(); recado("Link apagado."); await carregarTudo(); desenhar();
+      }
+    });
+  }
+  pegar("#formLink").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    let url = pegar("#l-url").value.trim();
+    if(url && !/^https?:\/\//i.test(url)) url = "https://" + url;   /* colou sem o https, resolvo aqui */
+    const linha = {
+      titulo: pegar("#l-titulo").value.trim(),
+      url: url,
+      grupo: pegar("#l-grupo").value.trim(),
+      obs: pegar("#l-obs").value.trim(),
+      ordem: numero(pegar("#l-ordem").value)
+    };
+    if(!linha.titulo){ recado("O nome é obrigatório.", true); return; }
+    if(!linha.url){ recado("O endereço é obrigatório.", true); return; }
+    if(await gravar("links", linha, l.id)){
+      fecharJanela(); recado("Link salvo."); await carregarTudo(); desenhar();
+    }
+  });
 }
 
 /* ============================================================
