@@ -2406,8 +2406,38 @@ function desenharCupons(){
   }));
 }
 
+/* Manda uma imagem para o Supabase e devolve o endereço público
+   dela. O nome ganha a hora na frente, para você poder subir duas
+   fotos com o mesmo nome sem uma apagar a outra. */
+async function enviarImagem(arquivo){
+  if(!window.sb){ recado("Sem conexão com o banco.", true); return ""; }
+  if(arquivo.size > 5 * 1024 * 1024){
+    recado("Essa imagem tem mais de 5 MB. Escolha uma menor.", true);
+    return "";
+  }
+  const limpo = String(arquivo.name || "imagem.png")
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .toLowerCase().replace(/[^a-z0-9.]+/g, "-").replace(/^-+|-+$/g, "");
+  const caminho = Date.now() + "-" + limpo;
+  try{
+    const { error } = await window.sb.storage.from("imagens")
+      .upload(caminho, arquivo, { upsert:true, contentType: arquivo.type || "image/png" });
+    if(error){
+      recado("Não consegui enviar a imagem: " + error.message +
+             ". Se falar em bucket, rode o imagens-dos-botoes.sql no Supabase.", true);
+      return "";
+    }
+    const { data } = window.sb.storage.from("imagens").getPublicUrl(caminho);
+    return (data && data.publicUrl) || "";
+  }catch(e){
+    recado("Não consegui enviar a imagem agora.", true);
+    return "";
+  }
+}
+
 function formularioCupom(cupom){
   const c = cupom || {};
+  let logoEscolhida = c.logo || "";
   /* "tipo" decide em que bloco da página de links o botão entra.
      Quem foi cadastrado antes deste campo existir entra como cupom. */
   const tipoAtual = String(c.tipo || "cupom").toLowerCase();
@@ -2428,6 +2458,14 @@ function formularioCupom(cupom){
         <div class="campo"><label for="p-desconto">Desconto</label><input id="p-desconto" placeholder="10% de desconto" value="${seguro(c.desconto)}"></div>
         <div class="campo"><label for="p-validade">Vale até</label><input id="p-validade" type="date" value="${c.validade ? String(c.validade).slice(0,10) : ""}"></div>
         <div class="campo largo"><label for="p-link">Link de afiliada</label><input id="p-link" placeholder="https://..." value="${seguro(c.link)}"></div>
+        <div class="campo largo"><label for="p-imagem">Imagem do botão</label>
+          <div class="linha-imagem">
+            <span class="previa-imagem" id="previaImagem">${c.logo ? `<img src="${seguro(c.logo)}" alt="">` : "sem imagem"}</span>
+            <input id="p-imagem" type="file" accept="image/*">
+            <button type="button" class="btn-mini" id="tirarImagem" ${c.logo ? "" : "hidden"}>tirar a imagem</button>
+          </div>
+          <small class="dica-fonte">Deixando vazio, o botão procura a logo pelo nome da marca e, se não achar, mostra as iniciais.</small>
+        </div>
         <div class="campo largo"><label for="p-mensagem">Mensagem pronta (deixe vazio que eu monto sozinha)</label><textarea id="p-mensagem" placeholder="Ex: Corre que na Marca X o meu cupom EMY10 dá 10% de desconto">${seguro(c.mensagem)}</textarea></div>
         <div class="campo largo"><label for="p-obs">Observação</label><input id="p-obs" placeholder="comissão, regras, onde vale" value="${seguro(c.obs)}"></div>
         <div class="campo"><label for="p-ativo">Ainda está valendo</label>
@@ -2451,9 +2489,41 @@ function formularioCupom(cupom){
       if(await apagarLinha("cupons", c.id)){ fecharJanela(); recado("Cupom apagado."); await carregarTudo(); desenhar(); }
     });
   }
+  /* escolheu uma imagem: manda na hora e já mostra a prévia */
+  const campoImagem = pegar("#p-imagem");
+  const previa = pegar("#previaImagem");
+  const botaoTirar = pegar("#tirarImagem");
+
+  function mostrarPrevia(){
+    previa.innerHTML = logoEscolhida
+      ? `<img src="${seguro(logoEscolhida)}" alt="">`
+      : "sem imagem";
+    botaoTirar.hidden = !logoEscolhida;
+  }
+
+  campoImagem.addEventListener("change", async () => {
+    const arquivo = campoImagem.files && campoImagem.files[0];
+    if(!arquivo) return;
+    previa.textContent = "enviando...";
+    const endereco = await enviarImagem(arquivo);
+    if(endereco){
+      logoEscolhida = endereco;
+      recado("Imagem enviada. Agora salve o cupom.");
+    }
+    campoImagem.value = "";
+    mostrarPrevia();
+  });
+
+  botaoTirar.addEventListener("click", () => {
+    logoEscolhida = "";
+    mostrarPrevia();
+    recado("Imagem tirada. Salve para valer.");
+  });
+
   pegar("#formCupom").addEventListener("submit", async (e) => {
     e.preventDefault();
     const linha = {
+      logo: logoEscolhida,
       marca: pegar("#p-marca").value.trim(),
       tipo: pegar("#p-tipo").value,
       cupom: pegar("#p-cupom").value.trim(),
