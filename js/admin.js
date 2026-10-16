@@ -819,6 +819,9 @@ function desenharPortfolio(){
 
   const cliques = {};
   let aberturasLinks = 0, aberturasPortfolio = 0;
+  /* os mesmos números, mas só do dia de hoje */
+  let linksHoje = 0, portfolioHoje = 0;
+  const origensHoje = {};
 
   visitas.forEach(v => {
     const dia = String(v.data || "").slice(0,10);
@@ -829,7 +832,17 @@ function desenharPortfolio(){
       return;                      /* clique não é visita, não entra no gráfico */
     }
 
-    if(ehPortfolio(v)) aberturasPortfolio++; else aberturasLinks++;
+    if(ehPortfolio(v)){
+      aberturasPortfolio++;
+      if(dia === hoje) portfolioHoje++;
+    } else {
+      aberturasLinks++;
+      if(dia === hoje) linksHoje++;
+    }
+    if(dia === hoje){
+      const deHoje = (v.origem || "direto").trim() || "direto";
+      origensHoje[deHoje] = (origensHoje[deHoje] || 0) + 1;
+    }
 
     if(dia in porDia){ porDia[dia]++; visitas14++; }
     if(dia === hoje) visitasHoje++;
@@ -860,6 +873,8 @@ function desenharPortfolio(){
 
   const listaOrigens = Object.entries(origens).sort((a,b) => b[1] - a[1]);
   const origemTop = listaOrigens.length ? listaOrigens[0][0] : "ainda não";
+  const listaOrigensHoje = Object.entries(origensHoje).sort((a,b) => b[1] - a[1]);
+  const origemTopHoje = listaOrigensHoje.length ? listaOrigensHoje[0][0] : "ninguém ainda";
 
   const maior = Math.max(1, ...dias.map(d => porDia[d]));   /* nunca divide por zero */
 
@@ -908,11 +923,11 @@ function desenharPortfolio(){
     </div>
 
     <div class="faixa-numeros">
-      <div class="numero"><b>${aberturasLinks}</b><small>abriram a página de links</small><i>o seu público, ${seguro(desdeQuando)}</i></div>
-      <div class="numero"><b>${aberturasPortfolio}</b><small>abriram o portfólio</small><i>marcas te considerando, ${seguro(desdeQuando)}</i></div>
-      <div class="numero"><b>${visitasHoje}</b><small>visitas hoje</small><i>só o dia de hoje</i></div>
+      <div class="numero"><b>${linksHoje}</b><small>abriram a página de links</small><i>hoje, ${seguro(dataBR(hoje))}</i></div>
+      <div class="numero"><b>${portfolioHoje}</b><small>abriram o portfólio</small><i>hoje, marcas te considerando</i></div>
+      <div class="numero"><b>${aberturasLinks + aberturasPortfolio}</b><small>visitas no total</small><i>${seguro(desdeQuando)}</i></div>
       <div class="numero"><b>${noAr}</b><small>vídeos no ar</small><i>agora</i></div>
-      <div class="numero"><b style="font-size:1rem">${seguro(origemTop)}</b><small>de onde mais vêm</small><i>${seguro(desdeQuando)}</i></div>
+      <div class="numero"><b style="font-size:1rem">${seguro(origemTopHoje)}</b><small>de onde vieram</small><i>hoje</i></div>
     </div>
 
     ${listaCliques.length ? `
