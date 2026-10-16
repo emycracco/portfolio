@@ -133,6 +133,25 @@ button{font-family:inherit; font-size:inherit; color:inherit;}
   color:var(--tinta); font-size:.84rem;
   display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
 }
+/* ---------- links úteis ---------- */
+.bloco-links + .bloco-links{margin-top:22px;}
+.titulo-grupo{
+  margin:0 0 10px; font-size:.7rem; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--roxo); font-weight:600;
+}
+.grid-links{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px;}
+.link-util{
+  display:flex; flex-direction:column; gap:8px; padding:14px 15px;
+  background:var(--branco); border:1px solid var(--linha); border-radius:var(--raio);
+  box-shadow:var(--sombra);
+}
+.nome-link{text-decoration:none; color:var(--tinta);}
+.nome-link b{display:block; font-weight:500; font-size:.95rem;}
+.nome-link small{display:block; color:var(--tinta-suave); font-size:.74rem; margin-top:2px; word-break:break-all;}
+.nome-link:hover b{color:var(--magenta);}
+.obs-link{margin:0; font-size:.78rem; color:var(--tinta-suave);}
+.acoes-link{display:flex; align-items:center; gap:8px; margin-top:auto;}
+
 /* o campo de imagem do botão, no formulário do cupom */
 .linha-imagem{display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
 .previa-imagem{
@@ -157,6 +176,7 @@ button{font-family:inherit; font-size:inherit; color:inherit;}
   border-radius:var(--raio); overflow:hidden; margin-bottom:18px;
 }
 .faixa-numeros.quatro{grid-template-columns:repeat(4,1fr);}
+.faixa-numeros.tres{grid-template-columns:repeat(3,1fr);}
 .numero{background:var(--branco); padding:14px 16px;}
 .numero b{display:block; font-size:1.35rem; font-weight:500; color:var(--magenta); line-height:1.2;}
 .numero small{font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; color:var(--tinta-suave);}
