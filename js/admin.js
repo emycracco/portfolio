@@ -837,6 +837,18 @@ function desenharPortfolio(){
     origens[de] = (origens[de] || 0) + 1;
   });
 
+  /* Desde quando esses números estão sendo contados. É a data da
+     visita mais antiga guardada, para você não ficar na dúvida se
+     o número é do mês, do ano ou de sempre. */
+  const diasComVisita = visitas
+    .filter(v => !ehClique(v))
+    .map(v => String(v.data || "").slice(0,10))
+    .filter(d => d.length === 10)
+    .sort();
+  const desdeQuando = diasComVisita.length
+    ? "desde " + dataBR(diasComVisita[0])
+    : "ainda sem visita";
+
   const listaCliques = Object.entries(cliques).sort((a,b) => b[1] - a[1]);
 
   const noAr = videos.filter(v => v.visivel !== false).length;
@@ -896,11 +908,11 @@ function desenharPortfolio(){
     </div>
 
     <div class="faixa-numeros">
-      <div class="numero"><b>${aberturasLinks}</b><small>abriram a página de links</small><i>o seu público</i></div>
-      <div class="numero"><b>${aberturasPortfolio}</b><small>abriram o portfólio</small><i>marcas te considerando</i></div>
-      <div class="numero"><b>${visitasHoje}</b><small>visitas hoje</small></div>
-      <div class="numero"><b>${noAr}</b><small>vídeos no ar</small></div>
-      <div class="numero"><b style="font-size:1rem">${seguro(origemTop)}</b><small>de onde mais vêm</small></div>
+      <div class="numero"><b>${aberturasLinks}</b><small>abriram a página de links</small><i>o seu público, ${seguro(desdeQuando)}</i></div>
+      <div class="numero"><b>${aberturasPortfolio}</b><small>abriram o portfólio</small><i>marcas te considerando, ${seguro(desdeQuando)}</i></div>
+      <div class="numero"><b>${visitasHoje}</b><small>visitas hoje</small><i>só o dia de hoje</i></div>
+      <div class="numero"><b>${noAr}</b><small>vídeos no ar</small><i>agora</i></div>
+      <div class="numero"><b style="font-size:1rem">${seguro(origemTop)}</b><small>de onde mais vêm</small><i>${seguro(desdeQuando)}</i></div>
     </div>
 
     ${listaCliques.length ? `
