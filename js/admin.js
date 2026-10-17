@@ -132,7 +132,14 @@ const SITUACOES = ["Lead", "Conversando", "Cliente", "Parada"];
 /* sugestões de nicho, só para facilitar o preenchimento.
    Você pode escrever qualquer outro, o campo é livre. */
 const NICHOS_SUGERIDOS = ["moda fitness", "suplementos", "cosméticos", "skincare", "moda", "beleza", "tech", "casa", "pet", "alimentação"];
-const TIPOS_AGENDA = ["gravar", "editar", "postar"];
+/* O que cabe no calendário. Os três primeiros são trabalho de
+   marca. Os outros são a sua rotina, para a agenda mostrar o dia
+   inteiro e não só o que é de cliente. "prazo" não entra aqui
+   porque ele nasce sozinho das campanhas. */
+const TIPOS_AGENDA = ["gravar", "editar", "postar", "treino", "estudo", "pessoal", "compromisso"];
+const TIPOS_FILTRO = ["Todos"]
+  .concat(TIPOS_AGENDA.map(t => t.charAt(0).toUpperCase() + t.slice(1)))
+  .concat(["Prazo"]);
 
 const estado = {
   aba: "portfolio",
@@ -2795,7 +2802,7 @@ function desenharCalendario(){
           <button class="btn-mini" id="esteMes">Este mês</button>
         </div>
         <div class="grupo-filtro">
-          ${["Todos","Gravar","Editar","Postar","Prazo"].map(t => `<button class="filtro" data-tipo="${t}" aria-pressed="${estado.filtroAgenda === t}">${t}</button>`).join("")}
+          ${TIPOS_FILTRO.map(t => `<button class="filtro" data-tipo="${t}" aria-pressed="${estado.filtroAgenda === t}">${t}</button>`).join("")}
         </div>
       </div>
       <div class="cartao-corpo">
@@ -2812,6 +2819,10 @@ function desenharCalendario(){
               ${sobra > 0 ? `<button class="mais-itens" data-ver="${c.iso}">+${sobra} mais</button>` : ""}
             </div>`;
           }).join("")}
+        </div>
+        <div class="legenda-agenda">
+          <span class="rotulo-legenda">cores</span>
+          ${TIPOS_AGENDA.concat(["prazo"]).map(t => `<span class="pilula p-${t}">${t}</span>`).join("")}
         </div>
       </div>
     </section>
@@ -2875,10 +2886,17 @@ function formularioAgenda(item, dataSugerida){
     <form id="formAgenda">
       <div class="campos">
         <div class="campo largo"><label for="c-titulo">O que é</label><input id="c-titulo" required value="${seguro(c.titulo)}"></div>
-        <div class="campo"><label for="c-marca">Marca</label><input id="c-marca" value="${seguro(c.marca)}"></div>
         <div class="campo"><label for="c-tipo">Tipo</label>
-          <select id="c-tipo">${TIPOS_AGENDA.map(t => `<option ${c.tipo === t ? "selected" : ""}>${t}</option>`).join("")}</select>
+          <select id="c-tipo">
+            <optgroup label="Trabalho de marca">
+              ${["gravar","editar","postar"].map(t => `<option ${c.tipo === t ? "selected" : ""}>${t}</option>`).join("")}
+            </optgroup>
+            <optgroup label="Minha rotina">
+              ${["treino","estudo","pessoal","compromisso"].map(t => `<option ${c.tipo === t ? "selected" : ""}>${t}</option>`).join("")}
+            </optgroup>
+          </select>
         </div>
+        <div class="campo"><label for="c-marca">Marca <span class="opcional">(só se for de marca)</span></label><input id="c-marca" value="${seguro(c.marca)}"></div>
         <div class="campo"><label for="c-data">Data</label><input id="c-data" type="date" value="${data}" required></div>
         <div class="campo"><label for="c-status">Status</label>
           <select id="c-status">
