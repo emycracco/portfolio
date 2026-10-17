@@ -378,6 +378,12 @@ tbody tr.destacada td:first-child{box-shadow:inset 3px 0 0 var(--rosa);}
 .atrasados li{display:flex; justify-content:space-between; gap:12px; align-items:center; padding:8px 0; border-bottom:1px solid var(--linha); font-size:.85rem;}
 .atrasados{list-style:none; margin:0; padding:0;}
 .atrasados li:last-child{border-bottom:0;}
+/* os atalhos no fim de cada linha atrasada */
+.fim-atrasado{display:flex; align-items:center; gap:7px; flex:none; white-space:nowrap;}
+.fim-atrasado .icone-btn{width:28px; height:28px;}
+@media (max-width:620px){
+  .atrasados li{flex-direction:column; align-items:flex-start; gap:7px;}
+}
 
 /* ---------- grade da semana de conteúdo ---------- */
 .grade-semana{
