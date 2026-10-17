@@ -2836,7 +2836,14 @@ function desenharCalendario(){
               const dias = Math.abs(diasEntre(hoje, i.data));
               return `<li>
                 <span><span class="pilula p-${i.tipo}">${seguro(i.tipo)}</span> ${seguro(i.titulo)}${i.marca ? " · " + seguro(i.marca) : ""}</span>
-                <span style="color:var(--vermelho); font-size:.78rem">há ${dias} dia${dias === 1 ? "" : "s"}</span>
+                <span class="fim-atrasado">
+                  <span style="color:var(--vermelho); font-size:.78rem">há ${dias} dia${dias === 1 ? "" : "s"}</span>
+                  ${i.daAgenda ? `
+                    <button class="btn-mini" data-fiz="${seguro(i.id)}" title="Marcar como feito">fiz</button>
+                    <button class="btn-mini" data-passar="${seguro(i.id)}" title="Jogar para hoje">hoje</button>
+                    <button class="icone-btn apagar" data-sumir="${seguro(i.id)}" title="Apagar">${ICONE.lixo}</button>
+                  ` : `<span class="dica-fonte">vem da campanha</span>`}
+                </span>
               </li>`;
             }).join("")}
           </ul>` : `<p class="recado">Nada atrasado por aqui. Tudo em dia.</p>`}
@@ -2855,6 +2862,25 @@ function desenharCalendario(){
     formularioAgenda(null, d.dataset.dia);
   }));
   pegarTodos("[data-ver]").forEach(b => b.addEventListener("click", (e) => { e.stopPropagation(); verDia(b.dataset.ver, porDia[b.dataset.ver] || []); }));
+
+  /* os três atalhos da lista "Ficou pra trás", para resolver dali
+     mesmo sem ter que voltar no dia */
+  pegarTodos("[data-fiz]").forEach(b => b.addEventListener("click", async () => {
+    if(await gravar("calendario", { status:"feito" }, b.dataset.fiz)){
+      recado("Marcado como feito."); await carregarTudo(); desenhar();
+    }
+  }));
+  pegarTodos("[data-passar]").forEach(b => b.addEventListener("click", async () => {
+    if(await gravar("calendario", { data: hojeISO() }, b.dataset.passar)){
+      recado("Passei para hoje."); await carregarTudo(); desenhar();
+    }
+  }));
+  pegarTodos("[data-sumir]").forEach(b => b.addEventListener("click", async () => {
+    if(!confirm("Apagar este item da agenda?")) return;
+    if(await apagarLinha("calendario", b.dataset.sumir)){
+      recado("Item apagado."); await carregarTudo(); desenhar();
+    }
+  }));
   pegarTodos("[data-item]").forEach(b => b.addEventListener("click", (e) => {
     e.stopPropagation();
     const id = b.dataset.item;
