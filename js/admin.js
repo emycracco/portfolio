@@ -173,6 +173,8 @@ const estado = {
     posicaoFila: 0
   },
   semana: new Date(), filtroConteudo: "Todos",
+  /* a aba Calendário: mês é o padrão, semana é a outra visão */
+  visaoAgenda: "mes", semanaAgenda: new Date(),
   buscaCupons: "", filtroCupons: "Todos",
   buscaMarcas: "", filtroSituacao: "Todas", filtroNicho: "Todos", soFavoritas: false,
   buscaCampanhas: "", filtroCampanhas: "Todas",
@@ -427,7 +429,7 @@ function desenhar(){
   if(estado.aba === "prospeccao") desenharProspeccao();
   if(estado.aba === "midiakit")   desenharMidiaKit();
   if(estado.aba === "conteudo")   desenharConteudo();
-  if(estado.aba === "calendario") desenharCalendario();
+  if(estado.aba === "calendario") desenharAgenda();
   if(estado.aba === "campanhas")  desenharCampanhas();
   if(estado.aba === "checklist")  desenharChecklist();
   if(estado.aba === "cabelo")     desenharCabelo();
@@ -2761,6 +2763,193 @@ function itensDoCalendario(){
   return itens;
 }
 
+/* A segunda-feira da semana de uma data qualquer */
+function inicioDaSemana(d){
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  let recuo = x.getDay() - 1; if(recuo < 0) recuo = 6;
+  x.setDate(x.getDate() - recuo);
+  return x;
+}
+
+function paraISO(d){
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+
+/* Os dois botões que trocam entre mês e semana */
+function botoesDeVisao(){
+  return `
+    <div class="grupo-filtro troca-visao">
+      <button class="filtro" data-visao="mes" aria-pressed="${estado.visaoAgenda !== "semana"}">Mês</button>
+      <button class="filtro" data-visao="semana" aria-pressed="${estado.visaoAgenda === "semana"}">Semana</button>
+    </div>`;
+}
+
+function ligarBotoesDeVisao(){
+  pegarTodos("[data-visao]").forEach(b => b.addEventListener("click", () => {
+    estado.visaoAgenda = b.dataset.visao;
+    if(estado.visaoAgenda === "semana") estado.semanaAgenda = new Date();
+    desenharAgenda();
+  }));
+}
+
+/* A lista do que ficou para trás, igual nas duas visões */
+function blocoAtrasados(hoje){
+  const atrasados = itensDoCalendario()
+    .filter(i => i.status !== "feito" && i.data && i.data < hoje)
+    .sort((a,b) => a.data < b.data ? 1 : -1);
+
+  return `
+    <section class="cartao">
+      <div class="cartao-topo"><h2>Ficou pra trás</h2></div>
+      <div class="cartao-corpo">
+        ${atrasados.length ? `
+          <ul class="atrasados">
+            ${atrasados.map(i => {
+              const dias = Math.abs(diasEntre(hoje, i.data));
+              return `<li>
+                <span><span class="pilula p-${i.tipo}">${seguro(i.tipo)}</span> ${seguro(i.titulo)}${i.marca ? " · " + seguro(i.marca) : ""}</span>
+                <span class="fim-atrasado">
+                  <span style="color:var(--vermelho); font-size:.78rem">há ${dias} dia${dias === 1 ? "" : "s"}</span>
+                  ${i.daAgenda ? `
+                    <button class="btn-mini" data-fiz="${seguro(i.id)}" title="Marcar como feito">fiz</button>
+                    <button class="btn-mini" data-passar="${seguro(i.id)}" title="Jogar para hoje">hoje</button>
+                    <button class="icone-btn apagar" data-sumir="${seguro(i.id)}" title="Apagar">${ICONE.lixo}</button>
+                  ` : `<span class="dica-fonte">vem da campanha</span>`}
+                </span>
+              </li>`;
+            }).join("")}
+          </ul>` : `<p class="recado">Nada atrasado por aqui. Tudo em dia.</p>`}
+      </div>
+    </section>`;
+}
+
+function ligarAtrasados(){
+  pegarTodos("[data-fiz]").forEach(b => b.addEventListener("click", async () => {
+    if(await gravar("calendario", { status:"feito" }, b.dataset.fiz)){
+      recado("Marcado como feito."); await carregarTudo(); desenhar();
+    }
+  }));
+  pegarTodos("[data-passar]").forEach(b => b.addEventListener("click", async () => {
+    if(await gravar("calendario", { data: hojeISO() }, b.dataset.passar)){
+      recado("Passei para hoje."); await carregarTudo(); desenhar();
+    }
+  }));
+  pegarTodos("[data-sumir]").forEach(b => b.addEventListener("click", async () => {
+    if(!confirm("Apagar este item da agenda?")) return;
+    if(await apagarLinha("calendario", b.dataset.sumir)){
+      recado("Item apagado."); await carregarTudo(); desenhar();
+    }
+  }));
+}
+
+/* A porta de entrada da aba: escolhe qual visão desenhar */
+function desenharAgenda(){
+  if(estado.visaoAgenda === "semana") desenharSemanaAgenda();
+  else desenharCalendario();
+}
+
+/* ------------------------------------------------------------
+   VISÃO DA SEMANA
+   Sete dias um embaixo do outro, com TUDO que tem em cada um.
+   Diferente do mês, aqui nada fica escondido atrás de "+2 mais".
+   ------------------------------------------------------------ */
+function desenharSemanaAgenda(){
+  const hoje = hojeISO();
+  const inicio = inicioDaSemana(estado.semanaAgenda);
+
+  const filtro = estado.filtroAgenda;
+  const todos = itensDoCalendario().filter(i => filtro === "Todos" || i.tipo === filtro.toLowerCase());
+  const porDia = {};
+  todos.forEach(i => { (porDia[i.data] = porDia[i.data] || []).push(i); });
+
+  const dias = [];
+  for(let i = 0; i < 7; i++){
+    const d = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + i);
+    dias.push({
+      iso: paraISO(d),
+      nome: d.toLocaleDateString("pt-BR", { weekday:"long" }),
+      numero: d.getDate() + "/" + String(d.getMonth()+1).padStart(2,"0")
+    });
+  }
+
+  const fim = dias[6];
+  const quantos = dias.reduce((s,d) => s + (porDia[d.iso] || []).length, 0);
+
+  pegar("#acoesTopo").innerHTML = `<button class="btn btn-principal" id="novoItem">${ICONE.mais} Novo item</button>`;
+
+  pegar("#area").innerHTML = `
+    <section class="cartao">
+      <div class="cartao-topo">
+        <div class="mes-topo">
+          <button class="icone-btn" id="semanaAntes" aria-label="Semana anterior">${ICONE.seta}</button>
+          <span class="mes-nome">${dias[0].numero} a ${fim.numero}</span>
+          <button class="icone-btn" id="semanaDepois" aria-label="Próxima semana" style="transform:rotate(180deg)">${ICONE.seta}</button>
+          <button class="btn-mini" id="estaSemana">Esta semana</button>
+        </div>
+        ${botoesDeVisao()}
+      </div>
+
+      <div class="cartao-topo" style="border-top:1px solid var(--linha)">
+        <div class="grupo-filtro">
+          ${TIPOS_FILTRO.map(t => `<button class="filtro" data-tipo="${t}" aria-pressed="${estado.filtroAgenda === t}">${t}</button>`).join("")}
+        </div>
+        <span style="font-size:.76rem;color:var(--tinta-suave)">${quantos} ${quantos === 1 ? "item na semana" : "itens na semana"}</span>
+      </div>
+
+      <div class="cartao-corpo">
+        <div class="lista-semana">
+          ${dias.map(d => {
+            const lista = (porDia[d.iso] || []).slice().sort((a,b) => String(a.tipo).localeCompare(String(b.tipo)));
+            return `
+            <div class="dia-semana ${d.iso === hoje ? "e-hoje" : ""}">
+              <div class="cabeca-dia">
+                <b>${seguro(d.nome)}</b>
+                <small>${d.numero}${d.iso === hoje ? " · hoje" : ""}</small>
+                <button class="btn-mini" data-novo="${d.iso}">adicionar</button>
+              </div>
+              <div class="itens-dia">
+                ${lista.length
+                  ? lista.map(i => `
+                    <button class="item-semana ${i.status === "feito" ? "feito" : ""}" data-item="${seguro(i.id)}">
+                      <span class="pilula p-${i.tipo}">${seguro(i.tipo)}</span>
+                      <span class="texto-item">${seguro(i.titulo)}${i.marca ? " · " + seguro(i.marca) : ""}</span>
+                    </button>`).join("")
+                  : `<span class="dia-vazio">nada marcado</span>`}
+              </div>
+            </div>`;
+          }).join("")}
+        </div>
+        <div class="legenda-agenda">
+          <span class="rotulo-legenda">cores</span>
+          ${TIPOS_AGENDA.concat(["prazo"]).map(t => `<span class="pilula p-${t}">${t}</span>`).join("")}
+        </div>
+      </div>
+    </section>
+
+    ${blocoAtrasados(hoje)}
+  `;
+
+  const andar = (quantos) => {
+    const d = inicioDaSemana(estado.semanaAgenda);
+    estado.semanaAgenda = new Date(d.getFullYear(), d.getMonth(), d.getDate() + quantos);
+    desenharSemanaAgenda();
+  };
+  pegar("#semanaAntes").addEventListener("click", () => andar(-7));
+  pegar("#semanaDepois").addEventListener("click", () => andar(7));
+  pegar("#estaSemana").addEventListener("click", () => { estado.semanaAgenda = new Date(); desenharSemanaAgenda(); });
+  pegar("#novoItem").addEventListener("click", () => formularioAgenda(null, hoje));
+  pegarTodos("[data-tipo]").forEach(b => b.addEventListener("click", () => { estado.filtroAgenda = b.dataset.tipo; desenharSemanaAgenda(); }));
+  pegarTodos("[data-novo]").forEach(b => b.addEventListener("click", () => formularioAgenda(null, b.dataset.novo)));
+  pegarTodos("[data-item]").forEach(b => b.addEventListener("click", () => {
+    const i = itensDoCalendario().find(x => String(x.id) === b.dataset.item);
+    if(!i) return;
+    if(!i.daAgenda){ recado("Esse prazo vem da aba Campanhas, mude por lá."); return; }
+    formularioAgenda((estado.dados.calendario || []).find(c => String(c.id) === String(i.id)));
+  }));
+  ligarBotoesDeVisao();
+  ligarAtrasados();
+}
+
 function desenharCalendario(){
   const base = new Date(estado.mes.getFullYear(), estado.mes.getMonth(), 1);
   const ano = base.getFullYear(), mes = base.getMonth();
@@ -2784,10 +2973,6 @@ function desenharCalendario(){
     celulas.push({ iso, dia: d.getDate(), fora: d.getMonth() !== mes, hoje: iso === hoje });
   }
 
-  const atrasados = itensDoCalendario()
-    .filter(i => i.status !== "feito" && i.data && i.data < hoje)
-    .sort((a,b) => a.data < b.data ? 1 : -1);
-
   const nomeMes = base.toLocaleDateString("pt-BR", { month:"long", year:"numeric" });
 
   pegar("#acoesTopo").innerHTML = `<button class="btn btn-principal" id="novoItem">${ICONE.mais} Novo item</button>`;
@@ -2801,6 +2986,10 @@ function desenharCalendario(){
           <button class="icone-btn" id="mesSeguinte" aria-label="Próximo mês" style="transform:rotate(180deg)">${ICONE.seta}</button>
           <button class="btn-mini" id="esteMes">Este mês</button>
         </div>
+        ${botoesDeVisao()}
+      </div>
+
+      <div class="cartao-topo" style="border-top:1px solid var(--linha)">
         <div class="grupo-filtro">
           ${TIPOS_FILTRO.map(t => `<button class="filtro" data-tipo="${t}" aria-pressed="${estado.filtroAgenda === t}">${t}</button>`).join("")}
         </div>
@@ -2827,28 +3016,7 @@ function desenharCalendario(){
       </div>
     </section>
 
-    <section class="cartao">
-      <div class="cartao-topo"><h2>Ficou pra trás</h2></div>
-      <div class="cartao-corpo">
-        ${atrasados.length ? `
-          <ul class="atrasados">
-            ${atrasados.map(i => {
-              const dias = Math.abs(diasEntre(hoje, i.data));
-              return `<li>
-                <span><span class="pilula p-${i.tipo}">${seguro(i.tipo)}</span> ${seguro(i.titulo)}${i.marca ? " · " + seguro(i.marca) : ""}</span>
-                <span class="fim-atrasado">
-                  <span style="color:var(--vermelho); font-size:.78rem">há ${dias} dia${dias === 1 ? "" : "s"}</span>
-                  ${i.daAgenda ? `
-                    <button class="btn-mini" data-fiz="${seguro(i.id)}" title="Marcar como feito">fiz</button>
-                    <button class="btn-mini" data-passar="${seguro(i.id)}" title="Jogar para hoje">hoje</button>
-                    <button class="icone-btn apagar" data-sumir="${seguro(i.id)}" title="Apagar">${ICONE.lixo}</button>
-                  ` : `<span class="dica-fonte">vem da campanha</span>`}
-                </span>
-              </li>`;
-            }).join("")}
-          </ul>` : `<p class="recado">Nada atrasado por aqui. Tudo em dia.</p>`}
-      </div>
-    </section>
+    ${blocoAtrasados(hoje)}
   `;
 
   pegar("#mesAnterior").addEventListener("click", () => { estado.mes = new Date(ano, mes - 1, 1); desenharCalendario(); });
@@ -2862,25 +3030,8 @@ function desenharCalendario(){
     formularioAgenda(null, d.dataset.dia);
   }));
   pegarTodos("[data-ver]").forEach(b => b.addEventListener("click", (e) => { e.stopPropagation(); verDia(b.dataset.ver, porDia[b.dataset.ver] || []); }));
-
-  /* os três atalhos da lista "Ficou pra trás", para resolver dali
-     mesmo sem ter que voltar no dia */
-  pegarTodos("[data-fiz]").forEach(b => b.addEventListener("click", async () => {
-    if(await gravar("calendario", { status:"feito" }, b.dataset.fiz)){
-      recado("Marcado como feito."); await carregarTudo(); desenhar();
-    }
-  }));
-  pegarTodos("[data-passar]").forEach(b => b.addEventListener("click", async () => {
-    if(await gravar("calendario", { data: hojeISO() }, b.dataset.passar)){
-      recado("Passei para hoje."); await carregarTudo(); desenhar();
-    }
-  }));
-  pegarTodos("[data-sumir]").forEach(b => b.addEventListener("click", async () => {
-    if(!confirm("Apagar este item da agenda?")) return;
-    if(await apagarLinha("calendario", b.dataset.sumir)){
-      recado("Item apagado."); await carregarTudo(); desenhar();
-    }
-  }));
+  ligarBotoesDeVisao();
+  ligarAtrasados();
   pegarTodos("[data-item]").forEach(b => b.addEventListener("click", (e) => {
     e.stopPropagation();
     const id = b.dataset.item;
