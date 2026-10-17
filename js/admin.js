@@ -2897,25 +2897,15 @@ function desenharSemanaAgenda(){
       </div>
 
       <div class="cartao-corpo">
-        <div class="lista-semana">
+        <div class="grade grade-semana-agenda">
+          ${["seg","ter","qua","qui","sex","sáb","dom"].map(d => `<div class="cabeca">${d}</div>`).join("")}
           ${dias.map(d => {
             const lista = (porDia[d.iso] || []).slice().sort((a,b) => String(a.tipo).localeCompare(String(b.tipo)));
             return `
-            <div class="dia-semana ${d.iso === hoje ? "e-hoje" : ""}">
-              <div class="cabeca-dia">
-                <b>${seguro(d.nome)}</b>
-                <small>${d.numero}${d.iso === hoje ? " · hoje" : ""}</small>
-                <button class="btn-mini" data-novo="${d.iso}">adicionar</button>
-              </div>
-              <div class="itens-dia">
-                ${lista.length
-                  ? lista.map(i => `
-                    <button class="item-semana ${i.status === "feito" ? "feito" : ""}" data-item="${seguro(i.id)}">
-                      <span class="pilula p-${i.tipo}">${seguro(i.tipo)}</span>
-                      <span class="texto-item">${seguro(i.titulo)}${i.marca ? " · " + seguro(i.marca) : ""}</span>
-                    </button>`).join("")
-                  : `<span class="dia-vazio">nada marcado</span>`}
-              </div>
+            <div class="dia ${d.iso === hoje ? "hoje" : ""}" data-dia="${d.iso}">
+              <span class="num">${d.numero}</span>
+              <button class="mais-dia" data-novo="${d.iso}" title="Adicionar neste dia">+</button>
+              ${lista.map(i => `<button class="evento pilula p-${i.tipo} ${i.status === "feito" ? "feito" : ""}" data-item="${seguro(i.id)}">${seguro(i.titulo)}</button>`).join("")}
             </div>`;
           }).join("")}
         </div>
@@ -2939,12 +2929,20 @@ function desenharSemanaAgenda(){
   pegar("#estaSemana").addEventListener("click", () => { estado.semanaAgenda = new Date(); desenharSemanaAgenda(); });
   pegar("#novoItem").addEventListener("click", () => formularioAgenda(null, hoje));
   pegarTodos("[data-tipo]").forEach(b => b.addEventListener("click", () => { estado.filtroAgenda = b.dataset.tipo; desenharSemanaAgenda(); }));
-  pegarTodos("[data-novo]").forEach(b => b.addEventListener("click", () => formularioAgenda(null, b.dataset.novo)));
-  pegarTodos("[data-item]").forEach(b => b.addEventListener("click", () => {
-    const i = itensDoCalendario().find(x => String(x.id) === b.dataset.item);
-    if(!i) return;
-    if(!i.daAgenda){ recado("Esse prazo vem da aba Campanhas, mude por lá."); return; }
-    formularioAgenda((estado.dados.calendario || []).find(c => String(c.id) === String(i.id)));
+  pegarTodos("[data-novo]").forEach(b => b.addEventListener("click", (e) => {
+    e.stopPropagation(); formularioAgenda(null, b.dataset.novo);
+  }));
+  pegarTodos(".grade-semana-agenda .dia").forEach(d => d.addEventListener("click", (e) => {
+    if(e.target.closest("button")) return;
+    formularioAgenda(null, d.dataset.dia);
+  }));
+  pegarTodos(".grade-semana-agenda [data-item]").forEach(b => b.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if(String(b.dataset.item).startsWith("campanha-")){
+      recado("Esse prazo vem da aba Campanhas, mude por lá.");
+      return;
+    }
+    formularioAgenda((estado.dados.calendario || []).find(c => String(c.id) === String(b.dataset.item)));
   }));
   ligarBotoesDeVisao();
   ligarAtrasados();
