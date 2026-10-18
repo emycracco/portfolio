@@ -2842,6 +2842,70 @@ function ligarAtrasados(){
   }));
 }
 
+/* ------------------------------------------------------------
+   ARRASTAR UM ITEM PARA OUTRO DIA
+
+   Vale nas duas visões, mês e semana. Pega o item, solta no dia
+   que você quiser e a data muda sozinha. Os prazos que vêm das
+   campanhas não se arrastam: eles pertencem à aba Campanhas.
+
+   No celular não funciona, porque arrastar com o dedo o navegador
+   entende como rolar a tela. Lá você abre o item e troca a data.
+   ------------------------------------------------------------ */
+function ligarArrastarAgenda(){
+  let arrastando = null;
+
+  const limparAlvos = () => pegarTodos(".dia.alvo").forEach(d => d.classList.remove("alvo"));
+
+  pegarTodos(".grade .evento").forEach(ev => {
+    const id = ev.dataset.item || "";
+    if(!id || String(id).startsWith("campanha-")) return;
+    ev.setAttribute("draggable", "true");
+    ev.classList.add("arrastavel");
+    ev.addEventListener("dragstart", (e) => {
+      arrastando = id;
+      ev.classList.add("arrastando");
+      if(e.dataTransfer){
+        e.dataTransfer.effectAllowed = "move";
+        try{ e.dataTransfer.setData("text/plain", id); }catch(err){}
+      }
+    });
+    ev.addEventListener("dragend", () => {
+      arrastando = null;
+      ev.classList.remove("arrastando");
+      limparAlvos();
+    });
+  });
+
+  pegarTodos(".grade .dia").forEach(cel => {
+    cel.addEventListener("dragover", (e) => {
+      if(!arrastando) return;
+      e.preventDefault();
+      if(e.dataTransfer) e.dataTransfer.dropEffect = "move";
+      cel.classList.add("alvo");
+    });
+    cel.addEventListener("dragleave", () => cel.classList.remove("alvo"));
+    cel.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      limparAlvos();
+      const id = arrastando || (e.dataTransfer ? e.dataTransfer.getData("text/plain") : "");
+      arrastando = null;
+      if(!id) return;
+
+      const novoDia = cel.dataset.dia;
+      const item = (estado.dados.calendario || []).find(c => String(c.id) === String(id));
+      if(!item || !novoDia) return;
+      if(String(item.data).slice(0,10) === novoDia) return;   /* soltou no mesmo dia */
+
+      if(await gravar("calendario", { data: novoDia }, id)){
+        recado("Passei para " + dataBR(novoDia) + ".");
+        await carregarTudo();
+        desenhar();
+      }
+    });
+  });
+}
+
 /* A porta de entrada da aba: escolhe qual visão desenhar */
 function desenharAgenda(){
   if(estado.visaoAgenda === "semana") desenharSemanaAgenda();
@@ -2946,6 +3010,7 @@ function desenharSemanaAgenda(){
   }));
   ligarBotoesDeVisao();
   ligarAtrasados();
+  ligarArrastarAgenda();
 }
 
 function desenharCalendario(){
@@ -3030,6 +3095,7 @@ function desenharCalendario(){
   pegarTodos("[data-ver]").forEach(b => b.addEventListener("click", (e) => { e.stopPropagation(); verDia(b.dataset.ver, porDia[b.dataset.ver] || []); }));
   ligarBotoesDeVisao();
   ligarAtrasados();
+  ligarArrastarAgenda();
   pegarTodos("[data-item]").forEach(b => b.addEventListener("click", (e) => {
     e.stopPropagation();
     const id = b.dataset.item;
