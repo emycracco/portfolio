@@ -374,6 +374,23 @@ tbody tr.destacada td:first-child{box-shadow:inset 3px 0 0 var(--rosa);}
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .evento.feito{text-decoration:line-through; opacity:.55;}
+/* ---------- repetir um item da agenda ---------- */
+.caixa-repetir{
+  margin:4px 0 16px; padding:13px 15px; border:1px dashed var(--linha);
+  border-radius:var(--raio-p); background:#fdf8fa;
+}
+.caixa-repetir .campo{margin-bottom:0;}
+.caixa-repetir #detalheRepetir{margin-top:12px;}
+.caixa-repetir #detalheRepetir .campo{margin-top:12px;}
+.dias-semana{display:flex; flex-wrap:wrap; gap:7px;}
+.chip-dia{
+  display:inline-flex; align-items:center; gap:6px; padding:6px 11px;
+  border:1px solid var(--linha); border-radius:999px; background:var(--branco);
+  font-size:.76rem; cursor:var(--toque);
+}
+.chip-dia input{margin:0;}
+.chip-dia:has(input:checked){border-color:var(--rosa); background:var(--rosa-claro); color:var(--magenta);}
+
 /* arrastar um item para outro dia */
 .evento.arrastavel{cursor:grab;}
 .evento.arrastavel:active{cursor:grabbing;}
