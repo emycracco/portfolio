@@ -2749,18 +2749,75 @@ function formularioCupom(cupom){
 function itensDoCalendario(){
   const itens = (estado.dados.calendario || []).map(c => ({
     id: c.id, titulo: c.titulo, marca: c.marca, tipo: c.tipo || "gravar",
-    data: String(c.data || "").slice(0,10), status: c.status || "a fazer", daAgenda: true
+    data: String(c.data || "").slice(0,10), status: c.status || "a fazer",
+    ordem: numero(c.ordem), criado_em: c.criado_em || "", daAgenda: true
   }));
-  /* os prazos das campanhas entram sozinhos, sem você digitar duas vezes */
+  /* os prazos das campanhas entram sozinhos, sem você digitar duas vezes.
+     Eles ficam sempre no fim do dia, porque não dá para reordenar daqui. */
   (estado.dados.campanhas || []).forEach(c => {
     if(!c.prazo) return;
     itens.push({
       id: "campanha-" + c.id, titulo: "Prazo: " + c.campanha, marca: c.cliente,
       tipo: "prazo", data: String(c.prazo).slice(0,10),
-      status: c.status === "Entregue" ? "feito" : "a fazer", daAgenda: false
+      status: c.status === "Entregue" ? "feito" : "a fazer",
+      ordem: 9999, criado_em: "", daAgenda: false
     });
   });
   return itens;
+}
+
+/* A ordem dentro de um dia: primeiro o número que você escolheu
+   arrastando, depois a ordem de criação para desempatar. */
+function porOrdemNoDia(a, b){
+  return (numero(a.ordem) - numero(b.ordem)) ||
+         String(a.criado_em || "").localeCompare(String(b.criado_em || "")) ||
+         String(a.titulo || "").localeCompare(String(b.titulo || ""));
+}
+
+function ordenarCadaDia(porDia){
+  Object.keys(porDia).forEach(d => porDia[d].sort(porOrdemNoDia));
+  return porDia;
+}
+
+/* Os itens da agenda de um dia, já na ordem, sem os prazos de campanha */
+function itensDaAgendaNoDia(iso){
+  return (estado.dados.calendario || [])
+    .filter(c => String(c.data || "").slice(0,10) === iso)
+    .sort(porOrdemNoDia);
+}
+
+/* Põe um item num dia, na posição que você soltou.
+   idAlvo vazio quer dizer "joga no fim do dia". */
+async function reordenarNoDia(id, iso, idAlvo, depois){
+  const arrastado = (estado.dados.calendario || []).find(x => String(x.id) === String(id));
+  if(!arrastado || !iso) return;
+
+  const lista = itensDaAgendaNoDia(iso).filter(x => String(x.id) !== String(id));
+
+  let pos = lista.length;
+  if(idAlvo){
+    const i = lista.findIndex(x => String(x.id) === String(idAlvo));
+    if(i >= 0) pos = depois ? i + 1 : i;
+  }
+  lista.splice(pos, 0, arrastado);
+
+  const mudouDeDia = String(arrastado.data || "").slice(0,10) !== iso;
+  let deuRuim = 0;
+
+  for(let k = 0; k < lista.length; k++){
+    const x = lista[k];
+    const ehOArrastado = String(x.id) === String(id);
+    if(numero(x.ordem) === k && !(ehOArrastado && mudouDeDia)) continue;
+    const campos = { ordem: k };
+    if(ehOArrastado) campos.data = iso;
+    if(!(await gravar("calendario", campos, x.id))) deuRuim++;
+  }
+
+  if(deuRuim) recado("Não consegui salvar a ordem toda. Tente de novo.", true);
+  else if(mudouDeDia) recado("Passei para " + dataBR(iso) + ".");
+
+  await carregarTudo();
+  desenhar();
 }
 
 /* A segunda-feira da semana de uma data qualquer */
@@ -2877,6 +2934,40 @@ function ligarArrastarAgenda(){
     });
   });
 
+  /* soltar EM CIMA de outro item muda a ordem dentro do dia.
+     Metade de cima: entra antes. Metade de baixo: entra depois. */
+  pegarTodos(".grade .evento").forEach(alvo => {
+    const idAlvo = alvo.dataset.item || "";
+    alvo.addEventListener("dragover", (e) => {
+      if(!arrastando || arrastando === idAlvo) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const caixa = alvo.getBoundingClientRect();
+      const embaixo = (e.clientY - caixa.top) > caixa.height / 2;
+      alvo.classList.toggle("solta-depois", embaixo);
+      alvo.classList.toggle("solta-antes", !embaixo);
+    });
+    alvo.addEventListener("dragleave", () => {
+      alvo.classList.remove("solta-antes", "solta-depois");
+    });
+    alvo.addEventListener("drop", async (e) => {
+      if(!arrastando || arrastando === idAlvo) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const depois = alvo.classList.contains("solta-depois");
+      alvo.classList.remove("solta-antes", "solta-depois");
+      limparAlvos();
+      const id = arrastando;
+      arrastando = null;
+
+      const cel = alvo.closest(".dia");
+      if(!cel) return;
+      /* soltou em cima de um prazo de campanha: vale como soltar no dia */
+      const referencia = String(idAlvo).startsWith("campanha-") ? "" : idAlvo;
+      await reordenarNoDia(id, cel.dataset.dia, referencia, depois);
+    });
+  });
+
   pegarTodos(".grade .dia").forEach(cel => {
     cel.addEventListener("dragover", (e) => {
       if(!arrastando) return;
@@ -2895,13 +2986,8 @@ function ligarArrastarAgenda(){
       const novoDia = cel.dataset.dia;
       const item = (estado.dados.calendario || []).find(c => String(c.id) === String(id));
       if(!item || !novoDia) return;
-      if(String(item.data).slice(0,10) === novoDia) return;   /* soltou no mesmo dia */
-
-      if(await gravar("calendario", { data: novoDia }, id)){
-        recado("Passei para " + dataBR(novoDia) + ".");
-        await carregarTudo();
-        desenhar();
-      }
+      /* soltou no vazio do dia: vai para o fim da lista daquele dia */
+      await reordenarNoDia(id, novoDia, "", false);
     });
   });
 }
@@ -2925,6 +3011,7 @@ function desenharSemanaAgenda(){
   const todos = itensDoCalendario().filter(i => filtro === "Todos" || i.tipo === filtro.toLowerCase());
   const porDia = {};
   todos.forEach(i => { (porDia[i.data] = porDia[i.data] || []).push(i); });
+  ordenarCadaDia(porDia);
 
   const dias = [];
   for(let i = 0; i < 7; i++){
@@ -2964,7 +3051,7 @@ function desenharSemanaAgenda(){
         <div class="grade grade-semana-agenda">
           ${["seg","ter","qua","qui","sex","sáb","dom"].map(d => `<div class="cabeca">${d}</div>`).join("")}
           ${dias.map(d => {
-            const lista = (porDia[d.iso] || []).slice().sort((a,b) => String(a.tipo).localeCompare(String(b.tipo)));
+            const lista = porDia[d.iso] || [];
             return `
             <div class="dia ${d.iso === hoje ? "hoje" : ""}" data-dia="${d.iso}">
               <span class="num">${d.numero}</span>
@@ -3023,6 +3110,7 @@ function desenharCalendario(){
 
   const porDia = {};
   todos.forEach(i => { (porDia[i.data] = porDia[i.data] || []).push(i); });
+  ordenarCadaDia(porDia);
 
   /* a grade começa na segunda-feira */
   const primeiro = new Date(ano, mes, 1);
