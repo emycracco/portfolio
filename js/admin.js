@@ -3120,6 +3120,25 @@ function verDia(iso, lista){
   pegar("#novoNesteDia").addEventListener("click", () => formularioAgenda(null, iso));
 }
 
+/* Apaga de uma vez todos os itens que nasceram da mesma repetição */
+async function apagarSerie(serie){
+  if(!window.sb || !serie) return false;
+  try{
+    const { error } = await window.sb.from("calendario").delete().eq("serie", serie);
+    if(error){ recado("Não consegui apagar a série: " + error.message, true); return false; }
+    return true;
+  }catch(e){
+    recado("Não consegui apagar a série agora.", true);
+    return false;
+  }
+}
+
+const DIAS_DA_SEMANA = [
+  { n:1, nome:"seg" }, { n:2, nome:"ter" }, { n:3, nome:"qua" }, { n:4, nome:"qui" },
+  { n:5, nome:"sex" }, { n:6, nome:"sáb" }, { n:0, nome:"dom" }
+];
+const MAXIMO_DA_SERIE = 180;   /* trava de segurança, para não criar item sem fim */
+
 function formularioAgenda(item, dataSugerida){
   const c = item || {};
   const data = c.data ? String(c.data).slice(0,10) : (dataSugerida || hojeISO());
@@ -3146,7 +3165,29 @@ function formularioAgenda(item, dataSugerida){
           </select>
         </div>
       </div>
+
+      <div class="caixa-repetir">
+        <div class="campo"><label for="c-repetir">Repetir</label>
+          <select id="c-repetir">
+            <option value="nao" selected>não repetir</option>
+            <option value="dia">todo dia</option>
+            <option value="semana">nos dias que eu escolher</option>
+          </select>
+        </div>
+        <div id="detalheRepetir" hidden>
+          <div class="dias-semana" id="escolhaDias">
+            ${DIAS_DA_SEMANA.map(d => `
+              <label class="chip-dia"><input type="checkbox" value="${d.n}"><span>${d.nome}</span></label>`).join("")}
+          </div>
+          <div class="campo"><label for="c-ate">Repetir até</label>
+            <input id="c-ate" type="date" value="${somarDias(data, 30)}">
+          </div>
+          <p class="dica-fonte">Cria um item para cada dia até essa data. No máximo ${MAXIMO_DA_SERIE} de uma vez.</p>
+        </div>
+      </div>
+
       <div class="acoes-janela">
+        ${item && c.serie ? `<button type="button" class="btn btn-simples apagar" id="apagarSerie">Apagar a série toda</button>` : ""}
         ${item ? `<button type="button" class="btn btn-simples apagar" id="apagarItem">Apagar</button>` : ""}
         <button type="button" class="btn btn-simples" id="cancelar">Cancelar</button>
         <button type="submit" class="btn btn-principal">Salvar</button>
@@ -3154,11 +3195,29 @@ function formularioAgenda(item, dataSugerida){
     </form>
   `);
   pegar("#cancelar").addEventListener("click", fecharJanela);
+
+  /* os dias da semana só aparecem quando você escolhe "nos dias que eu escolher" */
+  const campoRepetir = pegar("#c-repetir");
+  const detalhe = pegar("#detalheRepetir");
+  const escolhaDias = pegar("#escolhaDias");
+  campoRepetir.addEventListener("change", () => {
+    const modo = campoRepetir.value;
+    detalhe.hidden = modo === "nao";
+    escolhaDias.hidden = modo !== "semana";
+  });
+
   if(item){
     pegar("#apagarItem").addEventListener("click", async () => {
       if(!confirm("Apagar este item do calendário?")) return;
       if(await apagarLinha("calendario", c.id)){ fecharJanela(); recado("Item apagado."); await carregarTudo(); desenhar(); }
     });
+    if(c.serie){
+      pegar("#apagarSerie").addEventListener("click", async () => {
+        const quantos = (estado.dados.calendario || []).filter(x => x.serie === c.serie).length;
+        if(!confirm("Apagar os " + quantos + " itens dessa repetição?")) return;
+        if(await apagarSerie(c.serie)){ fecharJanela(); recado("Série apagada."); await carregarTudo(); desenhar(); }
+      });
+    }
   }
   pegar("#formAgenda").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -3170,9 +3229,56 @@ function formularioAgenda(item, dataSugerida){
       status: pegar("#c-status").value
     };
     if(!linha.titulo || !linha.data){ recado("Escreva o que é e escolha a data.", true); return; }
-    if(await gravar("calendario", linha, c.id)){
-      fecharJanela(); recado("Item salvo."); await carregarTudo(); desenhar();
+
+    /* ---- as repetições ---- */
+    const modo = campoRepetir.value;
+    let copias = [];
+
+    if(modo !== "nao"){
+      const ate = pegar("#c-ate").value;
+      if(!ate){ recado("Escolha até quando repetir.", true); return; }
+      if(ate <= linha.data){ recado("A data final tem que ser depois da data do item.", true); return; }
+
+      const escolhidos = Array.from(escolhaDias.querySelectorAll("input:checked")).map(x => Number(x.value));
+      if(modo === "semana" && !escolhidos.length){ recado("Marque pelo menos um dia da semana.", true); return; }
+
+      const serie = "s" + Date.now() + Math.floor(Math.random() * 1000);
+      linha.serie = serie;
+
+      let dia = somarDias(linha.data, 1);
+      while(dia <= ate && copias.length < MAXIMO_DA_SERIE){
+        const semana = new Date(dia + "T00:00:00").getDay();
+        if(modo === "dia" || escolhidos.includes(semana)){
+          copias.push({
+            titulo: linha.titulo, marca: linha.marca, tipo: linha.tipo,
+            data: dia, status: "a fazer", serie: serie
+          });
+        }
+        dia = somarDias(dia, 1);
+      }
+
+      if(!copias.length){
+        recado("Nenhum dia bateu com o que você marcou. Confira os dias e a data final.", true);
+        return;
+      }
+      if(!confirm("Vou criar este item e mais " + copias.length + " repetições, até " + dataBR(ate) + ". Pode ser?")) return;
     }
+
+    if(!(await gravar("calendario", linha, c.id))) return;
+
+    let falharam = 0;
+    for(const copia of copias){
+      if(!(await gravar("calendario", copia))) falharam++;
+    }
+
+    fecharJanela();
+    recado(copias.length
+      ? (falharam
+          ? "Salvei, mas " + falharam + " repetição(ões) não entraram."
+          : "Item salvo com " + copias.length + " repetições.")
+      : "Item salvo.", falharam > 0);
+    await carregarTudo();
+    desenhar();
   });
 }
 
