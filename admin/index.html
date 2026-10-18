@@ -374,6 +374,11 @@ tbody tr.destacada td:first-child{box-shadow:inset 3px 0 0 var(--rosa);}
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .evento.feito{text-decoration:line-through; opacity:.55;}
+/* arrastar um item para outro dia */
+.evento.arrastavel{cursor:grab;}
+.evento.arrastavel:active{cursor:grabbing;}
+.evento.arrastando{opacity:.35;}
+.dia.alvo{box-shadow:inset 0 0 0 2px var(--lima, #c6e94f); background:#fbfff0;}
 .mais-itens{display:block; width:100%; border:0; background:none; color:var(--magenta); font-size:.66rem; text-align:left; padding:3px 6px;}
 .atrasados li{display:flex; justify-content:space-between; gap:12px; align-items:center; padding:8px 0; border-bottom:1px solid var(--linha); font-size:.85rem;}
 .atrasados{list-style:none; margin:0; padding:0;}
