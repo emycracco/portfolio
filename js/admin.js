@@ -3048,6 +3048,8 @@ function desenharSemanaAgenda(){
       </div>
 
       <div class="cartao-corpo">
+        <p class="dica-rolar">arraste para o lado para ver a semana toda</p>
+        <div class="rolagem rolagem-grade">
         <div class="grade grade-semana-agenda">
           ${["seg","ter","qua","qui","sex","sáb","dom"].map(d => `<div class="cabeca">${d}</div>`).join("")}
           ${dias.map(d => {
@@ -3059,6 +3061,7 @@ function desenharSemanaAgenda(){
               ${lista.map(i => `<button class="evento pilula p-${i.tipo} ${i.status === "feito" ? "feito" : ""}" data-item="${seguro(i.id)}">${seguro(i.titulo)}</button>`).join("")}
             </div>`;
           }).join("")}
+        </div>
         </div>
         <div class="legenda-agenda">
           <span class="rotulo-legenda">cores</span>
@@ -3146,6 +3149,8 @@ function desenharCalendario(){
         </div>
       </div>
       <div class="cartao-corpo">
+        <p class="dica-rolar">arraste para o lado para ver o mês todo</p>
+        <div class="rolagem rolagem-grade">
         <div class="grade">
           ${["seg","ter","qua","qui","sex","sáb","dom"].map(d => `<div class="cabeca">${d}</div>`).join("")}
           ${celulas.map(c => {
@@ -3159,6 +3164,7 @@ function desenharCalendario(){
               ${sobra > 0 ? `<button class="mais-itens" data-ver="${c.iso}">+${sobra} mais</button>` : ""}
             </div>`;
           }).join("")}
+        </div>
         </div>
         <div class="legenda-agenda">
           <span class="rotulo-legenda">cores</span>
