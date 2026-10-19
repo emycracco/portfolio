@@ -208,7 +208,21 @@ button{font-family:inherit; font-size:inherit; color:inherit;}
 .colunas{display:grid; grid-template-columns:1.7fr 1fr; gap:18px;}
 
 /* ---------- tabelas ---------- */
-.rolagem{overflow-x:auto;}
+/* Tudo que rola de lado usa .rolagem. A barrinha fica VISÍVEL de
+   propósito: sem ela não dá para saber que tem mais coisa ao lado,
+   principalmente no celular. */
+.rolagem{
+  overflow-x:auto; -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin; scrollbar-color:var(--rosa-dourado) var(--rosa-claro);
+  padding-bottom:4px;
+}
+.rolagem::-webkit-scrollbar{height:9px;}
+.rolagem::-webkit-scrollbar-track{background:var(--rosa-claro); border-radius:999px;}
+.rolagem::-webkit-scrollbar-thumb{background:var(--rosa-dourado); border-radius:999px;}
+.rolagem::-webkit-scrollbar-thumb:hover{background:var(--magenta);}
+
+/* o aviso de arrastar só aparece onde a tela é pequena */
+.dica-rolar{display:none;}
 table{width:100%; border-collapse:collapse; font-size:.85rem;}
 th{
   text-align:left; font-weight:500; font-size:.64rem; letter-spacing:.14em;
@@ -354,7 +368,11 @@ tbody tr.destacada td:first-child{box-shadow:inset 3px 0 0 var(--rosa);}
 /* ---------- calendário ---------- */
 .mes-topo{display:flex; align-items:center; gap:10px;}
 .mes-nome{font-size:.95rem; min-width:160px; text-align:center; text-transform:capitalize;}
-.grade{display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--linha); border:1px solid var(--linha); border-radius:var(--raio-p); overflow:hidden;}
+/* minmax(0,1fr) e não 1fr: com 1fr a coluna nunca fica menor que o
+   texto de dentro, e um título comprido empurrava a grade para fora
+   da tela, escondendo o domingo. */
+.grade{display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:1px; background:var(--linha); border:1px solid var(--linha); border-radius:var(--raio-p); overflow:hidden;}
+.grade .dia{min-width:0;}
 .grade .cabeca{background:#fff7fa; padding:8px 6px; text-align:center; font-size:.62rem; letter-spacing:.12em; text-transform:uppercase; color:var(--tinta-suave);}
 .dia{background:var(--branco); min-height:104px; padding:6px 7px; position:relative;}
 .dia.fora{background:#fdf8fa; color:var(--rosa-dourado);}
@@ -606,6 +624,19 @@ textarea.roteiro{
   .campos{grid-template-columns:1fr;}
   .dia{min-height:76px;}
   .evento{font-size:.62rem;}
+
+  /* No celular a grade não encolhe mais: ela mantém a largura e a
+     pessoa arrasta de lado. Antes, espremida, os dias ficavam
+     ilegíveis e o fim da semana sumia da tela. */
+  .grade{min-width:700px;}
+  .grade-semana-agenda{min-width:700px;}
+  .grade-semana-agenda .dia{min-height:220px;}
+  .dica-rolar{
+    display:block; margin:0 0 9px;
+    font-size:.72rem; color:var(--tinta-suave); font-style:italic;
+  }
+  /* no celular o atalho de ordem dos cupons fica mais confortável */
+  .ordem-cupom .icone-btn{width:30px; height:30px;}
 }
 /* ============================================================
    VISUAL NOVO, IGUAL AO DO PORTFÓLIO
