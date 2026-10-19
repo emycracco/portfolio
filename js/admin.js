@@ -2766,9 +2766,14 @@ function itensDoCalendario(){
   return itens;
 }
 
-/* A ordem dentro de um dia: primeiro o número que você escolheu
-   arrastando, depois a ordem de criação para desempatar. */
+/* A ordem dentro de um dia:
+   1. o que já está feito desce para o fim, sempre
+   2. depois o número que você escolheu arrastando
+   3. a ordem de criação para desempatar */
 function porOrdemNoDia(a, b){
+  const feitoA = a.status === "feito" ? 1 : 0;
+  const feitoB = b.status === "feito" ? 1 : 0;
+  if(feitoA !== feitoB) return feitoA - feitoB;
   return (numero(a.ordem) - numero(b.ordem)) ||
          String(a.criado_em || "").localeCompare(String(b.criado_em || "")) ||
          String(a.titulo || "").localeCompare(String(b.titulo || ""));
