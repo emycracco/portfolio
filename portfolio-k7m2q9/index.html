@@ -305,6 +305,9 @@ body.tem-faixa .capa{padding-top:calc(var(--altura-faixa, 52px) + 162px);}
   background:linear-gradient(160deg, var(--magenta) 0%, var(--roxo) 100%);
 }
 .destaque-thumb{position:absolute; inset:0; width:100%; height:100%; object-fit:cover;}
+/* quando o YouTube não devolve capa nenhuma, fica o fundo da casa
+   com o play, em vez do quadrado cinza de imagem quebrada */
+.sem-capa .play{opacity:1;}
 .destaque-previa{position:absolute; inset:0; width:100%; height:100%; border:0; opacity:0; transition:opacity .45s ease; pointer-events:none; z-index:1;}
 .destaque-previa.tocando{opacity:1;}
 .formato{position:relative; z-index:2; padding:6px 14px; border-radius:999px; background:var(--branco); border:2px solid var(--tinta); font-size:.66rem; letter-spacing:.12em; text-transform:uppercase;}
@@ -1477,7 +1480,17 @@ function ligarCapasEPrevias(){
       `https://i.ytimg.com/vi/${codigo}/sddefault.jpg`,
       `https://i.ytimg.com/vi/${codigo}/hqdefault.jpg`
     ] : [];
-    const tentarProxima = () => { const p = reservas.shift(); if(p) img.src = p; };
+    /* Acabando as opções, a imagem some e fica o fundo rosa com o
+       play. É bem melhor que o quadrado cinza de imagem quebrada.
+       Quando isso acontece, quase sempre o vídeo está privado ou
+       foi apagado no YouTube. */
+    const tentarProxima = () => {
+      const p = reservas.shift();
+      if(p){ img.src = p; return; }
+      img.style.display = "none";
+      const dono = img.parentNode;
+      if(dono) dono.classList.add("sem-capa");
+    };
     /* quando a capa não existe o YouTube devolve uma imagenzinha
        cinza de 120x90 em vez de dar erro, por isso olho o tamanho */
     const conferirTamanho = () => { if(img.naturalWidth && img.naturalWidth < 400) tentarProxima(); };
