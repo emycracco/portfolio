@@ -69,12 +69,12 @@ h1,h2{font-family:var(--titulo); font-weight:600; margin:0; line-height:1.15;}
    verde atrás, no mesmo estilo de adesivo do portfólio.
    Para trocar a foto basta substituir o arquivo foto-sobre.jpg. */
 .retrato{
-  width:208px; height:262px; margin:0 auto 20px; border-radius:26px;
+  width:208px; height:208px; margin:0 auto 20px; border-radius:50%;
   overflow:hidden; border:var(--borda);
   box-shadow:8px 8px 0 var(--lima), 8px 8px 0 3px var(--tinta);
   background:linear-gradient(150deg, var(--magenta-claro), var(--roxo));
 }
-.retrato img{width:100%; height:100%; object-fit:cover; object-position:50% 18%;}
+.retrato img{width:100%; height:100%; object-fit:cover; object-position:50% 50%;}
 .topo-links h1{font-size:2.1rem;}
 .topo-links h1 span{color:var(--magenta);}
 .arroba{margin:5px 0 0; font-family:var(--titulo); font-weight:500; font-size:.92rem; color:var(--roxo);}
@@ -214,7 +214,7 @@ h1,h2{font-family:var(--titulo); font-weight:600; margin:0; line-height:1.15;}
 
   <div class="topo-links">
     <!-- FOTO: para trocar, substitua o arquivo foto-sobre.jpg -->
-    <div class="retrato"><img src="/foto-sobre.jpg" alt="Emellyn Cracco" width="910" height="1608"></div>
+    <div class="retrato"><img src="/foto-sobre.jpg" alt="Emellyn Cracco" width="910" height="910"></div>
     <h1>Emellyn <span>Cracco</span></h1>
     <p class="arroba">@emycracco</p>
     <p class="oficio">UGC Creator em Curitiba, PR</p>
