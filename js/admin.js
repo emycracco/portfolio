@@ -97,7 +97,7 @@ const ABAS = [
   { id:"cupons",     grupo:"meu site",     nome:"Cupons",     sub:"Seus cupons e links de afiliada, prontos para enviar." },
   { id:"prospeccao", grupo:"meu site",     nome:"Prospecção", sub:"Mandar a sua apresentação para várias marcas de uma vez." },
   { id:"midiakit",   grupo:"meu site",     nome:"Mídia kit",  sub:"Como ele está hoje, pronto para mandar para a marca." },
-  { id:"conteudo",   grupo:"minha rotina", nome:"Conteúdo",   sub:"A sua semana de postagens, canal por canal." },
+  { id:"conteudo",   grupo:"minha rotina", nome:"Conteúdo Shop",   sub:"A sua semana de postagens no TikTok Shop, no Insta shop e na Shopee." },
   { id:"calendario", grupo:"minha rotina", nome:"Calendário", sub:"O mês inteiro de gravar, editar e postar." },
   { id:"campanhas",  grupo:"minha rotina", nome:"Campanhas",  sub:"Trabalhos, valores e prazos." },
   { id:"checklist",  grupo:"minha rotina", nome:"Checklist",  sub:"O que ainda falta no seu portfólio." },
@@ -123,8 +123,11 @@ const FUNIL = ["Briefing", "Roteiro", "Aprovação Roteiro", "Gravação", "Edi�
 const CANAIS = [
   { id:"tiktok",         nome:"TikTok Shop",   curto:"TikTok",      meta:4, fonte:true,  cor:"p-editar" },
   { id:"instagram_shop", nome:"Insta shop",    curto:"Insta shop",  meta:1, fonte:false, cor:"p-conteudo" },
-  { id:"shopee",         nome:"Shopee Vídeos", curto:"Shopee",      meta:2, fonte:false, cor:"p-pago" },
-  { id:"instagram",      nome:"Insta pessoal", curto:"Insta",       meta:0, fonte:false, cor:"p-funil" }
+  { id:"shopee",         nome:"Shopee Vídeos", curto:"Shopee",      meta:2, fonte:false, cor:"p-pago" }
+  /* O Insta pessoal saiu daqui: esse conteúdo vive no Calendário. Para trazer de volta um dia,
+     basta descomentar esta linha (e pôr a vírgula na de cima).
+  ,{ id:"instagram",      nome:"Insta pessoal", curto:"Insta",       meta:0, fonte:false, cor:"p-funil" }
+  */
 ];
 const ETAPAS = ["ideia", "gravado", "editado", "postado"];
 const TIPOS_CONTEUDO = ["review", "unboxing", "rotina", "tutorial", "antes e depois", "oferta do dia", "trend", "resposta a comentário", "bastidores", "vitrine"];
