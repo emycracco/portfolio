@@ -65,6 +65,7 @@ const ICONE = {
   checklist: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>',
   cabelo:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-3.9 0-6 3.4-6 7.5 0 3.6.8 6.3 1.4 7.8M12 3c3.9 0 6 3.4 6 7.5 0 3.6-.8 6.3-1.4 7.8"/><path d="M12 3c-1.6 2.4-2 5-2 7.5 0 3.6.4 6.3 1 7.8M12 3c1.6 2.4 2 5 2 7.5 0 3.6-.4 6.3-1 7.8"/><path d="M8 21h8"/></svg>',
   links:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a4 4 0 0 0 5.7.3l3-3A4 4 0 0 0 13 4.7l-1.7 1.7"/><path d="M14 11a4 4 0 0 0-5.7-.3l-3 3A4 4 0 0 0 11 19.3l1.7-1.7"/></svg>',
+  treino:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6M7 7v10M17 7v10M20 9v6"/><path d="M7 12h10"/></svg>',
   mais:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
   subir:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5M8 9l4-4 4 4M4 19h16"/></svg>',
   baixar:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10M8 11l4 4 4-4M4 19h16"/></svg>',
@@ -101,6 +102,7 @@ const ABAS = [
   { id:"calendario", grupo:"minha rotina", nome:"Calendário", sub:"O mês inteiro de gravar, editar e postar." },
   { id:"campanhas",  grupo:"minha rotina", nome:"Campanhas",  sub:"Trabalhos, valores e prazos." },
   { id:"checklist",  grupo:"minha rotina", nome:"Checklist",  sub:"O que ainda falta no seu portfólio." },
+  { id:"treino",     grupo:"minha rotina", nome:"Rotina de treino", sub:"O que você treinou, dia a dia, com o registro do mês inteiro." },
   { id:"cabelo",     grupo:"minha rotina", nome:"Cronograma capilar", sub:"Em que passo do tratamento você está." },
   { id:"links",      grupo:"minha rotina", nome:"Links úteis", sub:"Os endereços que você sempre precisa, num lugar só." }
 ];
@@ -129,6 +131,15 @@ const CANAIS = [
   ,{ id:"instagram",      nome:"Insta pessoal", curto:"Insta",       meta:0, fonte:false, cor:"p-funil" }
   */
 ];
+/* As suas modalidades de treino, na ordem em que aparecem na grade da semana.
+   Para acrescentar uma, ponha aqui e some o id na lista do arquivo treinos.sql. */
+const MODALIDADES = [
+  { id:"calistenia",    nome:"Calistenia",    cor:"p-treino" },
+  { id:"flexibilidade", nome:"Flexibilidade", cor:"p-conteudo" },
+  { id:"pole",          nome:"Pole",          cor:"p-editar" },
+  { id:"danca",         nome:"Dança",         cor:"p-pago" },
+  { id:"outro",         nome:"Outro",         cor:"p-funil" }
+];
 const ETAPAS = ["ideia", "gravado", "editado", "postado"];
 const TIPOS_CONTEUDO = ["review", "unboxing", "rotina", "tutorial", "antes e depois", "oferta do dia", "trend", "resposta a comentário", "bastidores", "vitrine"];
 const SITUACOES = ["Lead", "Conversando", "Cliente", "Parada"];
@@ -149,7 +160,7 @@ const estado = {
   email: "",
   faltando: [],
   sessaoExpirou: false,
-  dados: { videos:[], marcas:[], calendario:[], campanhas:[], marcados:{}, visitas:[], cupons:[], conteudos:[], email_envios:[], email_optout:[], cabelo:[], links:[] },
+  dados: { videos:[], marcas:[], calendario:[], campanhas:[], marcados:{}, visitas:[], cupons:[], conteudos:[], email_envios:[], email_optout:[], cabelo:[], links:[], treinos:[] },
   buscaLinks: "", filtroGrupoLink: "Todos",
 
   /* --- a aba Prospecção --- */
@@ -176,6 +187,8 @@ const estado = {
     posicaoFila: 0
   },
   semana: new Date(), filtroConteudo: "Todos",
+  /* a aba Rotina de treino: a semana é o padrão, o mês é a outra visão */
+  visaoTreino: "semana", semanaTreino: new Date(), mesTreino: new Date(),
   /* a aba Calendário: mês é o padrão, semana é a outra visão */
   visaoAgenda: "mes", semanaAgenda: new Date(),
   buscaCupons: "", filtroCupons: "Todos",
@@ -306,7 +319,7 @@ async function apagarLinha(tabela, id){
 async function carregarTudo(){
   estado.faltando = [];
   estado.sessaoExpirou = false;
-  const [videos, marcas, calendario, campanhas, marcados, visitas, cupons, conteudos, envios, optout, cabelo, links] = await Promise.all([
+  const [videos, marcas, calendario, campanhas, marcados, visitas, cupons, conteudos, envios, optout, cabelo, links, treinos] = await Promise.all([
     lerTabela("videos", "ordem", true),
     lerTabela("marcas", "criado_em", false),
     lerTabela("calendario", "data", true),
@@ -318,8 +331,10 @@ async function carregarTudo(){
     lerTabela("email_envios", "criado_em", false),
     lerTabela("email_optout", "criado_em", false),
     lerTabela("cabelo", "data", false),
-    lerTabela("links", "ordem", true)
+    lerTabela("links", "ordem", true),
+    lerTabela("treinos", "data", false)
   ]);
+  estado.dados.treinos = treinos;
   estado.dados.links = links;
   estado.dados.cabelo = cabelo;
   estado.dados.email_envios = envios;
@@ -432,6 +447,7 @@ function desenhar(){
   if(estado.aba === "prospeccao") desenharProspeccao();
   if(estado.aba === "midiakit")   desenharMidiaKit();
   if(estado.aba === "conteudo")   desenharConteudo();
+  if(estado.aba === "treino")     desenharTreino();
   if(estado.aba === "calendario") desenharAgenda();
   if(estado.aba === "campanhas")  desenharCampanhas();
   if(estado.aba === "checklist")  desenharChecklist();
@@ -2495,6 +2511,289 @@ async function moverCupom(id, direcao){
   todos[b] = guarda;
 
   await salvarOrdemCupons(todos);
+}
+
+/* ============================================================
+   ABA: ROTINA DE TREINO
+   A semana é o padrão, igual ao quadrinho da parede. O mês é
+   para olhar para trás e ver como foi o mês inteiro.
+   ============================================================ */
+function modalidadePor(id){
+  return MODALIDADES.find(m => m.id === id) || MODALIDADES[MODALIDADES.length - 1];
+}
+
+/* Quantos treinos, em quantos dias diferentes, e o que você mais fez. */
+function contasDeTreino(lista){
+  const dias = new Set(lista.map(t => String(t.data).slice(0,10)));
+  const porModalidade = {};
+  lista.forEach(t => { porModalidade[t.modalidade] = (porModalidade[t.modalidade] || 0) + 1; });
+  let campea = "", maior = 0;
+  Object.keys(porModalidade).forEach(k => {
+    if(porModalidade[k] > maior){ maior = porModalidade[k]; campea = k; }
+  });
+  return { treinos: lista.length, dias: dias.size, campea: campea ? modalidadePor(campea).nome : "—" };
+}
+
+function botoesDeVisaoTreino(){
+  return `<div class="grupo-filtro">
+    <button class="filtro" data-visaotreino="semana" aria-pressed="${estado.visaoTreino === "semana"}">semana</button>
+    <button class="filtro" data-visaotreino="mes" aria-pressed="${estado.visaoTreino === "mes"}">mês</button>
+  </div>`;
+}
+
+function legendaTreino(){
+  return `<div class="cartao-corpo legenda">
+    ${MODALIDADES.map(m => `<span class="pilula ${m.cor}">${m.nome}</span>`).join("")}
+  </div>`;
+}
+
+function ligarBotoesTreino(){
+  pegarTodos("[data-visaotreino]").forEach(b => b.addEventListener("click", () => {
+    estado.visaoTreino = b.dataset.visaotreino;
+    desenharTreino();
+  }));
+  const novo = pegar("#novoTreino");
+  if(novo) novo.addEventListener("click", () => formularioTreino());
+
+  pegarTodos("[data-novotreino]").forEach(b => b.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const [modalidade, dia] = b.dataset.novotreino.split("|");
+    formularioTreino(null, modalidade, dia);
+  }));
+
+  pegarTodos("[data-treino]").forEach(b => b.addEventListener("click", (e) => {
+    e.stopPropagation();
+    formularioTreino((estado.dados.treinos || []).find(t => String(t.id) === b.dataset.treino));
+  }));
+}
+
+function desenharTreino(){
+  /* enquanto a tabela não existir no Supabase, não adianta desenhar a grade */
+  if(estado.faltando.some(f => String(f).includes("treinos"))){
+    pegar("#acoesTopo").innerHTML = "";
+    pegar("#area").innerHTML = `
+      <div class="recado">
+        <p style="margin:0 0 6px"><b>Falta criar a tabela dos treinos.</b></p>
+        <p style="margin:0">Abra o Supabase, vá em <b>SQL Editor</b>, <b>New query</b>, cole o arquivo
+        <b>treinos.sql</b> que está na raiz do site e clique em <b>Run</b>. Depois recarregue esta página.</p>
+      </div>`;
+    return;
+  }
+  if(estado.visaoTreino === "mes") desenharMesTreino();
+  else desenharSemanaTreino();
+}
+
+function desenharSemanaTreino(){
+  const dias = diasDaSemana(estado.semanaTreino);
+  const hoje = hojeISO();
+  const todos = estado.dados.treinos || [];
+
+  const daSemana = todos.filter(t => {
+    const dia = String(t.data || "").slice(0,10);
+    return dia >= dias[0].iso && dia <= dias[6].iso;
+  });
+
+  const porCelula = {};
+  daSemana.forEach(t => {
+    const chave = t.modalidade + "|" + String(t.data).slice(0,10);
+    (porCelula[chave] = porCelula[chave] || []).push(t);
+  });
+
+  const contas = contasDeTreino(daSemana);
+  const intervalo = dias[0].numero + " a " + dias[6].numero + " de " +
+    new Date(dias[6].iso + "T00:00:00").toLocaleDateString("pt-BR", { month:"long" });
+
+  pegar("#acoesTopo").innerHTML = `<button class="btn btn-principal" id="novoTreino">${ICONE.mais} Novo treino</button>`;
+
+  pegar("#area").innerHTML = `
+    <div class="faixa-numeros tres">
+      <div class="numero"><b>${contas.treinos}</b><small>treinos na semana</small></div>
+      <div class="numero"><b>${contas.dias} de 7</b><small>dias que você treinou</small></div>
+      <div class="numero"><b>${seguro(contas.campea)}</b><small>o que você mais fez</small></div>
+    </div>
+
+    <section class="cartao">
+      <div class="cartao-topo">
+        <div class="mes-topo">
+          <button class="icone-btn" id="semanaTreinoAnterior" aria-label="Semana anterior">${ICONE.seta}</button>
+          <span class="mes-nome">${seguro(intervalo)}</span>
+          <button class="icone-btn" id="semanaTreinoSeguinte" aria-label="Próxima semana" style="transform:rotate(180deg)">${ICONE.seta}</button>
+          <button class="btn-mini" id="estaSemanaTreino">Esta semana</button>
+        </div>
+        ${botoesDeVisaoTreino()}
+      </div>
+
+      <div class="rolagem">
+        <div class="grade-semana">
+          <div class="canto"></div>
+          ${dias.map(d => `<div class="cabeca-dia ${d.iso === hoje ? "hoje" : ""}">${d.nome} ${d.numero}</div>`).join("")}
+
+          ${MODALIDADES.map(m => `
+            <div class="nome-canal">
+              <span class="pilula ${m.cor}">${seguro(m.nome)}</span>
+            </div>
+            ${dias.map(d => {
+              const itens = porCelula[m.id + "|" + d.iso] || [];
+              return `
+              <div class="celula ${d.iso === hoje ? "hoje" : ""}">
+                <button class="mais-dia" data-novotreino="${m.id}|${d.iso}" title="Anotar treino neste dia">+</button>
+                ${itens.map(t => `
+                  <button class="chip postado" data-treino="${seguro(t.id)}" title="${seguro(t.o_que)}">
+                    ${seguro(t.o_que)}${t.duracao ? " · " + seguro(t.duracao) : ""}
+                  </button>`).join("")}
+              </div>`;
+            }).join("")}
+          `).join("")}
+        </div>
+      </div>
+
+      ${legendaTreino()}
+    </section>`;
+
+  pegar("#semanaTreinoAnterior").addEventListener("click", () => {
+    const d = new Date(estado.semanaTreino); d.setDate(d.getDate()-7); estado.semanaTreino = d; desenharTreino();
+  });
+  pegar("#semanaTreinoSeguinte").addEventListener("click", () => {
+    const d = new Date(estado.semanaTreino); d.setDate(d.getDate()+7); estado.semanaTreino = d; desenharTreino();
+  });
+  pegar("#estaSemanaTreino").addEventListener("click", () => {
+    estado.semanaTreino = new Date(); desenharTreino();
+  });
+  ligarBotoesTreino();
+}
+
+function desenharMesTreino(){
+  const base = new Date(estado.mesTreino.getFullYear(), estado.mesTreino.getMonth(), 1);
+  const ano = base.getFullYear(), mes = base.getMonth();
+  const hoje = hojeISO();
+  const todos = estado.dados.treinos || [];
+
+  const doMes = todos.filter(t => {
+    const d = String(t.data || "").slice(0,10);
+    return Number(d.slice(0,4)) === ano && Number(d.slice(5,7)) === mes + 1;
+  });
+
+  const porDia = {};
+  doMes.forEach(t => { (porDia[String(t.data).slice(0,10)] = porDia[String(t.data).slice(0,10)] || []).push(t); });
+
+  /* a grade começa na segunda-feira, igual à do Calendário */
+  const primeiro = new Date(ano, mes, 1);
+  let recuo = primeiro.getDay() - 1; if(recuo < 0) recuo = 6;
+  const inicio = new Date(ano, mes, 1 - recuo);
+
+  const celulas = [];
+  for(let i = 0; i < 42; i++){
+    const d = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + i);
+    const iso = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+    celulas.push({ iso, dia: d.getDate(), fora: d.getMonth() !== mes, hoje: iso === hoje });
+  }
+
+  const contas = contasDeTreino(doMes);
+  const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+  const nomeMes = base.toLocaleDateString("pt-BR", { month:"long", year:"numeric" });
+
+  pegar("#acoesTopo").innerHTML = `<button class="btn btn-principal" id="novoTreino">${ICONE.mais} Novo treino</button>`;
+
+  pegar("#area").innerHTML = `
+    <div class="faixa-numeros tres">
+      <div class="numero"><b>${contas.treinos}</b><small>treinos no mês</small></div>
+      <div class="numero"><b>${contas.dias} de ${diasNoMes}</b><small>dias que você treinou</small></div>
+      <div class="numero"><b>${seguro(contas.campea)}</b><small>o que você mais fez</small></div>
+    </div>
+
+    <section class="cartao">
+      <div class="cartao-topo">
+        <div class="mes-topo">
+          <button class="icone-btn" id="mesTreinoAnterior" aria-label="Mês anterior">${ICONE.seta}</button>
+          <span class="mes-nome">${seguro(nomeMes)}</span>
+          <button class="icone-btn" id="mesTreinoSeguinte" aria-label="Próximo mês" style="transform:rotate(180deg)">${ICONE.seta}</button>
+          <button class="btn-mini" id="esteMesTreino">Este mês</button>
+        </div>
+        ${botoesDeVisaoTreino()}
+      </div>
+
+      <div class="cartao-corpo">
+        <p class="dica-rolar">arraste para o lado para ver o mês todo</p>
+        <div class="rolagem rolagem-grade">
+          <div class="grade">
+            ${["seg","ter","qua","qui","sex","sáb","dom"].map(d => `<div class="cabeca">${d}</div>`).join("")}
+            ${celulas.map(c => {
+              const lista = porDia[c.iso] || [];
+              return `<div class="dia ${c.fora ? "fora" : ""} ${c.hoje ? "hoje" : ""}">
+                <span class="num">${c.dia}</span>
+                <button class="mais-dia" data-novotreino="calistenia|${c.iso}" title="Anotar treino neste dia">+</button>
+                ${lista.map(t => `<button class="evento pilula ${modalidadePor(t.modalidade).cor}" data-treino="${seguro(t.id)}" title="${seguro(t.o_que)}">${seguro(t.o_que)}</button>`).join("")}
+              </div>`;
+            }).join("")}
+          </div>
+        </div>
+      </div>
+
+      ${legendaTreino()}
+    </section>`;
+
+  pegar("#mesTreinoAnterior").addEventListener("click", () => {
+    estado.mesTreino = new Date(ano, mes - 1, 1); desenharTreino();
+  });
+  pegar("#mesTreinoSeguinte").addEventListener("click", () => {
+    estado.mesTreino = new Date(ano, mes + 1, 1); desenharTreino();
+  });
+  pegar("#esteMesTreino").addEventListener("click", () => {
+    estado.mesTreino = new Date(); desenharTreino();
+  });
+  ligarBotoesTreino();
+}
+
+function formularioTreino(item, modalidadeSugerida, diaSugerido){
+  const t = item || {};
+  const modalidade = t.modalidade || modalidadeSugerida || "calistenia";
+  const data = t.data ? String(t.data).slice(0,10) : (diaSugerido || hojeISO());
+
+  abrirJanela(item ? "Editar treino" : "Novo treino", `
+    <form id="formTreino">
+      <div class="campos">
+        <div class="campo"><label for="tr-modalidade">O que você fez</label>
+          <select id="tr-modalidade">${MODALIDADES.map(m => `<option value="${m.id}" ${modalidade === m.id ? "selected" : ""}>${m.nome}</option>`).join("")}</select>
+        </div>
+        <div class="campo"><label for="tr-data">Dia</label><input id="tr-data" type="date" value="${data}" required></div>
+        <div class="campo largo"><label for="tr-oque">Como foi o treino</label>
+          <input id="tr-oque" required placeholder="Ex: superior, barra fixa e flexão" value="${seguro(t.o_que)}">
+        </div>
+        <div class="campo"><label for="tr-duracao">Quanto tempo</label><input id="tr-duracao" placeholder="40 min" value="${seguro(t.duracao)}"></div>
+        <div class="campo largo"><label for="tr-nota">Observação</label>
+          <textarea id="tr-nota" placeholder="como você se sentiu, o que evoluiu, o que doeu">${seguro(t.nota)}</textarea>
+        </div>
+      </div>
+      <div class="acoes-janela">
+        ${item ? `<button type="button" class="btn btn-simples apagar" id="apagarTreino">Apagar</button>` : ""}
+        <button type="button" class="btn btn-simples" id="cancelarTreino">Cancelar</button>
+        <button type="submit" class="btn btn-principal">Salvar</button>
+      </div>
+    </form>
+  `);
+
+  pegar("#cancelarTreino").addEventListener("click", fecharJanela);
+  if(item){
+    pegar("#apagarTreino").addEventListener("click", async () => {
+      if(!confirm('Apagar "' + t.o_que + '"?')) return;
+      if(await apagarLinha("treinos", t.id)){ fecharJanela(); recado("Treino apagado."); await carregarTudo(); desenhar(); }
+    });
+  }
+
+  pegar("#formTreino").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const linha = {
+      modalidade: pegar("#tr-modalidade").value,
+      data: pegar("#tr-data").value,
+      o_que: pegar("#tr-oque").value.trim(),
+      duracao: pegar("#tr-duracao").value.trim(),
+      nota: pegar("#tr-nota").value.trim()
+    };
+    if(!linha.o_que || !linha.data){ recado("Escreva o que você fez e escolha o dia.", true); return; }
+    if(await gravar("treinos", linha, t.id)){
+      fecharJanela(); recado("Treino salvo."); await carregarTudo(); desenhar();
+    }
+  });
 }
 
 function desenharCupons(){
