@@ -118,7 +118,7 @@ const LAVAGEM = "lavagem";
 const FUNIL = ["Briefing", "Roteiro", "Aprovação Roteiro", "Gravação", "Edição", "Aprovado", "Entregue"];
 
 /* Os seus canais, na ordem em que aparecem na grade da semana.
-   "meta" é quantos vídeos por dia você combinou consigo mesma.
+   "meta" não aparece mais na tela, ficou guardada caso um dia você queira as contas de volta.
    "fonte" marca o canal de onde sai o conteúdo original. */
 const CANAIS = [
   { id:"tiktok",         nome:"TikTok Shop",   curto:"TikTok",      meta:4, fonte:true,  cor:"p-editar" },
@@ -2174,12 +2174,10 @@ function desenharConteudo(){
     (porCelula[chave] = porCelula[chave] || []).push(c);
   });
 
-  /* contas da semana, sempre protegidas contra divisão por zero */
-  const metaSemana = CANAIS.reduce((s,c) => s + c.meta, 0) * 7;
+  /* contas da semana. A meta saiu daqui a pedido: o que vale é o que já foi postado. */
   const planejados = daSemana.length;
   const postados = daSemana.filter(c => c.status === "postado").length;
   const doDia = todos.filter(c => String(c.data).slice(0,10) === hoje);
-  const metaDia = CANAIS.reduce((s,c) => s + c.meta, 0);
   const postadosHoje = doDia.filter(c => c.status === "postado").length;
 
   const intervalo = dias[0].numero + " a " + dias[6].numero + " de " +
@@ -2188,11 +2186,10 @@ function desenharConteudo(){
   pegar("#acoesTopo").innerHTML = `<button class="btn btn-principal" id="novoConteudo">${ICONE.mais} Novo conteúdo</button>`;
 
   pegar("#area").innerHTML = `
-    <div class="faixa-numeros quatro">
-      <div class="numero"><b>${planejados}</b><small>na semana</small><i>meta de ${metaSemana}</i></div>
+    <div class="faixa-numeros tres">
+      <div class="numero"><b>${planejados}</b><small>na semana</small></div>
       <div class="numero"><b>${postados}</b><small>já postados</small></div>
-      <div class="numero"><b>${Math.max(0, metaSemana - planejados)}</b><small>faltam planejar</small></div>
-      <div class="numero"><b>${postadosHoje} de ${metaDia}</b><small>postados hoje</small></div>
+      <div class="numero"><b>${postadosHoje}</b><small>postados hoje</small></div>
     </div>
 
     <section class="cartao">
@@ -2216,15 +2213,11 @@ function desenharConteudo(){
           ${CANAIS.map(canal => `
             <div class="nome-canal">
               <span class="pilula ${canal.cor}">${seguro(canal.curto)}</span>
-              <small>${canal.meta > 0 ? canal.meta + " por dia" : "quando der"}</small>
             </div>
             ${dias.map(d => {
               const itens = porCelula[canal.id + "|" + d.iso] || [];
-              const feitos = itens.filter(i => i.status === "postado").length;
-              const faltando = canal.meta > 0 && itens.length < canal.meta;
               return `
               <div class="celula ${d.iso === hoje ? "hoje" : ""}" data-canal="${canal.id}" data-dia="${d.iso}">
-                ${canal.meta > 0 ? `<span class="contagem ${faltando ? "falta" : ""}">${itens.length}/${canal.meta}</span>` : ""}
                 <button class="mais-dia" data-novo="${canal.id}|${d.iso}" title="Adicionar neste dia">+</button>
                 ${itens.map(i => `
                   <button class="chip ${i.status}" data-item="${seguro(i.id)}" title="${seguro(i.assunto)}">
@@ -2343,7 +2336,7 @@ function janelaReciclar(original){
           ${destinos.map(d => `
             <label class="item-check" style="padding:6px 0">
               <input type="checkbox" value="${d.id}" checked>
-              <span><b>${d.nome}</b><small>${d.meta} por dia</small></span>
+              <span><b>${d.nome}</b></span>
             </label>`).join("")}
         </div>
         <div class="campo"><label for="r-data">Em qual dia</label><input id="r-data" type="date" value="${String(original.data).slice(0,10)}" required></div>
