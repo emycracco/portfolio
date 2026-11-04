@@ -2268,6 +2268,8 @@ function formularioConteudo(item, canalSugerido, diaSugerido){
   const c = item || {};
   const canal = c.canal || canalSugerido || "tiktok";
   const data = c.data ? String(c.data).slice(0,10) : (diaSugerido || hojeISO());
+  /* conteúdo novo já entra como postado: quase sempre você anota depois de publicar */
+  const etapa = c.status || "postado";
   const origem = c.origem_id ? (estado.dados.conteudos || []).find(x => String(x.id) === String(c.origem_id)) : null;
 
   abrirJanela(item ? "Editar conteúdo" : "Novo conteúdo", `
@@ -2286,7 +2288,7 @@ function formularioConteudo(item, canalSugerido, diaSugerido){
         <div class="campo"><label for="t-marca">Marca ou produto</label><input id="t-marca" value="${seguro(c.marca)}"></div>
         <div class="campo largo"><label for="t-descricao">Descrição, legenda ou roteiro</label><textarea id="t-descricao" placeholder="o que falar, os ganchos, a legenda que vai junto">${seguro(c.descricao)}</textarea></div>
         <div class="campo"><label for="t-status">Etapa</label>
-          <select id="t-status">${ETAPAS.map(e => `<option ${c.status === e ? "selected" : ""}>${e}</option>`).join("")}</select>
+          <select id="t-status">${ETAPAS.map(e => `<option ${etapa === e ? "selected" : ""}>${e}</option>`).join("")}</select>
         </div>
         <div class="campo"><label for="t-hora">Hora de postar</label><input id="t-hora" placeholder="19h" value="${seguro(c.hora)}"></div>
         <div class="campo largo"><label for="t-link">Link do post, depois de publicado</label><input id="t-link" placeholder="https://..." value="${seguro(c.link)}"></div>
