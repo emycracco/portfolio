@@ -266,6 +266,16 @@ tbody tr.destacada td:first-child{box-shadow:inset 3px 0 0 var(--rosa);}
 .p-estudo{background:#fdf0e3; color:#8a5a1e;}
 .p-pessoal{background:#eceaf7; color:#4b3f8f;}
 .p-compromisso{background:#e4f1f6; color:#2b6076;}
+
+/* escolher a cor do treino, no formulário da Rotina de treino */
+.escolher-cor{display:flex; flex-wrap:wrap; gap:8px; margin-top:4px;}
+.opcao-cor{
+  border:2px solid transparent; cursor:pointer; font:inherit;
+  font-size:.78rem; padding:7px 14px;
+}
+.opcao-cor:hover{filter:brightness(.96);}
+.opcao-cor[aria-pressed="true"]{border-color:var(--tinta); box-shadow:2px 2px 0 var(--tinta);}
+.opcao-cor:focus-visible{outline:2px solid var(--magenta); outline-offset:2px;}
 /* a legenda das cores, embaixo do calendário */
 .legenda-agenda{
   display:flex; flex-wrap:wrap; gap:8px; align-items:center;
@@ -939,8 +949,8 @@ tr.chegou-agora td:first-child{box-shadow:inset 4px 0 0 var(--lima);}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <!-- O ?v= no fim faz o navegador buscar o arquivo novo em vez de reusar o guardado.
      Sempre que mexer em um destes três arquivos, troque a data aqui. -->
-<script src="../js/banco.js?v=2026-11-04b"></script>
-<script src="../js/biblioteca.js?v=2026-11-04b"></script>
-<script src="../js/admin.js?v=2026-11-04b"></script>
+<script src="../js/banco.js?v=2026-11-04c"></script>
+<script src="../js/biblioteca.js?v=2026-11-04c"></script>
+<script src="../js/admin.js?v=2026-11-04c"></script>
 </body>
 </html>
