@@ -2540,9 +2540,20 @@ function botoesDeVisaoTreino(){
   </div>`;
 }
 
+/* Os treinos de um dia, na ordem que você deixou arrastando. */
+function treinosDoDia(iso){
+  return (estado.dados.treinos || [])
+    .filter(t => String(t.data || "").slice(0,10) === iso)
+    .slice()
+    .sort((a,b) =>
+      (numero(a.ordem) - numero(b.ordem)) ||
+      String(a.criado_em || "").localeCompare(String(b.criado_em || ""))
+    );
+}
+
 /* Um dia da grade: o número, o botão de anotar e o que você fez. */
 function celulaDeTreino(c, lista){
-  return `<div class="dia ${c.fora ? "fora" : ""} ${c.hoje ? "hoje" : ""}">
+  return `<div class="dia ${c.fora ? "fora" : ""} ${c.hoje ? "hoje" : ""}" data-dia="${c.iso}">
     <span class="num">${c.rotulo}</span>
     <button class="mais-dia" data-novotreino="${c.iso}" title="Anotar treino neste dia">+</button>
     ${lista.map(t => `
@@ -2570,6 +2581,124 @@ function ligarBotoesTreino(){
     e.stopPropagation();
     formularioTreino((estado.dados.treinos || []).find(t => String(t.id) === b.dataset.treino));
   }));
+
+  ligarArrastarTreino();
+}
+
+/* ------------------------------------------------------------
+   ARRASTAR UM TREINO
+
+   Dentro do dia, para trocar a ordem. Para outro dia, para mudar
+   a data. Funciona igual ao Calendário: soltando em cima de outro
+   treino, a metade de cima entra antes e a de baixo entra depois.
+
+   No celular não funciona, porque arrastar com o dedo o navegador
+   entende como rolar a tela. Lá você abre o treino e troca o dia.
+   ------------------------------------------------------------ */
+async function reordenarTreinoNoDia(id, iso, idAlvo, depois){
+  const arrastado = (estado.dados.treinos || []).find(x => String(x.id) === String(id));
+  if(!arrastado || !iso) return;
+
+  const lista = treinosDoDia(iso).filter(x => String(x.id) !== String(id));
+
+  let pos = lista.length;
+  if(idAlvo){
+    const i = lista.findIndex(x => String(x.id) === String(idAlvo));
+    if(i >= 0) pos = depois ? i + 1 : i;
+  }
+  lista.splice(pos, 0, arrastado);
+
+  const mudouDeDia = String(arrastado.data || "").slice(0,10) !== iso;
+  let deuRuim = 0;
+
+  for(let k = 0; k < lista.length; k++){
+    const x = lista[k];
+    const ehOArrastado = String(x.id) === String(id);
+    if(numero(x.ordem) === k && !(ehOArrastado && mudouDeDia)) continue;
+    const campos = { ordem: k };
+    if(ehOArrastado) campos.data = iso;
+    if(!(await gravar("treinos", campos, x.id))) deuRuim++;
+  }
+
+  if(deuRuim) recado("Não consegui salvar a ordem toda. Tente de novo.", true);
+  else if(mudouDeDia) recado("Passei para " + dataBR(iso) + ".");
+
+  await carregarTudo();
+  desenhar();
+}
+
+function ligarArrastarTreino(){
+  let arrastando = null;
+  const limparAlvos = () => pegarTodos(".dia.alvo").forEach(d => d.classList.remove("alvo"));
+
+  pegarTodos(".grade-treino .evento").forEach(ev => {
+    const id = ev.dataset.treino || "";
+    if(!id) return;
+    ev.setAttribute("draggable", "true");
+    ev.classList.add("arrastavel");
+    ev.addEventListener("dragstart", (e) => {
+      arrastando = id;
+      ev.classList.add("arrastando");
+      if(e.dataTransfer){
+        e.dataTransfer.effectAllowed = "move";
+        try{ e.dataTransfer.setData("text/plain", id); }catch(err){}
+      }
+    });
+    ev.addEventListener("dragend", () => {
+      arrastando = null;
+      ev.classList.remove("arrastando");
+      limparAlvos();
+    });
+  });
+
+  /* soltar em cima de outro treino muda a ordem dentro do dia */
+  pegarTodos(".grade-treino .evento").forEach(alvo => {
+    const idAlvo = alvo.dataset.treino || "";
+    alvo.addEventListener("dragover", (e) => {
+      if(!arrastando || arrastando === idAlvo) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const caixa = alvo.getBoundingClientRect();
+      const embaixo = (e.clientY - caixa.top) > caixa.height / 2;
+      alvo.classList.toggle("solta-depois", embaixo);
+      alvo.classList.toggle("solta-antes", !embaixo);
+    });
+    alvo.addEventListener("dragleave", () => {
+      alvo.classList.remove("solta-antes", "solta-depois");
+    });
+    alvo.addEventListener("drop", async (e) => {
+      if(!arrastando || arrastando === idAlvo) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const depois = alvo.classList.contains("solta-depois");
+      alvo.classList.remove("solta-antes", "solta-depois");
+      limparAlvos();
+      const id = arrastando;
+      arrastando = null;
+      const cel = alvo.closest(".dia");
+      if(!cel) return;
+      await reordenarTreinoNoDia(id, cel.dataset.dia, idAlvo, depois);
+    });
+  });
+
+  /* soltar no vazio do dia: vai para o fim da lista daquele dia */
+  pegarTodos(".grade-treino .dia").forEach(cel => {
+    cel.addEventListener("dragover", (e) => {
+      if(!arrastando) return;
+      e.preventDefault();
+      if(e.dataTransfer) e.dataTransfer.dropEffect = "move";
+      cel.classList.add("alvo");
+    });
+    cel.addEventListener("dragleave", () => cel.classList.remove("alvo"));
+    cel.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      limparAlvos();
+      const id = arrastando || (e.dataTransfer ? e.dataTransfer.getData("text/plain") : "");
+      arrastando = null;
+      if(!id || !cel.dataset.dia) return;
+      await reordenarTreinoNoDia(id, cel.dataset.dia, "", false);
+    });
+  });
 }
 
 function desenharTreino(){
@@ -2598,12 +2727,6 @@ function desenharSemanaTreino(){
     return dia >= dias[0].iso && dia <= dias[6].iso;
   });
 
-  const porDia = {};
-  daSemana.forEach(t => {
-    const d = String(t.data).slice(0,10);
-    (porDia[d] = porDia[d] || []).push(t);
-  });
-
   const contas = contasDeTreino(daSemana);
   const intervalo = dias[0].numero + " a " + dias[6].numero + " de " +
     new Date(dias[6].iso + "T00:00:00").toLocaleDateString("pt-BR", { month:"long" });
@@ -2629,11 +2752,11 @@ function desenharSemanaTreino(){
 
       <div class="cartao-corpo">
         <div class="rolagem rolagem-grade">
-          <div class="grade">
+          <div class="grade grade-treino">
             ${["seg","ter","qua","qui","sex","sáb","dom"].map(d => `<div class="cabeca">${d}</div>`).join("")}
             ${dias.map(d => celulaDeTreino(
                 { iso:d.iso, rotulo:d.numero, fora:false, hoje:d.iso === hoje },
-                porDia[d.iso] || []
+                treinosDoDia(d.iso)
               )).join("")}
           </div>
         </div>
@@ -2661,12 +2784,6 @@ function desenharMesTreino(){
   const doMes = todos.filter(t => {
     const d = String(t.data || "").slice(0,10);
     return Number(d.slice(0,4)) === ano && Number(d.slice(5,7)) === mes + 1;
-  });
-
-  const porDia = {};
-  doMes.forEach(t => {
-    const d = String(t.data).slice(0,10);
-    (porDia[d] = porDia[d] || []).push(t);
   });
 
   /* a grade começa na segunda-feira, igual à do Calendário */
@@ -2707,9 +2824,9 @@ function desenharMesTreino(){
       <div class="cartao-corpo">
         <p class="dica-rolar">arraste para o lado para ver o mês todo</p>
         <div class="rolagem rolagem-grade">
-          <div class="grade">
+          <div class="grade grade-treino">
             ${["seg","ter","qua","qui","sex","sáb","dom"].map(d => `<div class="cabeca">${d}</div>`).join("")}
-            ${celulas.map(c => celulaDeTreino(c, porDia[c.iso] || [])).join("")}
+            ${celulas.map(c => celulaDeTreino(c, treinosDoDia(c.iso))).join("")}
           </div>
         </div>
       </div>
