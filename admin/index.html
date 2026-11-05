@@ -567,10 +567,13 @@ tbody tr.destacada td:first-child{box-shadow:inset 3px 0 0 var(--rosa);}
 .bloco-tempo .tempo{flex:none; width:64px; font-size:.72rem; color:var(--magenta); padding-top:2px;}
 .bloco-tempo .texto{font-size:.85rem;}
 .lista-simples{margin:8px 0 0; padding-left:18px; font-size:.85rem; color:var(--tinta-suave);}
-.ideia{border-bottom:1px solid rgba(224,164,180,.25); padding:10px 0;}
-.ideia:last-child{border-bottom:0;}
-.ideia b{display:block; font-weight:400; font-size:.88rem;}
-.ideia small{color:var(--magenta); font-size:.8rem;}
+/* as ideias por nicho, dentro do Checklist. Fica preso ao .secao-check
+   porque "ideia" também é o nome de uma etapa do Conteúdo Shop, e sem
+   isso a pílula cinza ficava mais alta que as outras. */
+.secao-check .ideia{border-bottom:1px solid rgba(224,164,180,.25); padding:10px 0;}
+.secao-check .ideia:last-child{border-bottom:0;}
+.secao-check .ideia b{display:block; font-weight:400; font-size:.88rem;}
+.secao-check .ideia small{color:var(--magenta); font-size:.8rem;}
 textarea.roteiro{
   width:100%; min-height:190px; padding:13px; border-radius:var(--raio-p);
   border:1px solid var(--linha); background:#fffdfe; font-family:inherit; font-size:.88rem; color:var(--tinta); resize:vertical;
@@ -954,8 +957,8 @@ tr.chegou-agora td:first-child{box-shadow:inset 4px 0 0 var(--lima);}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <!-- O ?v= no fim faz o navegador buscar o arquivo novo em vez de reusar o guardado.
      Sempre que mexer em um destes três arquivos, troque a data aqui. -->
-<script src="../js/banco.js?v=2026-11-04d"></script>
-<script src="../js/biblioteca.js?v=2026-11-04d"></script>
-<script src="../js/admin.js?v=2026-11-04d"></script>
+<script src="../js/banco.js?v=2026-11-04e"></script>
+<script src="../js/biblioteca.js?v=2026-11-04e"></script>
+<script src="../js/admin.js?v=2026-11-04e"></script>
 </body>
 </html>
