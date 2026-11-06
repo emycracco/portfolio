@@ -2227,8 +2227,9 @@ function desenharConteudo(){
               <div class="celula ${d.iso === hoje ? "hoje" : ""}" data-canal="${canal.id}" data-dia="${d.iso}">
                 <button class="mais-dia" data-novo="${canal.id}|${d.iso}" title="Adicionar neste dia">+</button>
                 ${itens.map(i => `
-                  <button class="chip ${i.status}" data-item="${seguro(i.id)}" title="${seguro(i.assunto)}">
-                    ${i.origem_id ? "&#8635; " : ""}${seguro(i.assunto)}
+                  <button class="chip ${i.status}" data-item="${seguro(i.id)}" title="${seguro(i.assunto)}${i.hora ? " · " + seguro(i.hora) : ""}">
+                    <span class="chip-texto">${i.origem_id ? "&#8635; " : ""}${seguro(i.assunto)}</span>
+                    ${i.hora ? `<span class="chip-hora">${seguro(i.hora)}</span>` : ""}
                   </button>`).join("")}
               </div>`;
             }).join("")}
