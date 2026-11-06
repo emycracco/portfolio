@@ -475,10 +475,18 @@ tbody tr.destacada td:first-child{box-shadow:inset 3px 0 0 var(--rosa);}
 .celula .mais-dia{top:3px; right:3px; opacity:0; transition:opacity .15s ease;}
 .celula:hover .mais-dia{opacity:1;}
 .chip{
-  display:block; width:100%; text-align:left; border:0; border-radius:7px;
+  display:flex; align-items:center; gap:6px;
+  width:100%; text-align:left; border:0; border-radius:7px;
   padding:4px 7px; margin-top:16px; font-size:.68rem; line-height:1.25;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  white-space:nowrap; overflow:hidden;
   background:var(--rosa-claro); color:var(--magenta);
+}
+/* o nome do conteúdo ocupa o espaço que sobra e é cortado se não couber */
+.chip-texto{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis;}
+/* a hora de postar, miudinha no canto. Só aparece quando você preenche. */
+.chip-hora{
+  flex:none; font-size:.58rem; opacity:.72; letter-spacing:.02em;
+  font-variant-numeric:tabular-nums;
 }
 .chip + .chip{margin-top:4px;}
 .chip.ideia{background:#efe9ec; color:var(--tinta-suave);}
@@ -957,8 +965,8 @@ tr.chegou-agora td:first-child{box-shadow:inset 4px 0 0 var(--lima);}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <!-- O ?v= no fim faz o navegador buscar o arquivo novo em vez de reusar o guardado.
      Sempre que mexer em um destes três arquivos, troque a data aqui. -->
-<script src="../js/banco.js?v=2026-11-04e"></script>
-<script src="../js/biblioteca.js?v=2026-11-04e"></script>
-<script src="../js/admin.js?v=2026-11-04e"></script>
+<script src="../js/banco.js?v=2026-11-06"></script>
+<script src="../js/biblioteca.js?v=2026-11-06"></script>
+<script src="../js/admin.js?v=2026-11-06"></script>
 </body>
 </html>
