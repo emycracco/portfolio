@@ -2142,6 +2142,20 @@ function formularioMarca(marca){
    ABA: CONTEÚDO DA SEMANA
    Uma linha por canal, uma coluna por dia, de segunda a domingo.
    ============================================================ */
+/* Transforma a hora que você escreveu em minutos, para dar para comparar.
+   Aceita o jeito que você escreve: 9h, 19h, 20h30, 9:45, 07.15, ou só 14.
+   Devolve null quando está vazio ou quando não dá para entender. */
+function minutosDaHora(texto){
+  const t = String(texto == null ? "" : texto).trim();
+  if(!t) return null;
+  const achou = t.match(/(\d{1,2})\s*(?:[h:.]\s*(\d{1,2}))?/);
+  if(!achou) return null;
+  const h = Number(achou[1]);
+  const m = achou[2] ? Number(achou[2]) : 0;
+  if(!(h >= 0 && h <= 23) || !(m >= 0 && m <= 59)) return null;
+  return h * 60 + m;
+}
+
 function diasDaSemana(referencia){
   const d = new Date(referencia);
   let recuo = d.getDay() - 1; if(recuo < 0) recuo = 6;   /* a semana começa na segunda */
@@ -2179,6 +2193,18 @@ function desenharConteudo(){
   daSemana.forEach(c => {
     const chave = c.canal + "|" + String(c.data).slice(0,10);
     (porCelula[chave] = porCelula[chave] || []).push(c);
+  });
+
+  /* dentro do dia, o mais cedo em cima. Quem ainda não tem horário
+     marcado desce para o fim da lista. */
+  Object.keys(porCelula).forEach(chave => {
+    porCelula[chave].sort((a,b) => {
+      const ha = minutosDaHora(a.hora), hb = minutosDaHora(b.hora);
+      if(ha === null && hb === null) return String(a.criado_em || "").localeCompare(String(b.criado_em || ""));
+      if(ha === null) return 1;
+      if(hb === null) return -1;
+      return ha - hb || String(a.criado_em || "").localeCompare(String(b.criado_em || ""));
+    });
   });
 
   /* contas da semana. A meta saiu daqui a pedido: o que vale é o que já foi postado. */
