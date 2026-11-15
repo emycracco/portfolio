@@ -2556,8 +2556,7 @@ async function moverCupom(id, direcao){
    A semana é o padrão; o mês é para olhar para trás.
    ============================================================ */
 
-/* As cores que você escolhe para cada treino. Use-as como quiser:
-   uma cor por tipo de treino, por intensidade, por lugar. */
+/* As cores, e qual pílula do painel cada uma usa. */
 const CORES_TREINO = [
   { id:"verde",   nome:"Verde",   classe:"p-treino" },
   { id:"rosa",    nome:"Rosa",    classe:"p-conteudo" },
@@ -2565,6 +2564,18 @@ const CORES_TREINO = [
   { id:"amarelo", nome:"Amarelo", classe:"p-pendente" },
   { id:"roxo",    nome:"Roxo",    classe:"p-pessoal" },
   { id:"laranja", nome:"Laranja", classe:"p-estudo" }
+];
+
+/* Os seus tipos de treino, cada um sempre da mesma cor. Clicar no tipo
+   pinta o treino e já escreve o nome para você; o texto continua seu,
+   então dá para deixar "Flex de perna", "Pole - giros", "Cardio bike". */
+const TIPOS_TREINO = [
+  { nome:"Calistenia", cor:"verde" },
+  { nome:"Pole",       cor:"roxo" },
+  { nome:"Flex",       cor:"amarelo" },
+  { nome:"Tay",        cor:"rosa" },
+  { nome:"Cardio",     cor:"laranja" },
+  { nome:"Outro",      cor:"azul" }
 ];
 
 function classeDaCor(cor){
@@ -2576,6 +2587,14 @@ function classeDaCor(cor){
 function contasDeTreino(lista){
   const dias = new Set(lista.map(t => String(t.data).slice(0,10)));
   return { treinos: lista.length, dias: dias.size };
+}
+
+/* a legenda das cores, embaixo da grade */
+function legendaTreino(){
+  return `<div class="legenda-agenda">
+    <span class="rotulo-legenda">cores</span>
+    ${TIPOS_TREINO.map(t => `<span class="pilula ${classeDaCor(t.cor)}">${seguro(t.nome)}</span>`).join("")}
+  </div>`;
 }
 
 function botoesDeVisaoTreino(){
@@ -2807,6 +2826,7 @@ function desenharSemanaTreino(){
               )).join("")}
           </div>
         </div>
+        ${legendaTreino()}
       </div>
     </section>`;
 
@@ -2880,6 +2900,7 @@ function desenharMesTreino(){
             ${celulas.map(c => celulaDeTreino(c, treinosDoDia(c.iso))).join("")}
           </div>
         </div>
+        ${legendaTreino()}
       </div>
     </section>`;
 
@@ -2904,14 +2925,14 @@ function formularioTreino(item, diaSugerido){
     <form id="formTreino">
       <div class="campos">
         <div class="campo largo"><label for="tr-oque">O que você fez</label>
-          <input id="tr-oque" required placeholder="Ex: flexibilidade de pernas" value="${seguro(t.o_que)}">
+          <input id="tr-oque" required placeholder="Ex: Flex de perna" value="${seguro(t.o_que)}">
         </div>
-        <div class="campo largo"><label>Cor</label>
+        <div class="campo largo"><label>Tipo de treino</label>
           <input type="hidden" id="tr-cor" value="${seguro(cor)}">
           <div class="escolher-cor">
-            ${CORES_TREINO.map(c => `
-              <button type="button" class="pilula ${c.classe} opcao-cor" data-cor="${c.id}"
-                      aria-pressed="${cor === c.id}">${c.nome}</button>`).join("")}
+            ${TIPOS_TREINO.map(t2 => `
+              <button type="button" class="pilula ${classeDaCor(t2.cor)} opcao-cor" data-cor="${t2.cor}"
+                      data-nome="${seguro(t2.nome)}" aria-pressed="${cor === t2.cor}">${seguro(t2.nome)}</button>`).join("")}
           </div>
         </div>
         <div class="campo"><label for="tr-data">Dia</label><input id="tr-data" type="date" value="${data}" required></div>
@@ -2930,10 +2951,17 @@ function formularioTreino(item, diaSugerido){
 
   pegar("#cancelarTreino").addEventListener("click", fecharJanela);
 
-  /* escolher a cor: marca a clicada e desmarca as outras */
+  /* escolher o tipo: pinta o treino e, se o campo ainda estiver vazio,
+     já escreve o nome do tipo e deixa o cursor lá para você completar */
   pegarTodos(".opcao-cor").forEach(b => b.addEventListener("click", () => {
     pegar("#tr-cor").value = b.dataset.cor;
     pegarTodos(".opcao-cor").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    const campo = pegar("#tr-oque");
+    if(campo && !campo.value.trim()){
+      campo.value = b.dataset.nome;
+      campo.focus();
+      campo.setSelectionRange(campo.value.length, campo.value.length);
+    }
   }));
 
   if(item){
