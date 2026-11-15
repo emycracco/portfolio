@@ -267,6 +267,13 @@ tbody tr.destacada td:first-child{box-shadow:inset 3px 0 0 var(--rosa);}
 .p-pessoal{background:#eceaf7; color:#4b3f8f;}
 .p-compromisso{background:#e4f1f6; color:#2b6076;}
 
+/* as setinhas de um dia, ao lado das de semana cheia */
+.passo-dia{
+  padding:4px 9px; font-size:.68rem; letter-spacing:.04em;
+  color:var(--tinta-suave); white-space:nowrap;
+}
+.passo-dia:hover{color:var(--magenta);}
+
 /* a grade da Rotina de treino: quadradinho mais alto que o do Calendário,
    e o texto do treino quebra em duas linhas em vez de ser cortado */
 .grade-treino .dia{min-height:168px;}
@@ -965,8 +972,8 @@ tr.chegou-agora td:first-child{box-shadow:inset 4px 0 0 var(--lima);}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <!-- O ?v= no fim faz o navegador buscar o arquivo novo em vez de reusar o guardado.
      Sempre que mexer em um destes três arquivos, troque a data aqui. -->
-<script src="../js/banco.js?v=2026-11-06b"></script>
-<script src="../js/biblioteca.js?v=2026-11-06b"></script>
-<script src="../js/admin.js?v=2026-11-06b"></script>
+<script src="../js/banco.js?v=2026-11-14"></script>
+<script src="../js/biblioteca.js?v=2026-11-14"></script>
+<script src="../js/admin.js?v=2026-11-14"></script>
 </body>
 </html>
