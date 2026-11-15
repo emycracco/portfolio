@@ -177,11 +177,12 @@ const estado = {
     filaRascunho: null,        /* a fila do plano B */
     posicaoFila: 0
   },
-  semana: new Date(), filtroConteudo: "Todos",
+  /* as janelas de 7 dias abrem na segunda; as setas de dia andam a partir daí */
+  semana: inicioDaSemana(new Date()), filtroConteudo: "Todos",
   /* a aba Rotina de treino: a semana é o padrão, o mês é a outra visão */
-  visaoTreino: "semana", semanaTreino: new Date(), mesTreino: new Date(),
+  visaoTreino: "semana", semanaTreino: inicioDaSemana(new Date()), mesTreino: new Date(),
   /* a aba Calendário: mês é o padrão, semana é a outra visão */
-  visaoAgenda: "mes", semanaAgenda: new Date(),
+  visaoAgenda: "mes", semanaAgenda: inicioDaSemana(new Date()),
   buscaCupons: "", filtroCupons: "Todos",
   buscaMarcas: "", filtroSituacao: "Todas", filtroNicho: "Todos", soFavoritas: false,
   buscaCampanhas: "", filtroCampanhas: "Todas",
@@ -2156,16 +2157,23 @@ function minutosDaHora(texto){
   return h * 60 + m;
 }
 
-function diasDaSemana(referencia){
+/* Sete dias seguidos a partir de uma data.
+   Normalmente começa na segunda da semana daquela data. Com
+   "comecarNoDia", começa no próprio dia — é o que deixa as setas
+   de dia andarem de um em um em vez de pular a semana inteira.
+   O nome do dia sai da própria data, então continua certo mesmo
+   quando a janela não começa na segunda. */
+function diasDaSemana(referencia, comecarNoDia){
   const d = new Date(referencia);
-  let recuo = d.getDay() - 1; if(recuo < 0) recuo = 6;   /* a semana começa na segunda */
+  let recuo = d.getDay() - 1; if(recuo < 0) recuo = 6;
+  if(comecarNoDia) recuo = 0;
   const inicio = new Date(d.getFullYear(), d.getMonth(), d.getDate() - recuo);
   const lista = [];
   for(let i = 0; i < 7; i++){
     const dia = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + i);
     lista.push({
       iso: dia.getFullYear() + "-" + String(dia.getMonth()+1).padStart(2,"0") + "-" + String(dia.getDate()).padStart(2,"0"),
-      nome: ["seg","ter","qua","qui","sex","sáb","dom"][i],
+      nome: dia.toLocaleDateString("pt-BR", { weekday:"short" }).replace(".", ""),
       numero: dia.getDate()
     });
   }
@@ -2175,7 +2183,7 @@ function diasDaSemana(referencia){
 function canalPor(id){ return CANAIS.find(c => c.id === id) || CANAIS[0]; }
 
 function desenharConteudo(){
-  const dias = diasDaSemana(estado.semana);
+  const dias = diasDaSemana(estado.semana, true);
   const hoje = hojeISO();
   const todos = estado.dados.conteudos || [];
 
@@ -2229,7 +2237,9 @@ function desenharConteudo(){
       <div class="cartao-topo">
         <div class="mes-topo">
           <button class="icone-btn" id="semanaAnterior" aria-label="Semana anterior">${ICONE.seta}</button>
+          <button class="btn-mini passo-dia" id="diaAnterior" aria-label="Um dia para trás">&lsaquo; dia</button>
           <span class="mes-nome">${seguro(intervalo)}</span>
+          <button class="btn-mini passo-dia" id="diaSeguinte" aria-label="Um dia para frente">dia &rsaquo;</button>
           <button class="icone-btn" id="semanaSeguinte" aria-label="Próxima semana" style="transform:rotate(180deg)">${ICONE.seta}</button>
           <button class="btn-mini" id="estaSemana">Esta semana</button>
         </div>
@@ -2271,9 +2281,17 @@ function desenharConteudo(){
   `;
 
   pegar("#novoConteudo").addEventListener("click", () => formularioConteudo(null, "tiktok", hoje));
-  pegar("#semanaAnterior").addEventListener("click", () => { const d = new Date(estado.semana); d.setDate(d.getDate()-7); estado.semana = d; desenharConteudo(); });
-  pegar("#semanaSeguinte").addEventListener("click", () => { const d = new Date(estado.semana); d.setDate(d.getDate()+7); estado.semana = d; desenharConteudo(); });
-  pegar("#estaSemana").addEventListener("click", () => { estado.semana = new Date(); desenharConteudo(); });
+  /* anda a partir de onde a janela está, sem voltar para a segunda */
+  const andarConteudo = (quantos) => {
+    const d = new Date(estado.semana); d.setDate(d.getDate() + quantos);
+    estado.semana = d; desenharConteudo();
+  };
+  pegar("#semanaAnterior").addEventListener("click", () => andarConteudo(-7));
+  pegar("#semanaSeguinte").addEventListener("click", () => andarConteudo(7));
+  pegar("#diaAnterior").addEventListener("click", () => andarConteudo(-1));
+  pegar("#diaSeguinte").addEventListener("click", () => andarConteudo(1));
+  /* volta para a semana cheia, começando na segunda */
+  pegar("#estaSemana").addEventListener("click", () => { estado.semana = inicioDaSemana(new Date()); desenharConteudo(); });
   pegarTodos("[data-fconteudo]").forEach(b => b.addEventListener("click", () => { estado.filtroConteudo = b.dataset.fconteudo; desenharConteudo(); }));
 
   pegarTodos("[data-novo]").forEach(b => b.addEventListener("click", (e) => {
@@ -2745,7 +2763,7 @@ function desenharTreino(){
 }
 
 function desenharSemanaTreino(){
-  const dias = diasDaSemana(estado.semanaTreino);
+  const dias = diasDaSemana(estado.semanaTreino, true);
   const hoje = hojeISO();
   const todos = estado.dados.treinos || [];
 
@@ -2770,7 +2788,9 @@ function desenharSemanaTreino(){
       <div class="cartao-topo">
         <div class="mes-topo">
           <button class="icone-btn" id="semanaTreinoAnterior" aria-label="Semana anterior">${ICONE.seta}</button>
+          <button class="btn-mini passo-dia" id="diaTreinoAnterior" aria-label="Um dia para trás">&lsaquo; dia</button>
           <span class="mes-nome">${seguro(intervalo)}</span>
+          <button class="btn-mini passo-dia" id="diaTreinoSeguinte" aria-label="Um dia para frente">dia &rsaquo;</button>
           <button class="icone-btn" id="semanaTreinoSeguinte" aria-label="Próxima semana" style="transform:rotate(180deg)">${ICONE.seta}</button>
           <button class="btn-mini" id="estaSemanaTreino">Esta semana</button>
         </div>
@@ -2780,7 +2800,7 @@ function desenharSemanaTreino(){
       <div class="cartao-corpo">
         <div class="rolagem rolagem-grade">
           <div class="grade grade-treino">
-            ${["seg","ter","qua","qui","sex","sáb","dom"].map(d => `<div class="cabeca">${d}</div>`).join("")}
+            ${dias.map(d => `<div class="cabeca">${seguro(d.nome)}</div>`).join("")}
             ${dias.map(d => celulaDeTreino(
                 { iso:d.iso, rotulo:d.numero, fora:false, hoje:d.iso === hoje },
                 treinosDoDia(d.iso)
@@ -2790,14 +2810,18 @@ function desenharSemanaTreino(){
       </div>
     </section>`;
 
-  pegar("#semanaTreinoAnterior").addEventListener("click", () => {
-    const d = new Date(estado.semanaTreino); d.setDate(d.getDate()-7); estado.semanaTreino = d; desenharTreino();
-  });
-  pegar("#semanaTreinoSeguinte").addEventListener("click", () => {
-    const d = new Date(estado.semanaTreino); d.setDate(d.getDate()+7); estado.semanaTreino = d; desenharTreino();
-  });
+  /* anda a partir de onde a janela está, sem voltar para a segunda */
+  const andarTreino = (quantos) => {
+    const d = new Date(estado.semanaTreino); d.setDate(d.getDate() + quantos);
+    estado.semanaTreino = d; desenharTreino();
+  };
+  pegar("#semanaTreinoAnterior").addEventListener("click", () => andarTreino(-7));
+  pegar("#semanaTreinoSeguinte").addEventListener("click", () => andarTreino(7));
+  pegar("#diaTreinoAnterior").addEventListener("click", () => andarTreino(-1));
+  pegar("#diaTreinoSeguinte").addEventListener("click", () => andarTreino(1));
+  /* volta para a semana cheia, começando na segunda */
   pegar("#estaSemanaTreino").addEventListener("click", () => {
-    estado.semanaTreino = new Date(); desenharTreino();
+    estado.semanaTreino = inicioDaSemana(new Date()); desenharTreino();
   });
   ligarBotoesTreino();
 }
@@ -3285,7 +3309,7 @@ function botoesDeVisao(){
 function ligarBotoesDeVisao(){
   pegarTodos("[data-visao]").forEach(b => b.addEventListener("click", () => {
     estado.visaoAgenda = b.dataset.visao;
-    if(estado.visaoAgenda === "semana") estado.semanaAgenda = new Date();
+    if(estado.visaoAgenda === "semana") estado.semanaAgenda = inicioDaSemana(new Date());
     desenharAgenda();
   }));
 }
@@ -3446,7 +3470,10 @@ function desenharAgenda(){
    ------------------------------------------------------------ */
 function desenharSemanaAgenda(){
   const hoje = hojeISO();
-  const inicio = inicioDaSemana(estado.semanaAgenda);
+  /* A janela de 7 dias começa onde você parou, não sempre na segunda.
+     É isso que deixa as setas de dia andarem de um em um. */
+  const base = estado.semanaAgenda;
+  const inicio = new Date(base.getFullYear(), base.getMonth(), base.getDate());
 
   const filtro = estado.filtroAgenda;
   const todos = itensDoCalendario().filter(i => filtro === "Todos" || i.tipo === filtro.toLowerCase());
@@ -3460,6 +3487,7 @@ function desenharSemanaAgenda(){
     dias.push({
       iso: paraISO(d),
       nome: d.toLocaleDateString("pt-BR", { weekday:"long" }),
+      curto: d.toLocaleDateString("pt-BR", { weekday:"short" }).replace(".", ""),
       numero: d.getDate() + "/" + String(d.getMonth()+1).padStart(2,"0")
     });
   }
@@ -3474,7 +3502,9 @@ function desenharSemanaAgenda(){
       <div class="cartao-topo">
         <div class="mes-topo">
           <button class="icone-btn" id="semanaAntes" aria-label="Semana anterior">${ICONE.seta}</button>
+          <button class="btn-mini passo-dia" id="diaAntes" aria-label="Um dia para trás">&lsaquo; dia</button>
           <span class="mes-nome">${dias[0].numero} a ${fim.numero}</span>
+          <button class="btn-mini passo-dia" id="diaDepois" aria-label="Um dia para frente">dia &rsaquo;</button>
           <button class="icone-btn" id="semanaDepois" aria-label="Próxima semana" style="transform:rotate(180deg)">${ICONE.seta}</button>
           <button class="btn-mini" id="estaSemana">Esta semana</button>
         </div>
@@ -3492,7 +3522,7 @@ function desenharSemanaAgenda(){
         <p class="dica-rolar">arraste para o lado para ver a semana toda</p>
         <div class="rolagem rolagem-grade">
         <div class="grade grade-semana-agenda">
-          ${["seg","ter","qua","qui","sex","sáb","dom"].map(d => `<div class="cabeca">${d}</div>`).join("")}
+          ${dias.map(d => `<div class="cabeca">${seguro(d.curto)}</div>`).join("")}
           ${dias.map(d => {
             const lista = porDia[d.iso] || [];
             return `
@@ -3514,14 +3544,18 @@ function desenharSemanaAgenda(){
     ${blocoAtrasados(hoje)}
   `;
 
+  /* anda a partir de onde a janela está agora, sem voltar para a segunda */
   const andar = (quantos) => {
-    const d = inicioDaSemana(estado.semanaAgenda);
+    const d = estado.semanaAgenda;
     estado.semanaAgenda = new Date(d.getFullYear(), d.getMonth(), d.getDate() + quantos);
     desenharSemanaAgenda();
   };
   pegar("#semanaAntes").addEventListener("click", () => andar(-7));
   pegar("#semanaDepois").addEventListener("click", () => andar(7));
-  pegar("#estaSemana").addEventListener("click", () => { estado.semanaAgenda = new Date(); desenharSemanaAgenda(); });
+  pegar("#diaAntes").addEventListener("click", () => andar(-1));
+  pegar("#diaDepois").addEventListener("click", () => andar(1));
+  /* volta para a semana cheia, começando na segunda */
+  pegar("#estaSemana").addEventListener("click", () => { estado.semanaAgenda = inicioDaSemana(new Date()); desenharSemanaAgenda(); });
   pegar("#novoItem").addEventListener("click", () => formularioAgenda(null, hoje));
   pegarTodos("[data-tipo]").forEach(b => b.addEventListener("click", () => { estado.filtroAgenda = b.dataset.tipo; desenharSemanaAgenda(); }));
   pegarTodos("[data-novo]").forEach(b => b.addEventListener("click", (e) => {
