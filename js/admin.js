@@ -99,7 +99,7 @@ const ABAS = [
   { id:"prospeccao", grupo:"meu site",     nome:"Prospecção", sub:"Mandar a sua apresentação para várias marcas de uma vez." },
   { id:"midiakit",   grupo:"meu site",     nome:"Mídia kit",  sub:"Como ele está hoje, pronto para mandar para a marca." },
   { id:"campanhas",  grupo:"meu site",     nome:"Campanhas",  sub:"Trabalhos, valores e prazos." },
-  { id:"conteudo",   grupo:"minha rotina", nome:"Conteúdo Shop",   sub:"A sua semana de postagens no TikTok Shop, no Insta shop e na Shopee." },
+  { id:"conteudo",   grupo:"minha rotina", nome:"Conteúdo Shop",   sub:"A sua semana de postagens no TikTok Shop, no Insta shop, na Shopee e no Blow Up." },
   { id:"calendario", grupo:"minha rotina", nome:"Calendário", sub:"O mês inteiro de gravar, editar e postar." },
   { id:"treino",     grupo:"minha rotina", nome:"Rotina de treino", sub:"O que você treinou, dia a dia, com o registro do mês inteiro." },
   { id:"cabelo",     grupo:"minha rotina", nome:"Cronograma capilar", sub:"Em que passo do tratamento você está." },
@@ -125,7 +125,8 @@ const FUNIL = ["Briefing", "Roteiro", "Aprovação Roteiro", "Gravação", "Edi�
 const CANAIS = [
   { id:"tiktok",         nome:"TikTok Shop",   curto:"TikTok",      meta:4, fonte:true,  cor:"p-editar" },
   { id:"instagram_shop", nome:"Insta shop",    curto:"Insta shop",  meta:1, fonte:false, cor:"p-conteudo" },
-  { id:"shopee",         nome:"Shopee Vídeos", curto:"Shopee",      meta:2, fonte:false, cor:"p-pago" }
+  { id:"shopee",         nome:"Shopee Vídeos", curto:"Shopee",      meta:2, fonte:false, cor:"p-pago" },
+  { id:"blowup",         nome:"Blow Up",       curto:"Blow Up",     meta:1, fonte:false, cor:"p-publicidade" }
   /* O Insta pessoal saiu daqui: esse conteúdo vive no Calendário. Para trazer de volta um dia,
      basta descomentar esta linha (e pôr a vírgula na de cima).
   ,{ id:"instagram",      nome:"Insta pessoal", curto:"Insta",       meta:0, fonte:false, cor:"p-funil" }
