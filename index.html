@@ -216,7 +216,7 @@ h1,h2{font-family:var(--titulo); font-weight:600; margin:0; line-height:1.15;}
     <!-- FOTO: para trocar, substitua o arquivo foto-sobre.jpg -->
     <div class="retrato"><img src="/foto-sobre.jpg" alt="Emellyn Cracco" width="910" height="910"></div>
     <h1>Emellyn <span>Cracco</span></h1>
-    <p class="arroba">@emycracco</p>
+    <p class="arroba">@emellyn.cracco</p>
     <p class="oficio">Curitiba, Paraná</p>
 
     <ul class="redes">
@@ -501,7 +501,13 @@ function cartaoDeBotao(c){
     const { data, error } = await window.sb
       .from("cupons").select("*").eq("ativo", true);
     if(error || !data) return;
-    linhas = data;
+    /* esta é a página de UGC. Mostra os botões marcados para ela e os
+       marcados para as duas. Quem foi cadastrado antes do campo existir
+       fica aqui, que era a única página na época. */
+    linhas = data.filter(c => {
+      const p = String(c.pagina || "ugc").toLowerCase();
+      return p === "ugc" || p === "ambas";
+    });
   }catch(e){ return; }
   if(!linhas.length) return;
 
