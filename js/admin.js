@@ -184,7 +184,7 @@ const estado = {
   visaoTreino: "semana", semanaTreino: inicioDaSemana(new Date()), mesTreino: new Date(),
   /* a aba Calendário: mês é o padrão, semana é a outra visão */
   visaoAgenda: "mes", semanaAgenda: inicioDaSemana(new Date()),
-  buscaCupons: "", filtroCupons: "Todos",
+  buscaCupons: "", filtroCupons: "Todos", filtroPaginaCupom: "Todas",
   buscaMarcas: "", filtroSituacao: "Todas", filtroNicho: "Todos", soFavoritas: false,
   buscaCampanhas: "", filtroCampanhas: "Todas",
   ordem: { campo:"prazo", sentido:1 },
@@ -2510,7 +2510,15 @@ function cuponsFiltrados(){
       (estado.filtroCupons === "Ativos" && c.ativo !== false && !v.vencido) ||
       (estado.filtroCupons === "Vencidos" && (v.vencido || c.ativo === false)) ||
       (estado.filtroCupons === "Favoritos" && c.favorito);
-    return combina && filtroOk;
+    /* o filtro de página: "Todas" mostra tudo, e quem está "nas duas"
+       aparece tanto na UGC quanto na de pole */
+    const p = String(c.pagina || "ugc").toLowerCase();
+    const paginaOk =
+      estado.filtroPaginaCupom === "Todas" ||
+      p === "ambas" ||
+      (estado.filtroPaginaCupom === "UGC" && p === "ugc") ||
+      (estado.filtroPaginaCupom === "Pole" && p === "pole");
+    return combina && filtroOk && paginaOk;
   });
 }
 
@@ -3015,6 +3023,8 @@ function desenharCupons(){
         <div class="busca">${ICONE.lupa}<input id="buscaCupons" placeholder="buscar marca ou código" value="${seguro(estado.buscaCupons)}"></div>
         <div class="grupo-filtro">
           ${["Todos","Ativos","Vencidos","Favoritos"].map(f => `<button class="filtro" data-fcupom="${f}" aria-pressed="${estado.filtroCupons === f}">${f}</button>`).join("")}
+          <span class="separa-filtro"></span>
+          ${["Todas","UGC","Pole"].map(f => `<button class="filtro" data-fpagina="${f}" aria-pressed="${estado.filtroPaginaCupom === f}">${f}</button>`).join("")}
         </div>
       </div>
       <div class="cartao-corpo">
@@ -3070,6 +3080,7 @@ function desenharCupons(){
   pegarTodos(".ordem-cupom .subir").forEach(b => b.addEventListener("click", () => moverCupom(b.dataset.ordem, -1)));
   pegarTodos(".ordem-cupom .descer").forEach(b => b.addEventListener("click", () => moverCupom(b.dataset.ordem, +1)));
   pegarTodos("[data-fcupom]").forEach(b => b.addEventListener("click", () => { estado.filtroCupons = b.dataset.fcupom; desenharCupons(); }));
+  pegarTodos("[data-fpagina]").forEach(b => b.addEventListener("click", () => { estado.filtroPaginaCupom = b.dataset.fpagina; desenharCupons(); }));
   pegar("#novoCupom").addEventListener("click", () => formularioCupom(null));
 
   const acha = (id) => todos.find(c => String(c.id) === id);
@@ -3125,10 +3136,20 @@ function formularioCupom(cupom){
   /* "tipo" decide em que bloco da página de links o botão entra.
      Quem foi cadastrado antes deste campo existir entra como cupom. */
   const tipoAtual = String(c.tipo || "cupom").toLowerCase();
+  /* em qual das duas páginas de links este botão aparece.
+     Quem foi cadastrado antes deste campo existir fica na de UGC. */
+  const paginaAtual = String(c.pagina || "ugc").toLowerCase();
   abrirJanela(cupom ? "Editar cupom" : "Novo cupom", `
     <form id="formCupom">
       <div class="campos">
         <div class="campo"><label for="p-marca">Marca</label><input id="p-marca" required value="${seguro(c.marca)}"></div>
+        <div class="campo"><label for="p-pagina">Em qual página de links</label>
+          <select id="p-pagina">
+            <option value="ugc" ${paginaAtual === "ugc" ? "selected" : ""}>UGC (emycracco.com.br)</option>
+            <option value="pole" ${paginaAtual === "pole" ? "selected" : ""}>Pole (emycracco.com.br/pole)</option>
+            <option value="ambas" ${paginaAtual === "ambas" ? "selected" : ""}>Nas duas</option>
+          </select>
+        </div>
         <div class="campo"><label for="p-tipo">Onde aparece na página de links</label>
           <select id="p-tipo">
             <option value="cupom" ${tipoAtual === "cupom" ? "selected" : ""}>Meus cupons</option>
@@ -3209,6 +3230,7 @@ function formularioCupom(cupom){
     const linha = {
       logo: logoEscolhida,
       marca: pegar("#p-marca").value.trim(),
+      pagina: pegar("#p-pagina").value,
       tipo: pegar("#p-tipo").value,
       cupom: pegar("#p-cupom").value.trim(),
       desconto: pegar("#p-desconto").value.trim(),
